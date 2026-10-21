@@ -20,6 +20,7 @@ from db.models import Brand, Service, LocationTarget, Article
 from generators.geo_writer import ProgrammaticGEOWriter
 from generators.link_injector import LinkInjector
 from core.bridge_client import WordPressBridgeClient
+from core.router_client import LLMRouterClient
 import mcp.server as mcp_tools
 
 logger = logging.getLogger("seo_web_app")
@@ -41,8 +42,26 @@ if os.path.exists("output"):
 geo_writer = ProgrammaticGEOWriter()
 link_injector = LinkInjector()
 bridge_client = WordPressBridgeClient()
+router_client = geo_writer.router
 
 # Request Models
+class RouterSettingsRequest(BaseModel):
+    base_url: str
+    api_key: Optional[str] = ""
+    selected_model: str
+    temperature: Optional[float] = 0.7
+
+class GenerateCustomImageRequest(BaseModel):
+    prompt: str
+    brand_name: Optional[str] = "GEO Studio"
+    location: Optional[str] = "Indonesia"
+    aspect_ratio: Optional[str] = "16:9"
+    style: Optional[str] = "photorealistic"
+
+class TestCompletionRequest(BaseModel):
+    prompt: str
+    model: Optional[str] = None
+
 class PreviewRequest(BaseModel):
     brand_id: str
     service_id: str
@@ -318,6 +337,88 @@ def remove_gemini_account(account_id: str):
     removed = geo_writer.gemini.remove_account(account_id)
     return {"success": removed}
 
+# Router & Model Dynamic Discovery Endpoints (9router / OpenAI-compatible)
+@app.get("/api/router/status")
+def get_router_status():
+    """Returns router connection health and current configuration."""
+    health = router_client.check_health()
+    return {
+        "success": True,
+        "health": health,
+        "config": {
+            "base_url": router_client.config.get("base_url"),
+            "api_key_masked": f"{router_client.config.get('api_key', '')[:8]}..." if router_client.config.get("api_key") else "(none)",
+            "selected_model": router_client.config.get("selected_model"),
+            "temperature": router_client.config.get("temperature", 0.7)
+        }
+    }
+
+@app.get("/api/router/models")
+@app.post("/api/router/fetch-models")
+def fetch_router_models():
+    """Dynamically fetches real live models from the router (never fictitious/hardcoded)."""
+    result = router_client.fetch_models()
+    return result
+
+@app.post("/api/router/settings")
+def update_router_settings(req: RouterSettingsRequest):
+    """Updates router connection and active model selection."""
+    result = router_client.update_settings(
+        base_url=req.base_url,
+        api_key=req.api_key or "",
+        selected_model=req.selected_model,
+        temperature=req.temperature or 0.7
+    )
+    # Sync to geo_writer
+    geo_writer.model = req.selected_model
+    return result
+
+@app.post("/api/router/test-completion")
+def test_router_completion(req: TestCompletionRequest):
+    """Sends a quick test message through the router to verify model responsiveness."""
+    if not req.prompt.strip():
+        raise HTTPException(status_code=400, detail="Prompt tidak boleh kosong.")
+    
+    target_model = req.model or router_client.config.get("selected_model", "ox-alpha")
+    messages = [
+        {"role": "system", "content": "You are a concise AI assistant. Respond in 1-2 helpful sentences."},
+        {"role": "user", "content": req.prompt.strip()}
+    ]
+    resp = router_client.generate_chat_completion(messages=messages, model=target_model)
+    if not resp:
+        return {
+            "success": False,
+            "error": f"Model '{target_model}' tidak memberikan respons. Pastikan router aktif.",
+            "model_used": target_model
+        }
+    return {
+        "success": True,
+        "response": resp,
+        "model_used": target_model
+    }
+
+# Studio Generator Gambar Endpoints
+@app.post("/api/images/generate")
+def generate_custom_image(req: GenerateCustomImageRequest):
+    """Generates custom graphic/thumbnail with specified aspect ratio (16:9, 1:1, 9:16) and style."""
+    if not req.prompt.strip():
+        raise HTTPException(status_code=400, detail="Prompt tidak boleh kosong.")
+    
+    result = geo_writer.gemini.generate_custom_image(
+        prompt=req.prompt.strip(),
+        brand_name=req.brand_name or "GEO Studio",
+        location=req.location or "Indonesia",
+        aspect_ratio=req.aspect_ratio or "16:9",
+        style=req.style or "photorealistic"
+    )
+    return result
+
+@app.get("/api/images/gallery")
+def get_image_gallery():
+    """Returns list of generated images in the studio gallery."""
+    images = geo_writer.gemini.list_gallery_images()
+    return {"images": images}
+
 @app.post("/api/reset-database")
 def reset_database(db: Session = Depends(get_db)):
     """Clears all brands, services, locations, articles for a completely fresh start."""
@@ -504,6 +605,7 @@ def system_diagnostics(db: Session = Depends(get_db)):
     articles_count = db.query(Article).count()
     services_count = db.query(Service).count()
     gemini_summary = geo_writer.gemini.get_accounts_summary()
+    router_health = router_client.check_health()
     
     return {
         "status": "operational",
@@ -512,7 +614,8 @@ def system_diagnostics(db: Session = Depends(get_db)):
         "articles_registered": articles_count,
         "gemini_accounts": gemini_summary.get("accounts_count", 0),
         "gemini_active": gemini_summary.get("active_accounts", 0),
-        "openrouter_connected": True,
-        "default_model": "gemini-2.0-flash",
+        "router_connected": router_health.get("online", False),
+        "router_models_count": router_health.get("models_count", 0),
+        "active_model": router_client.config.get("selected_model", "ox-alpha"),
         "port": int(os.getenv("PORT", "28420"))
     }

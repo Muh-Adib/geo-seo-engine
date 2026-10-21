@@ -172,6 +172,16 @@ def show_status():
         db.close()
     except Exception as e:
         print(f" Database    : {e}")
+
+    # Check 9router & Active Model
+    try:
+        from core.router_client import LLMRouterClient
+        rc = LLMRouterClient()
+        r_health = rc.check_health()
+        print(f" 9router (20128): {'🟢 ONLINE (' + str(r_health.get('models_count', 0)) + ' models)' if r_health.get('online') else '⚪ Offline'}")
+        print(f" Model Aktif : {rc.config.get('selected_model')}")
+    except Exception as e:
+        print(f" Router      : {e}")
     print("=" * 50)
 
 def show_accounts(sync_antigravity: bool = False):
@@ -226,6 +236,59 @@ def cli_import_sheet(target: str):
     else:
         print(f"❌ Gagal impor: {res.get('error')}")
 
+def cli_models(fetch: bool = False, set_model: str = "", filter_q: str = ""):
+    from core.router_client import LLMRouterClient
+    rc = LLMRouterClient()
+    
+    if set_model:
+        rc.config["selected_model"] = set_model
+        rc.save_config()
+        print(f"✅ Model aktif berhasil diubah menjadi: '{set_model}'")
+        return
+
+    print("=" * 60)
+    print(" 🧠 DAFTAR MODEL DARI 9ROUTER (DYNAMIC FETCH)")
+    print("=" * 60)
+    print(f" Endpoint Router: {rc.config.get('base_url')}")
+    print(f" Model Aktif    : {rc.config.get('selected_model')}")
+    print("-" * 60)
+
+    res = rc.fetch_models()
+    if res.get("success"):
+        models = res.get("models", [])
+        if filter_q:
+            models = [m for m in models if filter_q.lower() in m["id"].lower()]
+        print(f" Total Model: {len(models)} model ditemukan")
+        print()
+        for idx, m in enumerate(models[:50], 1):
+            is_active = " [AKTIF]" if m["id"] == rc.config.get("selected_model") else ""
+            print(f"  {idx:2d}. {m['id']:<35} ({m.get('owned_by', 'router')}){is_active}")
+        if len(models) > 50:
+            print(f"  ... dan {len(models) - 50} model lainnya. Gunakan --filter untuk mempersempit.")
+    else:
+        print(f"❌ Gagal mengambil model: {res.get('error')}")
+    print("=" * 60)
+
+def cli_generate_image(prompt: str, ratio: str = "16:9", style: str = "photorealistic", brand: str = "GEO Studio"):
+    from generators.gemini_generator import GeminiMultiAccountEngine
+    engine = GeminiMultiAccountEngine()
+    print("=" * 60)
+    print(" 🎨 STUDIO GENERATOR GAMBAR AI")
+    print("=" * 60)
+    print(f" Prompt : {prompt}")
+    print(f" Rasio  : {ratio}")
+    print(f" Style  : {style}")
+    print(" Sedang merender visual...")
+    res = engine.generate_custom_image(prompt=prompt, aspect_ratio=ratio, style=style, brand_name=brand)
+    if res.get("success"):
+        print("✅ VISUAL BERHASIL DIGENERATE!")
+        print(f"   File   : {res.get('file_path')}")
+        print(f"   URL    : {res.get('url')}")
+        print(f"   Ukuran : {res.get('width')}x{res.get('height')}")
+    else:
+        print(f"❌ Gagal: {res.get('error')}")
+    print("=" * 60)
+
 def main():
     parser = argparse.ArgumentParser(
         description="Unicam Programmatic SEO & GEO Engine CLI",
@@ -276,6 +339,18 @@ Contoh Penggunaan:
     sheet_p = subparsers.add_parser("import-sheet", help="Impor bank data dari Google Sheets / CSV")
     sheet_p.add_argument("target", help="URL Google Sheet atau path file CSV")
 
+    # Command: models (9router)
+    model_p = subparsers.add_parser("models", help="Daftar & kelola model live dari 9router")
+    model_p.add_argument("-f", "--filter", default="", help="Filter nama model (contoh: alpha, claude, sonnet)")
+    model_p.add_argument("--set", dest="set_model", default="", help="Ganti model aktif (contoh: ox-alpha)")
+
+    # Command: generate-image
+    img_p = subparsers.add_parser("generate-image", help="Generate gambar/visual AI via CLI")
+    img_p.add_argument("-p", "--prompt", required=True, help="Deskripsi visual / prompt")
+    img_p.add_argument("-r", "--ratio", default="16:9", choices=["16:9", "1:1", "9:16"], help="Aspek rasio")
+    img_p.add_argument("-s", "--style", default="photorealistic", choices=["photorealistic", "cyberpunk", "minimalist"], help="Gaya visual")
+    img_p.add_argument("-b", "--brand", default="GEO Studio", help="Nama brand watermark")
+
     args = parser.parse_args()
 
     if not args.command or args.command == "start":
@@ -294,6 +369,10 @@ Contoh Penggunaan:
         show_status()
     elif args.command == "accounts":
         show_accounts(getattr(args, "sync", False))
+    elif args.command == "models":
+        cli_models(fetch=True, set_model=getattr(args, "set_model", ""), filter_q=getattr(args, "filter", ""))
+    elif args.command == "generate-image":
+        cli_generate_image(prompt=args.prompt, ratio=args.ratio, style=args.style, brand=args.brand)
     elif args.command == "generate":
         cli_generate(args.brand, args.service, args.region, args.city, args.publish)
     elif args.command == "import-sheet":

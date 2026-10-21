@@ -1,19 +1,22 @@
 import pytest
 import mcp.server as s
 
-def test_mcp_tools():
+def test_mcp_tools(test_db_brand):
+    b_id = test_db_brand["brand_id"]
+    s_id = test_db_brand["service_id"]
+
     # 1. List brands
     brands_res = s.tool_list_all_brands()
     assert brands_res["success"] is True
-    assert brands_res["total_brands"] >= 10
+    assert brands_res["total_brands"] >= 1
 
     # 2. Get context
-    ctx = s.tool_get_brand_and_service_context("unimasi")
+    ctx = s.tool_get_brand_and_service_context(b_id)
     assert ctx["success"] is True
     assert len(ctx["services"]) >= 1
 
     # 3. Preview article
-    preview = s.tool_preview_seo_article("unimasi", "unimasi-safety", "Australia", "Sydney")
+    preview = s.tool_preview_seo_article(b_id, s_id, "Australia", "Sydney")
     assert preview["success"] is True
     assert preview["tags_count"] == 50
     assert preview["faq_items_count"] == 10
@@ -21,8 +24,8 @@ def test_mcp_tools():
 
     # 4. Generate bulk matrix (draft mode)
     bulk = s.tool_generate_bulk_matrix(
-        brand_id="unimasi",
-        service_id="unimasi-safety",
+        brand_id=b_id,
+        service_id=s_id,
         location_region="Australia",
         cities=["Melbourne", "Brisbane"],
         auto_publish=False

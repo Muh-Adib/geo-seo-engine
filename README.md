@@ -2,9 +2,11 @@
 
 [![Python Version](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
 [![FastAPI](https://img.shields.io/badge/Framework-FastAPI-009688.svg)](https://fastapi.tiangolo.com)
+[![9router Integration](https://img.shields.io/badge/LLM%20Router-9router%20(Port%2020128)-7C3AED.svg)](https://github.com/Muh-Adib/geo-seo-engine)
+[![Dynamic Models](https://img.shields.io/badge/Models-113%2B%20Live%20Models-success.svg)](#1-9router-integration--dynamic-model-discovery)
 [![Google Gemini](https://img.shields.io/badge/AI-Google%20Gemini%20%7C%20Imagen%203-8E75C2.svg)](https://ai.google.dev)
 [![WordPress Bridge](https://img.shields.io/badge/Integration-WordPress%20REST%20API-21759B.svg)](https://wordpress.org)
-[![Tests Passing](https://img.shields.io/badge/Tests-18%2F18%20Passed-success.svg)](https://pytest.org)
+[![Tests Passing](https://img.shields.io/badge/Tests-19%2F19%20Passed-success.svg)](https://pytest.org)
 [![Port](https://img.shields.io/badge/Port-28420-orange.svg)](#port-configuration)
 [![Platform](https://img.shields.io/badge/macOS-Apple%20Silicon%20%7C%20Intel%20x86__64-black.svg)](#installation)
 
@@ -16,15 +18,29 @@ Natively engineered to dominate both traditional Google SERP rankings and modern
 
 ## 🌟 Fitur Utama (Key Features)
 
-### 1. 🧠 Multi-Akun Google Gemini Otomatis
-* **Direct Gemini Engine:** Menggunakan API Google Gemini langsung (bukan OpenRouter pihak ketiga).
-* **Auto-Detect Antigravity Desktop Token:** Mendeteksi sesi login aktif Antigravity / Gemini Desktop lokal secara otomatis (`~/.gemini/jetski-standalone-oauth-token`).
-* **Multi-Account Rotation & Failover:** Mendukung penambahan banyak akun dan API key. Jika salah satu akun mencapai batas kuota (HTTP 429), sistem otomatis merotasi ke akun berikutnya tanpa menghentikan proses bulk generate.
+### 1. 🧠 Integrasi 9router & Dynamic Model Discovery (Bukan Model Fiktif)
+* **Koneksi Router Dinamis:** Terhubung langsung ke **9router** di port `20128` (`http://127.0.0.1:20128/v1`) atau router OpenAI-compatible lainnya.
+* **Auto-Detect API Key Lokal:** Otomatis membaca API key aktif dari database lokal 9router (`~/.9router/db/data.sqlite`).
+* **Dynamic Model Fetching:** Model didapatkan secara real-time via `GET /v1/models` (mendeteksi 113+ model aktif seperti `ox-alpha`, `kr/auto`, `kr/claude-sonnet-4.5`, `GK/gk/deepseek-v4-flash`), bebas dari nama model hardcoded/usang.
+* **Pengaturan & Pengujian Model:** Ganti model kapan saja dan uji respons model langsung dari Dashboard Web atau CLI.
 
-### 2. 🎨 Generator Gambar Thumbnail 16:9 Otomatis
-* Memproduksi featured image lanskap 16:9 (resolusi standar 1200x675) untuk setiap artikel menggunakan **Google Imagen 3**.
-* Dilengkapi sistem fallback cerdas **Studio Typography Canvas** (Pillow) dengan tipografi branding mewah beresolusi tinggi jika kuota gambar habis.
-* Featured image otomatis di-upload dan dipasang sebagai *Featured Image* WordPress via REST Bridge.
+### 2. 🎨 Studio Generator Gambar AI & Visual Assets
+* **Studio Visual Interaktif:** Dilengkapi tab terdedikasi untuk memproduksi materi visual dan gambar artikel dengan AI.
+* **Pilihan Aspek Rasio Fleksibel:**
+  * **16:9 (1200x675):** Featured thumbnail artikel WordPress standar industri.
+  * **1:1 (1000x1000):** Visual feed Instagram, LinkedIn, & profil media sosial.
+  * **9:16 (720x1280):** Visual vertikal untuk format Stories, Shorts, dan Reels.
+* **Pilihan Gaya Estetika:** *Photorealistic (Cinematic)*, *Cyberpunk (Neon Sci-Fi)*, atau *Minimalist Studio*.
+* **Galeri Asset & Download:** Seluruh asset visual tersimpan rapi di galeri lokal dengan 1-klik unduh JPG dan salin URL.
+
+### 3. 🌐 Database 100% Murni (Zero Fictitious Brands)
+* **Bersih Tanpa Dummy:** Sistem dimulai dengan tepat **0 brand bawaan fiktif**.
+* **Onboarding Mandiri:** Pengguna mendaftarkan website WordPress asli milik mereka satu per satu atau mengimpor sekaligus dari Google Sheets.
+
+### 4. 🧠 Multi-Akun Google Gemini Otomatis
+* **Direct Gemini Engine:** Akses langsung akun Google Gemini user.
+* **Auto-Detect Antigravity Desktop Token:** Mendeteksi sesi login aktif Antigravity / Gemini Desktop lokal secara otomatis (`~/.gemini/jetski-standalone-oauth-token`).
+* **Multi-Account Rotation & Failover:** Mendukung penambahan banyak API key dengan rotasi otomatis jika kuota gratis tercapai (HTTP 429).
 
 ### 3. 📝 Anatomi Konten 12 Blok Standar GEO & SGE
 Setiap artikel diproduksi mengikuti standar 12 blok terstruktur:
@@ -88,8 +104,18 @@ cd geo-seo-engine
 # Menghidupkan sesi di background
 ./seo-engine start
 
-# Melihat status sesi dan akun Gemini yang aktif
+# Melihat status sesi, akun Gemini, & status 9router
 ./seo-engine status
+
+# Melihat daftar model live dari 9router (Dynamic Fetch)
+./seo-engine models
+./seo-engine models --filter claude
+
+# Mengganti model aktif secara langsung
+./seo-engine models --set ox-alpha
+
+# Men-generate gambar visual / thumbnail via CLI
+./seo-engine generate-image -p "Commercial Video Studio 4K" -r 16:9 -s photorealistic
 
 # Melihat daftar akun Gemini & rotasi failover
 ./seo-engine accounts

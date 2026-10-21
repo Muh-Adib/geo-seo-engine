@@ -28,19 +28,48 @@ Anda **tidak perlu** mengetik perintah rumit di Terminal.
 
 1. Buka folder proyek di Finder:
    ```
-   /Users/macprom12020/Code/wise-hertz
+   /Users/macprom12020/Code/geo-seo-engine
    ```
 2. Temukan file bernama:
    **`Jalankan_SEO_Engine.command`**
 3. **Klik ganda (*double-click*)** file tersebut.
 4. Jendela terminal akan terbuka sebentar, dan browser Google Chrome atau Safari Anda akan otomatis membuka halaman Dashboard di:
-   👉 **`http://localhost:8000`**
+   👉 **`http://127.0.0.1:28420`**
 
 *(Catatan: Launcher ini kompatibel 100% untuk Mac dengan prosesor Intel x86_64 maupun Mac M-Series Apple Silicon).*
 
 ---
 
-## 🔑 Langkah 2: Menghubungkan Akun Google Gemini
+## 🧠 Langkah 2: Menggunakan Router & Dynamic Model Discovery (9router)
+
+Sistem ini menggunakan integrasi LLM Router nyata (**9router**) pada port `20128`:
+
+1. Buka tab **"Router & Model LLM"** di Dashboard.
+2. Anda akan melihat status router secara real-time (`Online` dengan 113+ model terdeteksi).
+3. Klik tombol **`🔄 Fetch Live Models`** untuk menyegarkan daftar model langsung dari router.
+4. Pilih model yang Anda inginkan (misalnya `ox-alpha`, `kr/auto`, `kr/claude-sonnet-4.5`, atau `GK/gk/deepseek-v4-flash`).
+5. Model akan langsung dipakai untuk produksi artikel GEO tanpa menggunakan model hardcoded atau fiktif.
+6. Anda juga dapat mengetik pesan singkat di kotak **Uji Respons Model** untuk memverifikasi model menjawab secara instan.
+
+---
+
+## 🎨 Langkah 3: Studio Generator Gambar AI & Visual Assets
+
+Anda dapat membuat gambar visual kapan saja secara interaktif:
+
+1. Klik tab **"Studio Generator Gambar"** di Dashboard.
+2. Masukkan deskripsi visual atau klik salah satu **Contoh Cepat** (misalnya *Commercial Video Production Studio with 4K Cine Camera*).
+3. Pilih rasio gambar yang Anda butuhkan:
+   - **16:9:** Khusus thumbnail artikel WordPress (1200x675).
+   - **1:1:** Khusus feed Instagram atau foto profil bisnis (1000x1000).
+   - **9:16:** Khusus video vertikal Stories, Shorts, atau Reels (720x1280).
+4. Pilih gaya visual: *Photorealistic*, *Cyberpunk*, atau *Minimalist*.
+5. Klik **`✨ Generate Visual AI Sekarang`**.
+6. Gambar akan langsung muncul di panel pratinjau dan dapat diunduh (JPG) atau disalin URL-nya. Seluruh gambar tersimpan otomatis di **Galeri Asset Visual**.
+
+---
+
+## 🔑 Langkah 4: Menghubungkan Akun Google Gemini (Opsional / Multi-Akun)
 
 Sistem ini mendukung login langsung seperti Antigravity Desktop:
 

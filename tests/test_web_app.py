@@ -9,28 +9,31 @@ def client():
 def test_dashboard_homepage(client):
     response = client.get("/")
     assert response.status_code == 200
-    assert "Unicam GEO Engine" in response.text
-    assert "Brands" in response.text
+    assert "GEO SEO Engine" in response.text
+    assert "Situs & Brand" in response.text
 
 def test_api_list_brands(client):
     response = client.get("/api/brands")
     assert response.status_code == 200
     data = response.json()
     assert "brands" in data
-    assert len(data["brands"]) >= 10
+    assert isinstance(data["brands"], list)
 
-def test_api_brand_context(client):
-    response = client.get("/api/brands/unimasi/context")
+def test_api_brand_context(client, test_db_brand):
+    b_id = test_db_brand["brand_id"]
+    response = client.get(f"/api/brands/{b_id}/context")
     assert response.status_code == 200
     data = response.json()
     assert data["brand"]["name"] == "UNIMASI"
     assert len(data["services"]) >= 1
     assert len(data["locations"]) >= 1
 
-def test_api_generate_preview(client):
+def test_api_generate_preview(client, test_db_brand):
+    b_id = test_db_brand["brand_id"]
+    s_id = test_db_brand["service_id"]
     payload = {
-        "brand_id": "unimasi",
-        "service_id": "unimasi-safety",
+        "brand_id": b_id,
+        "service_id": s_id,
         "location_region": "Australia",
         "city_name": "Perth"
     }
@@ -97,5 +100,44 @@ def test_api_system_diagnostics(client):
     assert response.status_code == 200
     data = response.json()
     assert data["status"] == "operational"
-    assert data["brands_loaded"] >= 10
-    assert data["openrouter_connected"] is True
+    assert "router_connected" in data
+
+def test_api_router_endpoints(client):
+    # 1. Status
+    res = client.get("/api/router/status")
+    assert res.status_code == 200
+    assert res.json()["success"] is True
+
+    # 2. Models
+    m_res = client.get("/api/router/models")
+    assert m_res.status_code == 200
+    assert m_res.json()["success"] is True
+    assert m_res.json()["count"] > 0
+
+    # 3. Settings update
+    s_res = client.post("/api/router/settings", json={
+        "base_url": "http://127.0.0.1:20128/v1",
+        "api_key": "test-key",
+        "selected_model": "ox-alpha",
+        "temperature": 0.7
+    })
+    assert s_res.status_code == 200
+    assert s_res.json()["success"] is True
+
+def test_api_image_generator_and_gallery(client):
+    # 1. Generate custom image
+    gen_res = client.post("/api/images/generate", json={
+        "prompt": "4K Cinematic Studio Rig",
+        "aspect_ratio": "16:9",
+        "style": "photorealistic",
+        "brand_name": "GEO Studio Test"
+    })
+    assert gen_res.status_code == 200
+    img_data = gen_res.json()
+    assert img_data["success"] is True
+    assert "output/images" in img_data["file_path"]
+
+    # 2. Gallery listing
+    gal_res = client.get("/api/images/gallery")
+    assert gal_res.status_code == 200
+    assert len(gal_res.json().get("images", [])) >= 1

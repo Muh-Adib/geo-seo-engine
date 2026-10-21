@@ -119,11 +119,15 @@
 
           <!-- Metrics Badges -->
           <div class="hidden sm:flex items-center space-x-2 pl-2 border-l border-slate-200 text-xs font-semibold text-slate-600">
-            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5">
+            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5" title="Situs Terdaftar">
               <i class="fa-solid fa-globe text-indigo-500"></i>
               <span x-text="brands.length"></span> Situs
             </span>
-            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5">
+            <span class="px-2.5 py-1 bg-violet-50 text-violet-700 border border-violet-100 rounded-md flex items-center gap-1.5" title="Model Router Aktif">
+              <i class="fa-solid fa-microchip text-violet-500"></i>
+              <span class="font-mono text-[11px]" x-text="routerSelectedModel || 'ox-alpha'"></span>
+            </span>
+            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5" title="Total Artikel Terbit">
               <i class="fa-solid fa-file-lines text-purple-500"></i>
               <span x-text="articles.length"></span> Artikel
             </span>
@@ -132,7 +136,7 @@
       </div>
 
       <!-- Navigation Tabs -->
-      <nav class="flex space-x-1 sm:space-x-6 border-t border-slate-100 overflow-x-auto custom-scrollbar" aria-label="Tabs">
+      <nav class="flex space-x-1 sm:space-x-4 border-t border-slate-100 overflow-x-auto custom-scrollbar" aria-label="Tabs">
         <button @click="activeTab = 'brands'" :class="activeTab === 'brands' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-globe"></i> <span>Situs & Brand</span>
         </button>
@@ -142,11 +146,14 @@
         <button @click="activeTab = 'bulk'" :class="activeTab === 'bulk' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-layer-group"></i> <span>Batch Generator Kota</span>
         </button>
+        <button @click="activeTab = 'images'" :class="activeTab === 'images' ? 'border-pink-600 text-pink-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-palette text-pink-500"></i> <span>Studio Generator Gambar</span>
+        </button>
+        <button @click="activeTab = 'router'" :class="activeTab === 'router' ? 'border-violet-600 text-violet-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-microchip text-violet-600"></i> <span>Router & Model LLM</span>
+        </button>
         <button @click="activeTab = 'articles'" :class="activeTab === 'articles' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-newspaper"></i> <span>Daftar Artikel Terbit</span>
-        </button>
-        <button @click="activeTab = 'gemini'" :class="activeTab === 'gemini' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-brands fa-google text-emerald-600"></i> <span>Google Gemini AI</span>
         </button>
         <button @click="activeTab = 'spreadsheet'" :class="activeTab === 'spreadsheet' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
           <i class="fa-solid fa-table-list"></i> <span>Bank Data Spreadsheet</span>
@@ -335,13 +342,23 @@
           <!-- Engine Intelligence Settings -->
           <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-2 text-xs">
             <div class="font-bold text-slate-700 flex items-center justify-between">
-              <span>Sintesis Konten:</span>
-              <span class="text-[10px] font-bold px-2 py-0.5 rounded" :class="geminiActiveCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'" x-text="geminiActiveCount > 0 ? 'Google Gemini AI' : 'Deterministic Engine'"></span>
+              <span>Sintesis LLM Router:</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-violet-100 text-violet-800 flex items-center gap-1 font-mono">
+                <i class="fa-solid fa-microchip"></i>
+                <span x-text="routerSelectedModel || 'ox-alpha'"></span>
+              </span>
             </div>
-            <div class="text-[11px] text-slate-500 leading-relaxed">
-              • Menghasilkan tepat 12 blok terstruktur.<br>
-              • 50 tag SEO dialokasikan ke taxonomy WordPress.<br>
-              • 16:9 featured thumbnail diproses via Imagen/Canvas.
+            <div class="flex items-center justify-between text-[11px] text-slate-500">
+              <span>Status 9router:</span>
+              <span class="font-semibold flex items-center gap-1" :class="routerStatus?.online ? 'text-emerald-600' : 'text-slate-500'">
+                <span class="w-2 h-2 rounded-full" :class="routerStatus?.online ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                <span x-text="routerStatus?.online ? 'Online (Port 20128)' : '9router Local'"></span>
+              </span>
+            </div>
+            <div class="pt-1 text-right border-t border-slate-200/60">
+              <button @click="activeTab = 'router'" class="text-[11px] text-indigo-600 hover:underline font-semibold cursor-pointer">
+                ⚙️ Pilih Model Lain di Tab Router →
+              </button>
             </div>
           </div>
 
@@ -616,81 +633,424 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- TAB 5: GOOGLE GEMINI AI (MULTI-AKUN)       -->
+    <!-- TAB 4: STUDIO GENERATOR GAMBAR (AI VISUAL) -->
     <!-- ========================================== -->
-    <div x-show="activeTab === 'gemini'" x-cloak class="space-y-6">
-      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div x-show="activeTab === 'images'" x-cloak class="space-y-6">
+      <div class="bg-gradient-to-r from-pink-600 to-indigo-600 p-6 rounded-2xl text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 class="text-base font-bold text-slate-900">Manajemen Multi-Akun Google Gemini</h2>
-          <p class="text-xs text-slate-500 mt-1">Sistem menggunakan API Google Gemini langsung. Anda dapat memasukkan banyak API key sekaligus untuk rotasi otomatis saat batas kuota gratis tercapai.</p>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold mb-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Visual Studio
+          </div>
+          <h2 class="text-xl font-extrabold">Studio Generator Gambar & Visual Asset</h2>
+          <p class="text-xs text-white/80 mt-1 max-w-2xl leading-relaxed">
+            Generate visual beresolusi tinggi secara instan: Thumbnail 16:9 untuk artikel WordPress, infografis 1:1 untuk feed media sosial, atau orientasi vertikal 9:16 untuk Stories/Reels.
+          </p>
         </div>
-        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-plus"></i> Buat API Key Gratis di Google AI Studio
-        </a>
+        <div class="flex items-center gap-2">
+          <span class="px-3 py-1.5 bg-white/10 rounded-xl text-xs font-semibold backdrop-blur-sm">
+            <i class="fa-solid fa-images"></i> <span x-text="imageGallery.length"></span> Asset Tersimpan
+          </span>
+        </div>
       </div>
 
-      <!-- Connected Accounts Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Accounts List -->
-        <div class="space-y-4">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Akun / API Key Terdaftar</h3>
-          
-          <div x-show="geminiAccounts.length === 0" class="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
-            Belum ada API Key Gemini yang disimpan. Masukkan API Key pada formulir di sebelah kanan.
+      <!-- Generator Studio Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Left: Prompt & Settings Form -->
+        <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+          <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-paintbrush text-pink-600"></i> Konfigurasi Prompt Visual
+            </h3>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-pink-50 text-pink-700 border border-pink-100">Live Generator</span>
           </div>
 
-          <template x-for="acc in geminiAccounts" :key="acc.id">
-            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-              <div class="flex justify-between items-start">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
-                    <i class="fa-brands fa-google"></i>
-                  </div>
-                  <div>
-                    <h4 class="text-xs font-bold text-slate-900" x-text="acc.email"></h4>
-                    <p class="text-[11px] text-slate-400" x-text="acc.source"></p>
-                  </div>
-                </div>
-                <button @click="removeGeminiAccount(acc.id)" class="text-rose-500 hover:text-rose-700 text-xs cursor-pointer" title="Hapus Akun">
-                  <i class="fa-solid fa-trash-can"></i>
-                </button>
+          <!-- Prompt Input -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Visual / Prompt Gambar</label>
+            <textarea x-model="imagePrompt" rows="3" placeholder="Contoh: Hyperrealistic 8k commercial cinematic visual for video production studio..." class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-pink-500 focus:ring-pink-500 p-3 border"></textarea>
+            
+            <!-- Prompt Presets Chips -->
+            <div class="mt-2 flex flex-wrap gap-1.5">
+              <span class="text-[11px] text-slate-400 py-0.5 font-medium">Contoh Cepat:</span>
+              <button type="button" @click="imagePrompt = 'Commercial Video Production Studio with 4K Cine Camera and Master Lighting'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
+                🎥 Video Studio 4K
+              </button>
+              <button type="button" @click="imagePrompt = 'Aerial Drone Cinematography over Modern City Architecture at Sunset 8K'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
+                🚁 Aerial Drone 8K
+              </button>
+              <button type="button" @click="imagePrompt = 'Professional Safety Induction Animation set with 3D Holographic UI'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
+                🦺 3D Safety Induction
+              </button>
+              <button type="button" @click="imagePrompt = 'Executive Corporate Interview Set with Cinematic Bokeh Depth of Field'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
+                🎙️ Corporate Interview
+              </button>
+            </div>
+          </div>
+
+          <!-- Aspect Ratio Selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Aspek Rasio Gambar</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button type="button" @click="imageRatio = '16:9'" :class="imageRatio === '16:9' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
+                <div class="w-12 h-7 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">16:9</div>
+                <span class="text-xs font-bold">Landscape</span>
+                <span class="text-[10px] text-slate-400">1200x675 (Thumbnail WP)</span>
+              </button>
+
+              <button type="button" @click="imageRatio = '1:1'" :class="imageRatio === '1:1' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
+                <div class="w-8 h-8 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">1:1</div>
+                <span class="text-xs font-bold">Square</span>
+                <span class="text-[10px] text-slate-400">1000x1000 (Social Media)</span>
+              </button>
+
+              <button type="button" @click="imageRatio = '9:16'" :class="imageRatio === '9:16' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
+                <div class="w-6 h-10 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">9:16</div>
+                <span class="text-xs font-bold">Portrait</span>
+                <span class="text-[10px] text-slate-400">720x1280 (Story/Reels)</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Style Selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-2">Gaya Visual (Aesthetic Style)</label>
+            <div class="grid grid-cols-3 gap-3">
+              <button type="button" @click="imageStyle = 'photorealistic'" :class="imageStyle === 'photorealistic' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-camera"></i> Photorealistic
+              </button>
+              <button type="button" @click="imageStyle = 'cyberpunk'" :class="imageStyle === 'cyberpunk' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-bolt"></i> Cyberpunk
+              </button>
+              <button type="button" @click="imageStyle = 'minimalist'" :class="imageStyle === 'minimalist' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-cube"></i> Minimalist
+              </button>
+            </div>
+          </div>
+
+          <!-- Brand & Location Optional Attributes -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Nama Brand / Watermark</label>
+              <input type="text" x-model="imageBrand" placeholder="GEO Studio" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Lokasi Target</label>
+              <input type="text" x-model="imageLocation" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+            </div>
+          </div>
+
+          <!-- Generate Button -->
+          <button @click="generateCustomImage()" :disabled="!imagePrompt.trim() || generatingImage" class="w-full py-3.5 bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-700 hover:to-indigo-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer">
+            <i class="fa-solid fa-sparkles" x-show="!generatingImage"></i>
+            <i class="fa-solid fa-circle-notch fa-spin" x-show="generatingImage"></i>
+            <span x-text="generatingImage ? 'Sedang Merender Visual AI...' : '✨ Generate Visual AI Sekarang'"></span>
+          </button>
+        </div>
+
+        <!-- Right: Realtime Preview & Actions -->
+        <div class="lg:col-span-6 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between h-full">
+            <div>
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <i class="fa-solid fa-eye text-indigo-600"></i> Hasil Visual Terbaru
+                </h3>
+                <span x-show="latestGeneratedImage" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" x-text="latestGeneratedImage?.aspect_ratio + ' • ' + latestGeneratedImage?.width + 'x' + latestGeneratedImage?.height"></span>
               </div>
 
-              <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
-                <span class="font-mono text-slate-600" x-text="acc.masked_credential"></span>
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800" x-text="acc.status || 'Verified'"></span>
+              <!-- Preview Frame -->
+              <div class="bg-slate-900 rounded-xl p-3 flex items-center justify-center min-h-[300px] border border-slate-800 relative overflow-hidden">
+                <template x-if="latestGeneratedImage">
+                  <img :src="latestGeneratedImage.url" :alt="latestGeneratedImage.prompt" class="max-h-[360px] w-auto object-contain rounded-lg shadow-2xl">
+                </template>
+                <template x-if="!latestGeneratedImage">
+                  <div class="text-center text-slate-500 py-16 space-y-3">
+                    <div class="w-16 h-16 rounded-2xl bg-slate-800 text-slate-400 flex items-center justify-center mx-auto text-2xl">
+                      <i class="fa-solid fa-image"></i>
+                    </div>
+                    <p class="text-xs">Belum ada gambar yang digenerate dalam sesi ini.</p>
+                    <p class="text-[11px] text-slate-600">Tulis prompt di sebelah kiri dan klik tombol Generate.</p>
+                  </div>
+                </template>
+              </div>
+
+              <!-- Details of latest image -->
+              <div x-show="latestGeneratedImage" class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs space-y-1">
+                <div class="font-bold text-slate-800" x-text="latestGeneratedImage?.prompt"></div>
+                <div class="text-[11px] text-slate-500 flex items-center gap-3 font-mono">
+                  <span>File: <strong class="text-slate-700" x-text="latestGeneratedImage?.filename"></strong></span>
+                  <span>Style: <strong class="text-slate-700 uppercase" x-text="latestGeneratedImage?.style"></strong></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons for latest image -->
+            <div x-show="latestGeneratedImage" class="pt-4 flex flex-wrap gap-2 border-t border-slate-100 mt-4">
+              <a :href="latestGeneratedImage?.url" :download="latestGeneratedImage?.filename" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+                <i class="fa-solid fa-download"></i> Unduh File JPG
+              </a>
+              <button @click="copyToClipboard(window.location.origin + latestGeneratedImage?.url, 'URL Gambar disalin!')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-link"></i> Salin URL
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Image Gallery Section -->
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <div>
+            <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-grip text-indigo-600"></i> Galeri Asset Visual
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Seluruh asset visual yang telah digenerate siap digunakan untuk postingan blog atau materi pemasaran.</p>
+          </div>
+          <button @click="loadImageGallery()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer">
+            <i class="fa-solid fa-rotate-right"></i> Refresh Galeri
+          </button>
+        </div>
+
+        <!-- Empty Gallery -->
+        <div x-show="imageGallery.length === 0" class="p-8 text-center text-xs text-slate-400">
+          Belum ada asset di galeri. Generate gambar pertama Anda di atas.
+        </div>
+
+        <!-- Gallery Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" x-show="imageGallery.length > 0">
+          <template x-for="item in imageGallery" :key="item.id || item.filename">
+            <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 hover:shadow-md transition flex flex-col justify-between group">
+              <div class="relative aspect-video bg-slate-900 flex items-center justify-center overflow-hidden">
+                <img :src="item.url" :alt="item.prompt" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
+                <span class="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-black/70 text-white backdrop-blur-sm" x-text="item.aspect_ratio || '16:9'"></span>
+              </div>
+              <div class="p-3 space-y-2 flex-1 flex flex-col justify-between">
+                <div>
+                  <h4 class="text-xs font-bold text-slate-800 line-clamp-2" x-text="item.prompt"></h4>
+                  <p class="text-[10px] text-slate-400 mt-1 font-mono" x-text="item.filename"></p>
+                </div>
+                <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-[11px]">
+                  <a :href="item.url" :download="item.filename" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1">
+                    <i class="fa-solid fa-download"></i> Unduh
+                  </a>
+                  <button @click="copyToClipboard(window.location.origin + item.url, 'URL Gambar disalin!')" class="text-slate-500 hover:text-slate-800">
+                    <i class="fa-solid fa-copy"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </template>
         </div>
+      </div>
+    </div>
 
-        <!-- Add Account Form -->
-        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Hubungkan API Key Baru</h3>
-          <p class="text-xs text-slate-600 leading-relaxed">
-            API Key Gemini tersedia gratis dari Google dengan batas 15 request per menit. Kunci diverifikasi secara langsung saat disimpan.
+    <!-- ========================================== -->
+    <!-- TAB 5: ROUTER & MODEL LLM (DYNAMIC FETCH)   -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'router'" x-cloak class="space-y-6">
+      
+      <!-- Router Header Banner -->
+      <div class="bg-gradient-to-r from-violet-600 to-indigo-700 p-6 rounded-2xl text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold mb-2">
+            <i class="fa-solid fa-network-wired"></i> LLM Router Integration
+          </div>
+          <h2 class="text-xl font-extrabold">Router & Dynamic Model Discovery</h2>
+          <p class="text-xs text-white/80 mt-1 max-w-2xl leading-relaxed">
+            Menghubungkan langsung ke <strong>9router</strong> di port <code>20128</code> atau router OpenAI-compatible lainnya. Model didapatkan secara real-time langsung dari router via <code>GET /v1/models</code> (bukan model fiktif atau hardcoded).
           </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <button @click="fetchRouterModels()" :disabled="fetchingModels" class="px-4 py-2.5 bg-white text-violet-700 hover:bg-violet-50 rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition cursor-pointer disabled:opacity-50">
+            <i class="fa-solid fa-rotate" :class="fetchingModels ? 'fa-spin' : ''"></i>
+            <span x-text="fetchingModels ? 'Mengambil Model...' : '🔄 Fetch Live Models'"></span>
+          </button>
+        </div>
+      </div>
 
-          <div class="space-y-3 text-xs">
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Label Akun (Opsional)</label>
-              <input type="text" x-model="newGeminiEmail" placeholder="Akun Kantor / Akun Personal" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
-            </div>
+      <!-- Live Status & Stats Bar -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-500">Status Router</span>
+            <span class="w-2.5 h-2.5 rounded-full" :class="routerStatus?.online ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"></span>
+          </div>
+          <div class="text-lg font-extrabold text-slate-900 mt-2" x-text="routerStatus?.online ? 'Online & Terhubung' : 'Offline'"></div>
+          <div class="text-[11px] text-slate-400 font-mono mt-0.5" x-text="routerBaseUrl"></div>
+        </div>
 
-            <div>
-              <label class="block font-bold text-slate-700 mb-1">Google Gemini API Key (AIzaSy...)</label>
-              <input type="password" x-model="newGeminiKey" placeholder="AIzaSy..." class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
-              <p class="text-[11px] text-slate-400 mt-1">Dapatkan instan di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 underline">aistudio.google.com/app/apikey</a>.</p>
-            </div>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-500">Model Aktif Terpilih</span>
+          <div class="text-base font-extrabold text-violet-600 mt-2 font-mono truncate" x-text="routerSelectedModel || 'ox-alpha'"></div>
+          <div class="text-[11px] text-slate-400 mt-0.5">Digunakan untuk penulisan artikel GEO</div>
+        </div>
 
-            <button @click="addGeminiAccount()" :disabled="!newGeminiKey.trim() || verifyingGemini" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer">
-              <i class="fa-solid fa-check" x-show="!verifyingGemini"></i>
-              <i class="fa-solid fa-circle-notch fa-spin" x-show="verifyingGemini"></i>
-              <span x-text="verifyingGemini ? 'Memverifikasi ke Google...' : 'Simpan & Verifikasi API Key'"></span>
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-500">Model Ditemukan</span>
+          <div class="text-lg font-extrabold text-slate-900 mt-2 flex items-center gap-2">
+            <span x-text="routerModels.length"></span>
+            <span class="text-xs font-normal text-slate-400">model live</span>
+          </div>
+          <div class="text-[11px] text-emerald-600 font-semibold mt-0.5">Didapat via dynamic fetch</div>
+        </div>
+
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <span class="text-xs font-bold text-slate-500">Akun Google Gemini</span>
+          <div class="text-lg font-extrabold text-slate-900 mt-2 flex items-center gap-2">
+            <span x-text="geminiActiveCount"></span>
+            <span class="text-xs font-normal text-slate-400">akun aktif</span>
+          </div>
+          <div class="text-[11px] text-indigo-600 font-semibold mt-0.5">Multi-account rotation</div>
+        </div>
+      </div>
+
+      <!-- Settings & Model Selection Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        
+        <!-- Left: Model Selector & Search (7 cols) -->
+        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+          <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-list-check text-violet-600"></i> Pilih Model LLM untuk Generator
+            </h3>
+            <button @click="fetchRouterModels()" class="text-xs text-indigo-600 hover:underline font-semibold cursor-pointer">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh List
             </button>
+          </div>
+
+          <!-- Quick Search Filter -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Cari / Filter Model</label>
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
+              <input type="text" x-model="filterModelSearch" placeholder="Ketik nama model (contoh: alpha, claude, sonnet, deepseek, auto)..." class="w-full text-xs pl-8 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-violet-500 focus:ring-violet-500">
+            </div>
+          </div>
+
+          <!-- Model Dropdown Selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Model Utama (Active Model)</label>
+            <select x-model="routerSelectedModel" @change="saveRouterSettings()" class="w-full text-xs font-mono border-slate-200 rounded-xl shadow-sm focus:border-violet-500 focus:ring-violet-500 p-3 border bg-white">
+              <template x-for="m in filteredRouterModels()" :key="m.id">
+                <option :value="m.id" x-text="m.id + ' (' + (m.owned_by || 'router') + ')'"></option>
+              </template>
+            </select>
+          </div>
+
+          <!-- Quick Chips for Popular Models -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-slate-700">Rekomendasi Model Cepat:</label>
+            <div class="flex flex-wrap gap-2">
+              <template x-for="pop in ['ox-alpha', 'kr/auto', 'kr/claude-sonnet-4.5', 'kr/gpt-4.5-preview', 'GK/gk/deepseek-v4-flash']" :key="pop">
+                <button type="button" @click="selectModel(pop)" :class="routerSelectedModel === pop ? 'bg-violet-600 text-white font-bold' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium'" class="px-3 py-1.5 rounded-xl text-xs font-mono transition cursor-pointer flex items-center gap-1.5">
+                  <i class="fa-solid fa-check" x-show="routerSelectedModel === pop"></i>
+                  <span x-text="pop"></span>
+                </button>
+              </template>
+            </div>
+          </div>
+
+          <!-- Live Model Response Tester -->
+          <div class="p-4 bg-slate-50 rounded-xl border border-slate-100 space-y-3">
+            <div class="flex justify-between items-center">
+              <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                <i class="fa-solid fa-terminal text-violet-600"></i> Uji Respons Model Secara Langsung
+              </span>
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-violet-100 text-violet-800" x-text="routerSelectedModel"></span>
+            </div>
+            
+            <div class="flex gap-2">
+              <input type="text" x-model="modelTestPrompt" placeholder="Ketik pesan tes..." class="flex-1 text-xs border-slate-200 rounded-xl p-2.5 border">
+              <button @click="testRouterModel()" :disabled="testingModel || !modelTestPrompt.trim()" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer">
+                <i class="fa-solid fa-paper-plane" x-show="!testingModel"></i>
+                <i class="fa-solid fa-circle-notch fa-spin" x-show="testingModel"></i>
+                <span x-text="testingModel ? 'Mengetes...' : 'Kirim Tes'"></span>
+              </button>
+            </div>
+
+            <div x-show="modelTestResponse" class="p-3 bg-white rounded-lg border border-slate-200 text-xs font-mono text-slate-800 space-y-1">
+              <div class="text-[10px] text-slate-400 font-sans font-bold">Hasil Respons Model:</div>
+              <div x-text="modelTestResponse" class="whitespace-pre-wrap leading-relaxed"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Router Connection Config & Gemini Multi-Account (5 cols) -->
+        <div class="lg:col-span-5 space-y-6">
+          
+          <!-- Router Config Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-indigo-600"></i> Konfigurasi Endpoint Router
+            </h3>
+
+            <div class="space-y-3 text-xs">
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Router Base URL</label>
+                <input type="url" x-model="routerBaseUrl" placeholder="http://127.0.0.1:20128/v1" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+                <p class="text-[11px] text-slate-400 mt-1">Default 9router berjalan pada <code>http://127.0.0.1:20128/v1</code>.</p>
+              </div>
+
+              <div>
+                <label class="block font-bold text-slate-700 mb-1">Router API Key (Otomatis Terdeteksi dari 9router SQLite)</label>
+                <input type="password" x-model="routerApiKey" placeholder="sk-..." class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+              </div>
+
+              <div>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="font-bold text-slate-700">Temperature Kreativitas: <span x-text="routerTemperature"></span></label>
+                </div>
+                <input type="range" min="0.1" max="1.0" step="0.05" x-model="routerTemperature" class="w-full">
+              </div>
+
+              <button @click="saveRouterSettings()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+                <i class="fa-solid fa-check"></i> Simpan Konfigurasi Router
+              </button>
+            </div>
+          </div>
+
+          <!-- Google Gemini Multi-Account Manager Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <i class="fa-brands fa-google text-emerald-600"></i> Akun Google Gemini Langsung
+                </h3>
+                <p class="text-[11px] text-slate-500 mt-0.5">Rotasi akun gratis untuk visual & Imagen</p>
+              </div>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[11px] text-indigo-600 hover:underline font-semibold">
+                + Dapatkan Key
+              </a>
+            </div>
+
+            <!-- List of Gemini Keys -->
+            <div class="space-y-2">
+              <template x-for="acc in geminiAccounts" :key="acc.id">
+                <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                  <div>
+                    <div class="font-bold text-slate-800" x-text="acc.email || 'Akun Gemini'"></div>
+                    <div class="font-mono text-[10px] text-slate-500" x-text="acc.masked_credential"></div>
+                  </div>
+                  <button @click="removeGeminiAccount(acc.id)" class="text-rose-500 hover:text-rose-700 text-xs cursor-pointer">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </template>
+            </div>
+
+            <!-- Add Key Input -->
+            <div class="space-y-2 pt-2 border-t border-slate-100">
+              <input type="password" x-model="newGeminiKey" placeholder="Tambah AIzaSy... baru" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+              <button @click="addGeminiAccount()" :disabled="!newGeminiKey.trim() || verifyingGemini" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition disabled:opacity-50 cursor-pointer">
+                <i class="fa-solid fa-plus" x-show="!verifyingGemini"></i>
+                <i class="fa-solid fa-circle-notch fa-spin" x-show="verifyingGemini"></i>
+                <span x-text="verifyingGemini ? 'Verifikasi...' : 'Tambah Akun Gemini'"></span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
+    </div>
     </div>
 
     <!-- ========================================== -->
@@ -903,6 +1263,27 @@
         newGeminiEmail: '',
         newGeminiKey: '',
 
+        routerStatus: null,
+        routerModels: [],
+        routerSelectedModel: 'ox-alpha',
+        routerBaseUrl: 'http://127.0.0.1:20128/v1',
+        routerApiKey: '',
+        routerTemperature: 0.7,
+        fetchingModels: false,
+        testingModel: false,
+        modelTestPrompt: 'Jelaskan secara singkat peran video interaktif untuk SEO lokal.',
+        modelTestResponse: '',
+        filterModelSearch: '',
+
+        imagePrompt: 'Commercial Video Production Studio with 4K Cine Camera and Master Lighting',
+        imageRatio: '16:9',
+        imageStyle: 'photorealistic',
+        imageBrand: 'GEO Studio',
+        imageLocation: 'Indonesia',
+        generatingImage: false,
+        latestGeneratedImage: null,
+        imageGallery: [],
+
         newBrand: {
           name: '',
           domain_url: '',
@@ -929,9 +1310,11 @@
         toasts: [],
 
         async init() {
+          await this.loadRouterStatus();
           await this.loadGeminiAccounts();
           await this.loadBrands();
           await this.loadArticles();
+          await this.loadImageGallery();
         },
 
         showToast(title, message, type = 'info') {
@@ -1324,6 +1707,157 @@
           } finally {
             this.sheetImporting = false;
           }
+        },
+
+        async loadRouterStatus() {
+          try {
+            const res = await fetch('/api/router/status');
+            const data = await res.json();
+            if (data.success) {
+              this.routerStatus = data.health;
+              this.routerBaseUrl = data.config.base_url || 'http://127.0.0.1:20128/v1';
+              this.routerSelectedModel = data.config.selected_model || 'ox-alpha';
+              this.routerTemperature = data.config.temperature || 0.7;
+            }
+            await this.fetchRouterModels(false);
+          } catch (e) {
+            console.error('Error loading router status:', e);
+          }
+        },
+
+        async fetchRouterModels(notify = true) {
+          this.fetchingModels = true;
+          try {
+            const res = await fetch('/api/router/fetch-models', { method: 'POST' });
+            const data = await res.json();
+            if (data.success && data.models) {
+              this.routerModels = data.models;
+              if (data.selected_model) {
+                this.routerSelectedModel = data.selected_model;
+              }
+              if (notify) {
+                this.showToast('Model Diperbarui', `Berhasil mengambil ${data.count} model live dari router!`, 'success');
+              }
+            } else if (notify) {
+              this.showToast('Gagal Ambil Model', data.error || 'Router tidak dapat dihubungi.', 'error');
+            }
+          } catch (e) {
+            if (notify) this.showToast('Error', e.message, 'error');
+          } finally {
+            this.fetchingModels = false;
+          }
+        },
+
+        filteredRouterModels() {
+          if (!this.filterModelSearch.trim()) return this.routerModels;
+          const q = this.filterModelSearch.toLowerCase();
+          return this.routerModels.filter(m => m.id.toLowerCase().includes(q) || (m.owned_by && m.owned_by.toLowerCase().includes(q)));
+        },
+
+        selectModel(modelId) {
+          this.routerSelectedModel = modelId;
+          this.saveRouterSettings();
+        },
+
+        async saveRouterSettings() {
+          try {
+            const res = await fetch('/api/router/settings', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                base_url: this.routerBaseUrl,
+                api_key: this.routerApiKey,
+                selected_model: this.routerSelectedModel,
+                temperature: parseFloat(this.routerTemperature)
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              this.showToast('Pengaturan Tersimpan', `Model aktif: ${this.routerSelectedModel}`, 'success');
+              const statusRes = await fetch('/api/router/status');
+              const statusData = await statusRes.json();
+              if (statusData.success) {
+                this.routerStatus = statusData.health;
+              }
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
+          }
+        },
+
+        async testRouterModel() {
+          if (!this.modelTestPrompt.trim()) return;
+          this.testingModel = true;
+          this.modelTestResponse = '';
+          try {
+            const res = await fetch('/api/router/test-completion', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                prompt: this.modelTestPrompt.trim(),
+                model: this.routerSelectedModel
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              this.modelTestResponse = data.response;
+              this.showToast('Sukses Respon', `Model ${data.model_used} berhasil merespon!`, 'success');
+            } else {
+              this.modelTestResponse = `[Error]: ${data.error}`;
+              this.showToast('Tes Gagal', data.error, 'error');
+            }
+          } catch (e) {
+            this.modelTestResponse = `[Exception]: ${e.message}`;
+            this.showToast('Error', e.message, 'error');
+          } finally {
+            this.testingModel = false;
+          }
+        },
+
+        async generateCustomImage() {
+          if (!this.imagePrompt.trim()) return;
+          this.generatingImage = true;
+          try {
+            const res = await fetch('/api/images/generate', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                prompt: this.imagePrompt.trim(),
+                aspect_ratio: this.imageRatio,
+                style: this.imageStyle,
+                brand_name: this.imageBrand || 'GEO Studio',
+                location: this.imageLocation || 'Indonesia'
+              })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              this.latestGeneratedImage = data;
+              this.showToast('Visual Selesai', `Asset ${data.filename} berhasil digenerate!`, 'success');
+              await this.loadImageGallery();
+            } else {
+              this.showToast('Gagal Generate', data.detail || 'Gagal memproduksi gambar visual.', 'error');
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
+          } finally {
+            this.generatingImage = false;
+          }
+        },
+
+        async loadImageGallery() {
+          try {
+            const res = await fetch('/api/images/gallery');
+            const data = await res.json();
+            this.imageGallery = data.images || [];
+          } catch (e) {
+            console.error('Error loading gallery:', e);
+          }
+        },
+
+        copyToClipboard(text, successMsg = 'Tersalin ke clipboard!') {
+          navigator.clipboard.writeText(text).then(() => {
+            this.showToast('Tersalin', successMsg, 'info');
+          });
         }
       }
     }

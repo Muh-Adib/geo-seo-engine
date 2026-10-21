@@ -6,13 +6,14 @@ from typing import Dict, Any, List, Optional
 import os
 
 from generators.gemini_generator import GeminiMultiAccountEngine
+from core.router_client import LLMRouterClient
 
 logger = logging.getLogger(__name__)
 
 class ProgrammaticGEOWriter:
     """
     Programmatic Local SEO & GEO (Generative Engine Optimization) Generator.
-    Powered directly by Google Gemini (Multi-Account Key Pool):
+    Powered by LLM Router (9router / OpenRouter / Custom Router) with dynamic model selection:
     - 12 strict structural blocks
     - 10 factual FAQ items for AI Overviews / GEO
     - Strict NO-EMAIL constraint (in CTA and FAQ #10)
@@ -22,9 +23,10 @@ class ProgrammaticGEOWriter:
     - Automatic 16:9 featured thumbnail generation
     """
 
-    def __init__(self, gemini_engine: Optional[GeminiMultiAccountEngine] = None, model: str = "gemini-1.5-flash"):
+    def __init__(self, gemini_engine: Optional[GeminiMultiAccountEngine] = None, router_client: Optional[LLMRouterClient] = None, model: Optional[str] = None):
         self.gemini = gemini_engine or GeminiMultiAccountEngine()
-        self.model = model
+        self.router = router_client or LLMRouterClient()
+        self.model = model or self.router.config.get("selected_model", "ox-alpha")
 
     def generate_programmatic_article(
         self,
@@ -72,12 +74,16 @@ class ProgrammaticGEOWriter:
         if isinstance(production_steps, str):
             production_steps = json.loads(production_steps or "[]")
 
-        # Attempt Gemini generation if user accounts exist and use_llm is True
+        # Attempt LLM generation via Router (or fallback to Gemini / Deterministic)
         llm_result = None
-        if use_llm and self.gemini.auth.get_active_auth_headers_or_param():
-            llm_result = self._generate_with_gemini(
+        if use_llm:
+            llm_result = self._generate_with_router(
                 brand_data, service_data, location_data, city_scope, primary_keyword, title, is_english, sub_keywords
             )
+            if not llm_result and self.gemini.auth.get_active_auth_headers_or_param():
+                llm_result = self._generate_with_gemini(
+                    brand_data, service_data, location_data, city_scope, primary_keyword, title, is_english, sub_keywords
+                )
 
         if llm_result:
             article_payload = llm_result
@@ -362,6 +368,85 @@ class ProgrammaticGEOWriter:
                 "faq": faq_html
             }
         }
+
+    def _generate_with_router(
+        self,
+        brand_data: Dict[str, Any],
+        service_data: Dict[str, Any],
+        location_data: Dict[str, Any],
+        city_scope: str,
+        primary_keyword: str,
+        title: str,
+        is_english: bool,
+        sub_keywords: List[str]
+    ) -> Optional[Dict[str, Any]]:
+        """Calls LLM Router (9router / OpenRouter) using the selected dynamic model."""
+        sub_kw_str = ", ".join(sub_keywords)
+        lang_str = "English" if is_english else "Bahasa Indonesia"
+
+        prompt = f"""
+You are an expert Programmatic Local SEO and Generative Engine Optimization (GEO) copywriter.
+Generate a structured, high-conversion landing page article in {lang_str}.
+
+PARAMETERS:
+- Brand: {brand_data['name']} (HQ: {brand_data.get('hq_location', 'Yogyakarta, Indonesia')})
+- Service: {service_data['name']}
+- Primary Keyword: {primary_keyword}
+- Target Location: {city_scope}
+- Sub-Keywords to mention: {sub_kw_str}
+- Revision Guarantee: {brand_data.get('revision_guarantee', 'Free 2x revision guarantee')}
+- Master Spec: {brand_data.get('master_output_spec', 'Uncompressed 4K master files')}
+- CTA Tagline: {brand_data.get('cta_tagline', '🎥 Bringing your vision to life.')}
+
+STRICT CONSTRAINTS (CRITICAL):
+1. NO EMAIL ADDRESSES: Never write any email address in the CTA or in FAQ #10.
+2. In English articles, under every H3 header, place: '*Keyword Subjudul: {sub_kw_str}*' in italics.
+3. EXACTLY 10 FAQ items in the FAQ section addressing definition, benefits, pricing, brand consistency, industries, timeline, social media formats, reusability, file formats, and how to start.
+4. Meta description must be under 160 characters.
+
+Return VALID JSON ONLY with this structure:
+{{
+  "meta_description": "concise meta under 160 chars",
+  "content_html": "<p>Intro paragraph 1 with <strong>{primary_keyword}</strong>...</p><h3>What Defines...</h3>...",
+  "faq_items": [
+    {{"question": "Q1", "answer": "A1"}},
+    {{"question": "Q2", "answer": "A2"}},
+    {{"question": "Q3", "answer": "A3"}},
+    {{"question": "Q4", "answer": "A4"}},
+    {{"question": "Q5", "answer": "A5"}},
+    {{"question": "Q6", "answer": "A6"}},
+    {{"question": "Q7", "answer": "A7"}},
+    {{"question": "Q8", "answer": "A8"}},
+    {{"question": "Q9", "answer": "A9"}},
+    {{"question": "Q10", "answer": "A10 without email"}}
+  ]
+}}
+"""
+        messages = [
+            {"role": "system", "content": "You are a professional SEO copywriter. Always output pure JSON without markdown explanation."},
+            {"role": "user", "content": prompt}
+        ]
+
+        target_model = self.router.config.get("selected_model", "ox-alpha")
+        try:
+            raw_output = self.router.generate_chat_completion(messages, model=target_model)
+            if raw_output:
+                clean_json = raw_output.strip()
+                if clean_json.startswith("```"):
+                    clean_json = re.sub(r'^```(?:json)?\s*', '', clean_json)
+                    clean_json = re.sub(r'\s*```$', '', clean_json)
+                clean_json = clean_json.strip()
+                
+                parsed = json.loads(clean_json)
+                if "content_html" in parsed:
+                    logger.info(f"[GEOWriter] Successfully generated via Router ({target_model})")
+                    parsed["ai_generated"] = True
+                    parsed["model_used"] = target_model
+                    return parsed
+        except Exception as e:
+            logger.warning(f"[GEOWriter] Router generation exception ({target_model}): {e}")
+
+        return None
 
     def _generate_with_gemini(
         self,
