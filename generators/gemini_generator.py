@@ -663,14 +663,20 @@ class GeminiMultiAccountEngine:
                 logger.warning(f"Could not save brand gallery index for {brand_id}: {e}")
 
     def list_gallery_images(self, brand_id: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Lists images in gallery, scoped strictly to brand_id when provided."""
+        """Lists images in gallery, scoped strictly to brand_id when provided, filtering out missing files."""
         if brand_id:
             brand_dir = self.get_brand_asset_dir(brand_id)
             brand_index = os.path.join(brand_dir, "assets_index.json")
             if os.path.exists(brand_index):
                 try:
                     with open(brand_index, "r") as f:
-                        return json.load(f)
+                        items = json.load(f)
+                    valid_items = []
+                    for it in items:
+                        fp = it.get("file_path") or os.path.join(brand_dir, it.get("filename", ""))
+                        if os.path.exists(fp):
+                            valid_items.append(it)
+                    return valid_items
                 except Exception:
                     pass
 
@@ -694,7 +700,13 @@ class GeminiMultiAccountEngine:
         if os.path.exists(gallery_file):
             try:
                 with open(gallery_file, "r") as f:
-                    return json.load(f)
+                    items = json.load(f)
+                valid_items = []
+                for it in items:
+                    fp = it.get("file_path") or (it.get("url", "").lstrip("/"))
+                    if os.path.exists(fp):
+                        valid_items.append(it)
+                return valid_items
             except Exception:
                 pass
         

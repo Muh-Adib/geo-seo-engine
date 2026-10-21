@@ -1341,11 +1341,11 @@
               <div>
                 <h3 class="text-sm font-bold text-slate-900 line-clamp-1" x-text="previewData ? previewData.title : 'Belum Ada Artikel yang Di-generate'"></h3>
                 <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5" x-show="previewData">
-                  <span>Slug: <code class="bg-slate-200 px-1 py-0.5 rounded text-[11px] font-mono text-slate-700" x-text="previewData.slug"></code></span>
+                  <span>Slug: <code class="bg-slate-200 px-1 py-0.5 rounded text-[11px] font-mono text-slate-700" x-text="previewData?.slug || ''"></code></span>
                   <span>•</span>
-                  <span>Tags: <strong class="text-indigo-600 font-bold" x-text="previewData.tags_count"></strong></span>
+                  <span>Tags: <strong class="text-indigo-600 font-bold" x-text="previewData?.tags_count || 0"></strong></span>
                   <span>•</span>
-                  <span>GEO Q&A: <strong class="text-indigo-600 font-bold" x-text="previewData.faq_items_count"></strong></span>
+                  <span>GEO Q&A: <strong class="text-indigo-600 font-bold" x-text="previewData?.faq_items_count || 0"></strong></span>
                 </div>
               </div>
 
@@ -1385,23 +1385,23 @@
               <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
                 <div class="flex justify-between font-bold text-slate-700">
                   <span>Meta Deskripsi:</span>
-                  <span class="text-indigo-600" x-text="previewData.meta_description.length + ' / 155 karakter'"></span>
+                  <span class="text-indigo-600" x-text="(previewData?.meta_description?.length || 0) + ' / 155 karakter'"></span>
                 </div>
-                <p class="text-slate-600 italic leading-relaxed" x-text="previewData.meta_description"></p>
+                <p class="text-slate-600 italic leading-relaxed" x-text="previewData?.meta_description || ''"></p>
               </div>
 
               <!-- Main Content Body -->
-              <div x-html="previewData.content_html"></div>
+              <div x-html="previewData?.content_html || ''"></div>
             </div>
 
             <!-- Preview View 2: Featured Image Thumbnail 16:9 -->
             <div x-show="previewData && !loading && previewMode === 'thumbnail'" class="p-8 overflow-y-auto max-h-[620px] custom-scrollbar flex flex-col items-center justify-center space-y-4">
               <div class="w-full max-w-2xl bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-800 relative group">
-                <img :src="previewData.featured_image_base64 ? 'data:image/jpeg;base64,' + previewData.featured_image_base64 : (previewData.featured_media?.url || '/output/images/' + previewData.featured_image_filename)" 
+                <img :src="previewData?.featured_image_base64 ? 'data:image/jpeg;base64,' + previewData.featured_image_base64 : (previewData?.featured_media?.url || (previewData?.featured_image_filename ? '/output/images/' + previewData.featured_image_filename : ''))" 
                      alt="Featured Image Preview" 
                      class="w-full aspect-video object-cover">
                 <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-xs font-mono">
-                  1200 x 675 (16:9) • <span x-text="previewData.featured_media?.generator || 'Featured Thumbnail'"></span>
+                  1200 x 675 (16:9) • <span x-text="previewData?.featured_media?.generator || 'Featured Thumbnail'"></span>
                 </div>
               </div>
               <p class="text-xs text-slate-500 text-center max-w-md">
@@ -1422,7 +1422,7 @@
               </div>
 
               <div class="flex flex-wrap gap-2">
-                <template x-for="(tag, idx) in previewData.tags" :key="idx">
+                <template x-for="(tag, idx) in (previewData?.tags || [])" :key="idx">
                   <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs bg-slate-100 text-slate-700 border border-slate-200">
                     <span class="text-slate-400 font-mono text-[10px] mr-1.5" x-text="'#' + (idx + 1)"></span>
                     <span x-text="tag"></span>
@@ -1437,7 +1437,7 @@
                 <strong>10 Q&A untuk Generative Engine Optimization (GEO):</strong> Diformulasikan untuk dikutip secara langsung oleh Google AI Overviews, Perplexity, dan Gemini Answer Engine.
               </div>
               <ol class="space-y-3">
-                <template x-for="(item, idx) in previewData.faq_items" :key="idx">
+                <template x-for="(item, idx) in (previewData?.faq_items || [])" :key="idx">
                   <li class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs space-y-1">
                     <div class="font-bold text-slate-900" x-text="(idx + 1) + '. ' + item.question"></div>
                     <div class="text-slate-600 leading-relaxed" x-text="item.answer"></div>
@@ -1448,7 +1448,7 @@
 
             <!-- Preview View 5: Schema JSON-LD -->
             <div x-show="previewData && !loading && previewMode === 'raw'" class="p-6 overflow-y-auto max-h-[620px] custom-scrollbar">
-              <pre class="bg-slate-900 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed"><code x-text="previewData.content_html"></code></pre>
+              <pre class="bg-slate-900 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed"><code x-text="previewData?.content_html || ''"></code></pre>
             </div>
 
           </div>
@@ -2358,7 +2358,6 @@
           </div>
         </div>
       </div>
-    </div>
     </div>
 
     <!-- ========================================== -->
