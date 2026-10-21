@@ -1,382 +1,483 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Programmatic Local SEO & GEO Engine (10 Brands)</title>
+  <title>GEO SEO Engine — Unicam GEO Engine Programmatic Local SEO & Generative Optimization</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fira+Code:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Fira Code"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
   <style>
     [x-cloak] { display: none !important; }
-    .prose-preview h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #0f172a; }
-    .prose-preview h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: #1e293b; }
-    .prose-preview h4 { font-size: 1.1rem; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.25rem; color: #334155; }
-    .prose-preview p { margin-bottom: 0.75rem; line-height: 1.6; color: #334155; }
-    .prose-preview ul, .prose-preview ol { margin-left: 1.5rem; margin-bottom: 0.75rem; color: #334155; }
-    .prose-preview li { margin-bottom: 0.35rem; }
-    .prose-preview a { color: #2563eb; text-decoration: underline; }
+    .prose-preview h1, .prose-preview h2 { font-size: 1.4rem; font-weight: 700; margin-top: 1.5rem; margin-bottom: 0.75rem; color: #0f172a; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.5rem; }
+    .prose-preview h3 { font-size: 1.15rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #1e293b; }
+    .prose-preview h4 { font-size: 1.05rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; color: #334155; }
+    .prose-preview p { margin-bottom: 0.85rem; line-height: 1.65; color: #334155; font-size: 0.95rem; }
+    .prose-preview ul, .prose-preview ol { margin-left: 1.5rem; margin-bottom: 0.85rem; color: #334155; font-size: 0.95rem; }
+    .prose-preview li { margin-bottom: 0.4rem; }
+    .prose-preview a { color: #4f46e5; text-decoration: underline; font-weight: 500; }
+    .prose-preview em { color: #64748b; font-style: italic; }
+    .prose-preview strong { color: #0f172a; font-weight: 600; }
+    .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+    .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen" x-data="geoApp()" x-init="init()">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col" x-data="geoEngineApp()" x-init="init()">
 
-  <!-- Top Navigation -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
-      <div class="flex items-center space-x-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md">
-          <i class="fa-solid fa-bolt-lightning text-lg"></i>
+  <!-- Toast Notification Container -->
+  <div class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full">
+    <template x-for="toast in toasts" :key="toast.id">
+      <div class="pointer-events-auto flex items-start p-4 rounded-xl shadow-lg border text-sm transition-all transform duration-300 ease-out"
+           :class="{
+             'bg-emerald-50 text-emerald-900 border-emerald-200': toast.type === 'success',
+             'bg-rose-50 text-rose-900 border-rose-200': toast.type === 'error',
+             'bg-indigo-50 text-indigo-900 border-indigo-200': toast.type === 'info',
+             'bg-amber-50 text-amber-900 border-amber-200': toast.type === 'warning'
+           }">
+        <div class="mr-3 mt-0.5 text-base">
+          <i class="fa-solid" :class="{
+            'fa-circle-check text-emerald-600': toast.type === 'success',
+            'fa-triangle-exclamation text-rose-600': toast.type === 'error',
+            'fa-circle-info text-indigo-600': toast.type === 'info',
+            'fa-bell text-amber-600': toast.type === 'warning'
+          }"></i>
         </div>
-        <div>
-          <h1 class="text-lg font-bold text-slate-900 leading-tight">Unicam GEO Engine</h1>
-          <p class="text-xs text-slate-500 font-medium">Programmatic Local SEO & Generative Engine Optimization</p>
+        <div class="flex-1">
+          <h5 class="font-bold text-xs uppercase tracking-wider mb-0.5" x-text="toast.title"></h5>
+          <p class="text-xs leading-relaxed text-slate-700" x-text="toast.message"></p>
         </div>
-      </div>
-      
-      <div class="flex items-center space-x-3">
-        <button @click="showWizard = true" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-compass"></i> Panduan Onboarding
+        <button @click="removeToast(toast.id)" class="ml-2 text-slate-400 hover:text-slate-600 text-xs">
+          <i class="fa-solid fa-xmark"></i>
         </button>
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-          <i class="fa-brands fa-google mr-1.5 text-emerald-600"></i> <span x-text="geminiAccounts.length > 0 ? geminiAccounts[0].email : 'Akun Gemini'"></span>
-        </span>
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
-          <i class="fa-solid fa-layer-group mr-1.5 text-indigo-500"></i> <span x-text="brands.length"></span> Brands
-        </span>
-        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
-          <i class="fa-solid fa-database mr-1.5 text-purple-500"></i> <span x-text="articles.length"></span> Articles
-        </span>
       </div>
-    </div>
+    </template>
+  </div>
 
-    <!-- Navigation Tabs -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-100 flex space-x-8">
-      <button @click="activeTab = 'brands'" :class="activeTab === 'brands' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
-        <i class="fa-solid fa-layer-group"></i> <span>Brand Network</span>
-      </button>
-      <button @click="activeTab = 'gemini'" :class="activeTab === 'gemini' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
-        <i class="fa-brands fa-google text-emerald-600"></i> <span>Akun Gemini (Multi-Akun)</span>
-      </button>
-      <button @click="activeTab = 'generator'" :class="activeTab === 'generator' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
-        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Matrix Writer & Preview</span>
-      </button>
-      <button @click="activeTab = 'registry'" :class="activeTab === 'registry' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
-        <i class="fa-solid fa-book-bookmark"></i> <span>Article Registry & Links</span>
-      </button>
-      <button @click="activeTab = 'diagnostics'" :class="activeTab === 'diagnostics' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
-        <i class="fa-solid fa-stethoscope"></i> <span>WP Bridge & Diagnostics</span>
-      </button>
-      <button @click="activeTab = 'sheet'" :class="activeTab === 'sheet' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
-        <i class="fa-solid fa-table"></i> <span>Spreadsheet Bank Data</span>
-      </button>
+  <!-- Header Navigation -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo & Title -->
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
+            <i class="fa-solid fa-bolt-lightning text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-base font-extrabold text-slate-900 tracking-tight">GEO SEO Engine</h1>
+              <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">v2.1 Pro</span>
+            </div>
+            <p class="text-[11px] text-slate-500 font-medium">Programmatic Local SEO & Generative Optimization</p>
+          </div>
+        </div>
+
+        <!-- Global Status & Quick Actions -->
+        <div class="flex items-center space-x-3">
+          <!-- Download WordPress Plugin Button -->
+          <a href="/api/download-plugin" download="unicam-seo-bridge.zip" class="px-3.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-semibold shadow-sm flex items-center gap-2 transition cursor-pointer" title="Unduh file ZIP plugin bridge untuk dipasang di WordPress">
+            <i class="fa-solid fa-puzzle-piece text-sky-600"></i>
+            <span>Unduh Plugin WP</span>
+            <i class="fa-solid fa-download text-[11px]"></i>
+          </a>
+
+          <!-- Gemini AI Status Indicator -->
+          <button @click="activeTab = 'gemini'" class="px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
+                  :class="geminiActiveCount > 0 ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'">
+            <i class="fa-brands fa-google" :class="geminiActiveCount > 0 ? 'text-emerald-600' : 'text-amber-600'"></i>
+            <span x-text="geminiActiveCount > 0 ? (geminiAccounts[0]?.model_tested || 'Gemini 2.0 Flash') : 'Gemini: Belum Ada Key'"></span>
+            <span class="w-2 h-2 rounded-full" :class="geminiActiveCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
+          </button>
+
+          <!-- Metrics Badges -->
+          <div class="hidden sm:flex items-center space-x-2 pl-2 border-l border-slate-200 text-xs font-semibold text-slate-600">
+            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5">
+              <i class="fa-solid fa-globe text-indigo-500"></i>
+              <span x-text="brands.length"></span> Situs
+            </span>
+            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5">
+              <i class="fa-solid fa-file-lines text-purple-500"></i>
+              <span x-text="articles.length"></span> Artikel
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex space-x-1 sm:space-x-6 border-t border-slate-100 overflow-x-auto custom-scrollbar" aria-label="Tabs">
+        <button @click="activeTab = 'brands'" :class="activeTab === 'brands' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-globe"></i> <span>Situs & Brand</span>
+        </button>
+        <button @click="activeTab = 'writer'" :class="activeTab === 'writer' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Studio Penulis Matriks</span>
+        </button>
+        <button @click="activeTab = 'bulk'" :class="activeTab === 'bulk' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-layer-group"></i> <span>Batch Generator Kota</span>
+        </button>
+        <button @click="activeTab = 'articles'" :class="activeTab === 'articles' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-newspaper"></i> <span>Daftar Artikel Terbit</span>
+        </button>
+        <button @click="activeTab = 'gemini'" :class="activeTab === 'gemini' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-brands fa-google text-emerald-600"></i> <span>Google Gemini AI</span>
+        </button>
+        <button @click="activeTab = 'spreadsheet'" :class="activeTab === 'spreadsheet' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-table-list"></i> <span>Bank Data Spreadsheet</span>
+        </button>
+        <button @click="activeTab = 'diagnostics'" :class="activeTab === 'diagnostics' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer whitespace-nowrap">
+          <i class="fa-solid fa-stethoscope"></i> <span>Kesehatan Sistem</span>
+        </button>
+      </nav>
     </div>
   </header>
 
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <!-- Main Content Body -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
 
-    <!-- TAB 1: BRAND NETWORK -->
+    <!-- ========================================== -->
+    <!-- TAB 1: SITUS & BRAND (WEBSITES MANAGER)     -->
+    <!-- ========================================== -->
     <div x-show="activeTab === 'brands'" x-cloak class="space-y-6">
-      <div class="flex justify-between items-center">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Jaringan Multi-Brand WordPress</h2>
-          <p class="text-sm text-slate-500">Kelola brand studio Anda satu per satu. Pasang plugin WordPress pada masing-masing website untuk otomasi posting.</p>
+          <h2 class="text-lg font-extrabold text-slate-900">Jaringan Website WordPress</h2>
+          <p class="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+            Daftarkan situs WordPress Anda. Setiap situs terhubung secara aman via plugin <strong>Unicam SEO Bridge</strong> untuk posting otomatis 50 tag dan featured image tanpa terkena blokir Wordfence.
+          </p>
         </div>
-        <button @click="showAddBrandModal = true" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow flex items-center gap-1.5 transition">
-          <i class="fa-solid fa-plus"></i> Tambah Brand Baru
-        </button>
+        <div class="flex items-center gap-2">
+          <button @click="openAddBrandModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-2 transition cursor-pointer">
+            <i class="fa-solid fa-plus"></i> Tambah Website Baru
+          </button>
+        </div>
       </div>
 
       <!-- Empty State if No Brands -->
       <div x-show="brands.length === 0" class="bg-white rounded-2xl border-2 border-dashed border-indigo-200 p-12 text-center shadow-sm">
-        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
-          <i class="fa-solid fa-rocket"></i>
+        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+          <i class="fa-solid fa-laptop-code"></i>
         </div>
-        <h3 class="text-lg font-bold text-slate-800 mb-1">Belum Ada Brand yang Didaftarkan</h3>
-        <p class="text-xs text-slate-500 max-w-md mx-auto mb-6">Mulai dengan mendaftarkan website brand pertama Anda satu per satu, lalu pasang plugin WordPress untuk menerima artikel otomatis.</p>
-        <button @click="showAddBrandModal = true" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow transition">
-          <i class="fa-solid fa-plus mr-1"></i> Setup Brand Pertama Sekarang
-        </button>
+        <h3 class="text-base font-bold text-slate-800 mb-1">Belum Ada Website yang Terhubung</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mb-6 leading-relaxed">
+          Setup website WordPress pertama Anda dalam 3 langkah mudah: unduh plugin bridge, aktifkan di WordPress, lalu hubungkan alamat domain situs Anda.
+        </p>
+        <div class="flex justify-center gap-3">
+          <a href="/api/download-plugin" download="unicam-seo-bridge.zip" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-xl transition flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-download"></i> Unduh Plugin ZIP
+          </a>
+          <button @click="openAddBrandModal()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-xl shadow-sm transition flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-plus"></i> Daftarkan Website Sekarang
+          </button>
+        </div>
       </div>
 
+      <!-- Brands Cards Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-show="brands.length > 0">
         <template x-for="brand in brands" :key="brand.id">
-          <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
-            <div class="flex justify-between items-start mb-3">
-              <div>
-                <span class="text-xs uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600" x-text="brand.id"></span>
-                <h3 class="text-lg font-bold text-slate-900 mt-1" x-text="brand.name"></h3>
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition flex flex-col justify-between">
+            <div>
+              <!-- Card Header -->
+              <div class="flex justify-between items-start mb-3">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-base font-bold text-slate-900" x-text="brand.name"></h3>
+                    <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600" x-text="brand.id"></span>
+                  </div>
+                  <a :href="brand.domain_url" target="_blank" class="text-xs text-indigo-600 hover:underline flex items-center gap-1 mt-0.5" x-text="brand.domain_url"></a>
+                </div>
+
+                <!-- Live Ping Status Badge -->
+                <button @click="testBrandConnection(brand.id)" class="px-2.5 py-1 text-[11px] rounded-full font-semibold border flex items-center gap-1.5 transition cursor-pointer"
+                        :class="brandStatusMap[brand.id]?.status === 'online' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (brandStatusMap[brand.id]?.status === 'testing' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-600 border-slate-200')">
+                  <span class="w-2 h-2 rounded-full" :class="brandStatusMap[brand.id]?.status === 'online' ? 'bg-emerald-500' : (brandStatusMap[brand.id]?.status === 'testing' ? 'bg-indigo-500 animate-ping' : 'bg-slate-400')"></span>
+                  <span x-text="brandStatusMap[brand.id]?.label || 'Cek Ping'"></span>
+                </button>
               </div>
-              <span class="px-2.5 py-1 text-xs rounded-full font-medium" :class="brand.platform === 'WORDPRESS' ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'" x-text="brand.platform"></span>
+
+              <!-- Information Grid -->
+              <div class="space-y-2 text-xs text-slate-600 bg-slate-50 p-3.5 rounded-xl border border-slate-100 my-4">
+                <div class="flex justify-between">
+                  <span class="text-slate-400">HQ Studio:</span>
+                  <span class="font-medium text-slate-700" x-text="brand.hq_location"></span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Bahasa:</span>
+                  <span class="font-medium text-slate-700 uppercase" x-text="brand.default_language"></span>
+                </div>
+                <div class="flex justify-between items-center">
+                  <span class="text-slate-400">Secret Key:</span>
+                  <span class="font-mono text-[11px] text-slate-600" x-text="showKeyMap[brand.id] ? brand.api_secret_key : '••••••••••••••••'"></span>
+                  <button @click="showKeyMap[brand.id] = !showKeyMap[brand.id]" class="text-slate-400 hover:text-slate-600 ml-1 text-[10px]">
+                    <i class="fa-solid" :class="showKeyMap[brand.id] ? 'fa-eye-slash' : 'fa-eye'"></i>
+                  </button>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-slate-400">Garansi:</span>
+                  <span class="font-medium text-emerald-600" x-text="brand.revision_guarantee"></span>
+                </div>
+              </div>
             </div>
 
-            <p class="text-xs text-slate-500 mb-4 line-clamp-2" x-text="brand.brand_voice || ('Studio spesialis ' + brand.name)"></p>
-
-            <div class="space-y-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 mb-4">
-              <div class="flex justify-between">
-                <span class="text-slate-400">HQ Location:</span>
-                <span class="font-medium text-slate-700" x-text="brand.hq_location"></span>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-400">Domain:</span>
-                <a :href="brand.domain_url" target="_blank" class="font-medium text-indigo-600 hover:underline" x-text="brand.domain_url"></a>
-              </div>
-              <div class="flex justify-between">
-                <span class="text-slate-400">Garansi:</span>
-                <span class="font-medium text-emerald-600" x-text="brand.revision_guarantee"></span>
-              </div>
-            </div>
-
-            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
-              <button @click="selectBrandForMatrix(brand.id)" class="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+            <!-- Card Actions -->
+            <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+              <button @click="openWriterForBrand(brand.id)" class="inline-flex items-center text-xs font-bold text-indigo-600 hover:text-indigo-800 transition cursor-pointer">
                 <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Buka Penulis Matriks &rarr;
               </button>
-              <button @click="deleteBrand(brand.id)" class="text-rose-500 hover:text-rose-700 text-xs" title="Hapus Brand">
-                <i class="fa-solid fa-trash-can"></i>
-              </button>
+              <div class="flex items-center gap-2">
+                <a :href="brand.domain_url + '/wp-admin/'" target="_blank" class="p-1.5 text-slate-400 hover:text-sky-600 text-xs rounded-lg hover:bg-slate-100 transition" title="Buka WP-Admin">
+                  <i class="fa-brands fa-wordpress"></i>
+                </a>
+                <button @click="deleteBrand(brand.id)" class="p-1.5 text-slate-400 hover:text-rose-600 text-xs rounded-lg hover:bg-slate-100 transition cursor-pointer" title="Hapus Website">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
             </div>
           </div>
         </template>
       </div>
     </div>
 
-    <!-- TAB: AKUN GEMINI (MULTI-AKUN) -->
-    <div x-show="activeTab === 'gemini'" x-cloak class="space-y-6">
-      <div class="flex justify-between items-center">
+    <!-- ========================================== -->
+    <!-- TAB 2: STUDIO PENULIS MATRIKS (WRITER)     -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'writer'" x-cloak class="space-y-6">
+      
+      <!-- Warning if no brand is registered -->
+      <div x-show="brands.length === 0" class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-amber-900 flex items-start gap-4">
+        <i class="fa-solid fa-triangle-exclamation text-xl text-amber-600 mt-1"></i>
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Koneksi Akun Google Gemini (Multi-Akun)</h2>
-          <p class="text-sm text-slate-500">Terhubung langsung ke akun Google Gemini user seperti Antigravity Desktop. Dukungan multi-akun dengan rotasi otomatis saat kuota habis.</p>
+          <h4 class="font-bold text-sm">Belum Ada Website yang Terdaftar</h4>
+          <p class="text-xs text-amber-800 mt-1">Anda perlu mendaftarkan website WordPress pertama Anda di tab <strong>Situs & Brand</strong> sebelum dapat memproduksi artikel GEO.</p>
+          <button @click="activeTab = 'brands'; openAddBrandModal()" class="mt-3 px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">
+            Daftarkan Website Sekarang
+          </button>
         </div>
       </div>
 
-      <!-- Antigravity 1-Click Banner -->
-      <div class="p-6 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-        <div class="flex items-start space-x-3">
-          <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shrink-0 shadow">
-            <i class="fa-brands fa-google"></i>
-          </div>
-          <div>
-            <h3 class="text-base font-bold text-emerald-950 flex items-center gap-2">
-              Sesi Antigravity / Gemini Desktop Terdeteksi
-              <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-200 text-emerald-900 font-bold uppercase">Auto-Detect</span>
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8" x-show="brands.length > 0">
+        
+        <!-- Left Column: Generator Form (4 cols) -->
+        <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+          <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+              <i class="fa-solid fa-sliders text-indigo-600"></i> Parameter Artikel GEO
             </h3>
-            <p class="text-xs text-emerald-800 mt-1">Anda login di Mac ini dengan akun Google: <strong class="font-mono bg-white/70 px-1.5 py-0.5 rounded" x-text="geminiAccounts.length > 0 ? geminiAccounts[0].email : 'proofingunipics@gmail.com'"></strong>. Tidak perlu input API key manual!</p>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">12 Blok Standar</span>
           </div>
-        </div>
-        <button @click="connectAntigravityAccount()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow transition shrink-0 flex items-center gap-2">
-          <i class="fa-solid fa-arrows-rotate"></i> Sinkronkan Sesi Antigravity
-        </button>
-      </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <!-- Connected Accounts Pool -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-users text-indigo-600"></i> Akun Gemini Terhubung (<span x-text="geminiAccounts.length"></span>)
-          </h3>
-          <p class="text-xs text-slate-500">Sistem membagi beban artikel dan thumbnail secara otomatis di antara akun-akun ini.</p>
-
-          <div class="space-y-3">
-            <template x-for="acc in geminiAccounts" :key="acc.id">
-              <div class="p-3.5 rounded-lg border border-slate-200 bg-slate-50/70 flex justify-between items-center text-xs">
-                <div>
-                  <div class="font-bold text-slate-800 flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                    <span x-text="acc.email"></span>
-                  </div>
-                  <div class="text-[11px] text-slate-500 mt-0.5" x-text="acc.source + ' (' + acc.auth_type + ')'"></div>
-                </div>
-                <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-semibold" x-show="acc.is_current">Aktif Saat Ini</span>
-                  <button @click="removeGeminiAccount(acc.id)" class="text-rose-500 hover:text-rose-700 p-1" title="Hapus Akun">
-                    <i class="fa-solid fa-trash-can"></i>
-                  </button>
-                </div>
-              </div>
-            </template>
-            <div x-show="geminiAccounts.length === 0" class="p-4 text-center text-slate-400 italic text-xs border border-dashed rounded-lg">
-              Belum ada akun Gemini terhubung. Klik "Sinkronkan Sesi Antigravity" atau tambah akun di sebelah kanan.
-            </div>
-          </div>
-        </div>
-
-        <!-- Add Additional Account Form -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-plus-circle text-indigo-600"></i> Tambah Akun Google Lain (Multi-Akun)
-          </h3>
-          <p class="text-xs text-slate-500">Gunakan akun Google kedua/ketiga untuk menambah kuota gratis harian.</p>
-
-          <div class="space-y-3 text-xs">
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Email Akun Google (Opsional)</label>
-              <input type="email" x-model="newGeminiEmail" placeholder="akun2@gmail.com" class="w-full text-xs border-slate-200 rounded-lg p-2.5 border">
-            </div>
-
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">API Key Google AI Studio / OAuth Token</label>
-              <input type="password" x-model="newGeminiKey" placeholder="AIzaSy..." class="w-full text-xs font-mono border-slate-200 rounded-lg p-2.5 border">
-              <p class="text-[11px] text-slate-400 mt-1">Dapatkan gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 underline">aistudio.google.com</a>.</p>
-            </div>
-
-            <button @click="addGeminiAccount()" :disabled="!newGeminiKey.trim()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow transition disabled:opacity-50">
-              <i class="fa-solid fa-link mr-1"></i> Simpan & Hubungkan Akun Gemini
-            </button>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- TAB 2: MATRIX WRITER & 12-BLOCK PREVIEW -->
-    <div x-show="activeTab === 'generator'" x-cloak class="space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        <!-- Left: Configuration Form -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
-          <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center">
-            <i class="fa-solid fa-sliders text-indigo-600 mr-2"></i> Matrix Generator Parameters
-          </h2>
-
+          <!-- Website Selector -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Target Brand</label>
-            <select x-model="selectedBrandId" @change="loadBrandServices()" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Target Website / Brand</label>
+            <select x-model="selectedBrandId" @change="loadBrandServices()" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
               <template x-for="brand in brands" :key="brand.id">
-                <option :value="brand.id" x-text="brand.name + ' (' + brand.id + ')'"></option>
+                <option :value="brand.id" x-text="brand.name + ' (' + brand.domain_url.replace('https://', '') + ')'"></option>
               </template>
             </select>
           </div>
 
+          <!-- Specialized Service Selector -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Specialized Service</label>
-            <select x-model="selectedServiceId" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+            <div class="flex justify-between items-center mb-1">
+              <label class="text-xs font-bold text-slate-700">Layanan Spesialisasi</label>
+              <button @click="showAddServiceModal = true" class="text-[11px] text-indigo-600 hover:underline font-semibold cursor-pointer">+ Tambah</button>
+            </div>
+            <select x-model="selectedServiceId" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
               <template x-for="s in currentServices" :key="s.id">
                 <option :value="s.id" x-text="s.name"></option>
               </template>
             </select>
           </div>
 
+          <!-- Target Region -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Target Region / Country</label>
-            <select x-model="selectedRegion" @change="updateDefaultCities()" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+            <label class="block text-xs font-bold text-slate-700 mb-1">Wilayah / Negara Target</label>
+            <select x-model="selectedRegion" @change="updateDefaultCities()" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
               <template x-for="loc in currentLocations" :key="loc.region_name">
                 <option :value="loc.region_name" x-text="loc.region_name"></option>
               </template>
             </select>
           </div>
 
+          <!-- Target Cities -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Target Cities (Comma Separated for Bulk)</label>
-            <input type="text" x-model="citiesInput" placeholder="Sydney, Melbourne, Brisbane, Perth" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border">
-            <p class="text-[11px] text-slate-400 mt-1">First city is used for single preview; all are used for bulk matrix generation.</p>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Kota Spesifik Target</label>
+            <input type="text" x-model="citiesInput" placeholder="Jakarta, Surabaya, Bandung" class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border">
+            <p class="text-[11px] text-slate-400 mt-1">Kota pertama akan dibuatkan preview tunggal; kota lainnya untuk bulk.</p>
           </div>
 
-          <!-- Constraints Verification Badge -->
-          <div class="bg-indigo-50/60 rounded-lg p-3 border border-indigo-100 text-xs space-y-1 text-indigo-900">
-            <div class="font-semibold flex items-center text-indigo-700">
-              <i class="fa-solid fa-shield-check mr-1.5"></i> Strict Programmatic Constraints:
+          <!-- Engine Intelligence Settings -->
+          <div class="p-3.5 bg-slate-50 rounded-xl border border-slate-100 space-y-2 text-xs">
+            <div class="font-bold text-slate-700 flex items-center justify-between">
+              <span>Sintesis Konten:</span>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded" :class="geminiActiveCount > 0 ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-700'" x-text="geminiActiveCount > 0 ? 'Google Gemini AI' : 'Deterministic Engine'"></span>
             </div>
-            <div>✓ Exactly 12 structural blocks</div>
-            <div>✓ Exactly 10 GEO FAQs for AI Overviews</div>
-            <div>✓ Exactly 50 transactional tags in 1 paragraph</div>
-            <div>✓ Strictly NO email addresses in CTA/FAQs</div>
-            <div>✓ Contextual internal linking & JSON-LD schema</div>
+            <div class="text-[11px] text-slate-500 leading-relaxed">
+              • Menghasilkan tepat 12 blok terstruktur.<br>
+              • 50 tag SEO dialokasikan ke taxonomy WordPress.<br>
+              • 16:9 featured thumbnail diproses via Imagen/Canvas.
+            </div>
           </div>
 
           <!-- Action Buttons -->
           <div class="space-y-2 pt-2">
-            <button @click="generatePreview()" :disabled="loading" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
+            <button @click="generatePreview()" :disabled="loading" class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center space-x-2 transition disabled:opacity-50 cursor-pointer">
               <i class="fa-solid fa-bolt" x-show="!loading"></i>
-              <i class="fa-solid fa-spinner fa-spin" x-show="loading"></i>
-              <span x-text="loading ? 'Generating 12-Block Article...' : 'Generate 12-Block Preview'"></span>
+              <i class="fa-solid fa-circle-notch fa-spin" x-show="loading"></i>
+              <span x-text="loading ? 'Memproses Sintesis 12-Blok...' : 'Generate 12-Block Preview'"></span>
             </button>
 
-            <button @click="generateBulkMatrix()" :disabled="loading" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-lg text-sm shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
-              <i class="fa-solid fa-network-wired"></i>
-              <span>Batch Generate All Cities Matrix</span>
-            </button>
-
-            <button @click="publishCurrentArticle()" :disabled="!previewData || loading" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
-              <i class="fa-solid fa-cloud-arrow-up"></i>
-              <span>Publish Previewed Post to WordPress</span>
+            <button @click="publishPreviewDirectly()" :disabled="!previewData || publishing" class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center space-x-2 transition disabled:opacity-50 cursor-pointer">
+              <i class="fa-solid fa-cloud-arrow-up" x-show="!publishing"></i>
+              <i class="fa-solid fa-circle-notch fa-spin" x-show="publishing"></i>
+              <span x-text="publishing ? 'Mengirim ke WordPress...' : 'Publikasikan ke WordPress'"></span>
             </button>
           </div>
         </div>
 
-        <!-- Right: Output Preview Screen -->
-        <div class="lg:col-span-2 space-y-4">
-          <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+        <!-- Right Column: Output Screen & Tabs (8 cols) -->
+        <div class="lg:col-span-8 space-y-4">
+          <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[640px]">
             
             <!-- Output Header & Sub-Tabs -->
-            <div class="border-b border-slate-200 px-6 py-4 flex justify-between items-center bg-slate-50">
+            <div class="border-b border-slate-200 px-6 py-4 bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h3 class="text-sm font-bold text-slate-800" x-text="previewData ? previewData.title : 'No Article Generated Yet'"></h3>
-                <p class="text-xs text-slate-500" x-show="previewData">
-                  Slug: <code class="bg-slate-200 px-1 py-0.5 rounded text-slate-700" x-text="previewData.slug"></code> | 
-                  Tags: <span class="font-bold text-indigo-600" x-text="previewData.tags_count"></span> | 
-                  GEO FAQs: <span class="font-bold text-indigo-600" x-text="previewData.faq_items_count"></span>
-                </p>
+                <h3 class="text-sm font-bold text-slate-900 line-clamp-1" x-text="previewData ? previewData.title : 'Belum Ada Artikel yang Di-generate'"></h3>
+                <div class="flex items-center gap-2 text-xs text-slate-500 mt-0.5" x-show="previewData">
+                  <span>Slug: <code class="bg-slate-200 px-1 py-0.5 rounded text-[11px] font-mono text-slate-700" x-text="previewData.slug"></code></span>
+                  <span>•</span>
+                  <span>Tags: <strong class="text-indigo-600 font-bold" x-text="previewData.tags_count"></strong></span>
+                  <span>•</span>
+                  <span>GEO Q&A: <strong class="text-indigo-600 font-bold" x-text="previewData.faq_items_count"></strong></span>
+                </div>
               </div>
 
-              <div class="flex space-x-2" x-show="previewData">
-                <button @click="previewMode = 'rendered'" :class="previewMode === 'rendered' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">Formatted View</button>
-                <button @click="previewMode = 'tags'" :class="previewMode === 'tags' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">50 Tags (1 Para)</button>
-                <button @click="previewMode = 'faq'" :class="previewMode === 'faq' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">10 FAQs</button>
-                <button @click="previewMode = 'raw'" :class="previewMode === 'raw' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">Raw HTML & Schema</button>
+              <!-- Output Tabs -->
+              <div class="flex items-center space-x-1 border border-slate-200 rounded-xl p-1 bg-white" x-show="previewData">
+                <button @click="previewMode = 'rendered'" :class="previewMode === 'rendered' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 text-xs rounded-lg transition cursor-pointer">Artikel</button>
+                <button @click="previewMode = 'thumbnail'" :class="previewMode === 'thumbnail' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 text-xs rounded-lg transition cursor-pointer">Thumbnail 16:9</button>
+                <button @click="previewMode = 'tags'" :class="previewMode === 'tags' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 text-xs rounded-lg transition cursor-pointer">50 Tags</button>
+                <button @click="previewMode = 'faq'" :class="previewMode === 'faq' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 text-xs rounded-lg transition cursor-pointer">10 Q&A</button>
+                <button @click="previewMode = 'raw'" :class="previewMode === 'raw' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-600 hover:text-slate-900'" class="px-2.5 py-1 text-xs rounded-lg transition cursor-pointer">Schema</button>
               </div>
             </div>
 
             <!-- Empty State -->
             <div x-show="!previewData && !loading" class="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
-              <i class="fa-solid fa-file-pen text-5xl mb-4 text-slate-300"></i>
-              <h4 class="text-base font-semibold text-slate-700 mb-1">Ready to Produce Programmatic SEO & GEO Content</h4>
-              <p class="text-xs max-w-md">Select brand, service, and location on the left panel and click "Generate 12-Block Preview" to run the generation pipeline.</p>
+              <div class="w-16 h-16 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mb-4 text-2xl">
+                <i class="fa-solid fa-file-pen"></i>
+              </div>
+              <h4 class="text-sm font-bold text-slate-700 mb-1">Studio Siap Memproduksi Konten</h4>
+              <p class="text-xs max-w-md text-slate-500 leading-relaxed">
+                Pilih website target, layanan spesialisasi, dan kota pada panel kiri, lalu klik <strong>"Generate 12-Block Preview"</strong> untuk menjalankan sintesis artikel.
+              </p>
             </div>
 
             <!-- Loading State -->
             <div x-show="loading" class="flex-1 flex flex-col items-center justify-center p-12 text-center text-indigo-600">
               <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
-              <h4 class="text-sm font-semibold text-slate-800">Synthesizing 12 Strict Structural Blocks...</h4>
-              <p class="text-xs text-slate-500">Injecting local contexts, 50 transactional tags, GEO FAQs, and contextual silo links.</p>
+              <h4 class="text-sm font-bold text-slate-800">Menyusun 12 Blok Anatomi GEO...</h4>
+              <p class="text-xs text-slate-500 mt-1 max-w-sm leading-relaxed">
+                Memproses integrasi konteks lokal, 50 tag taksonomi, 10 FAQ faktual, serta memproduksi thumbnail 16:9 beresolusi tinggi.
+              </p>
             </div>
 
-            <!-- Content Rendered View -->
-            <div x-show="previewData && !loading && previewMode === 'rendered'" class="p-8 overflow-y-auto max-h-[700px] prose-preview">
-              <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
-                <span class="font-bold text-slate-700">Meta Description (<span x-text="previewData.meta_description.length"></span> chars):</span>
-                <p class="text-slate-600 italic" x-text="previewData.meta_description"></p>
+            <!-- Preview View 1: Formatted Article -->
+            <div x-show="previewData && !loading && previewMode === 'rendered'" class="p-8 overflow-y-auto max-h-[620px] custom-scrollbar prose-preview">
+              <!-- Meta Description Card -->
+              <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-xl text-xs space-y-1">
+                <div class="flex justify-between font-bold text-slate-700">
+                  <span>Meta Deskripsi:</span>
+                  <span class="text-indigo-600" x-text="previewData.meta_description.length + ' / 155 karakter'"></span>
+                </div>
+                <p class="text-slate-600 italic leading-relaxed" x-text="previewData.meta_description"></p>
               </div>
+
+              <!-- Main Content Body -->
               <div x-html="previewData.content_html"></div>
             </div>
 
-            <!-- 50 Tags View -->
-            <div x-show="previewData && !loading && previewMode === 'tags'" class="p-8 overflow-y-auto max-h-[700px]">
-              <div class="flex justify-between items-center mb-4">
-                <h4 class="text-sm font-bold text-slate-800">50 Transactional & Location Tags (Strict 1-Paragraph Format)</h4>
-                <span class="text-xs font-semibold px-2 py-1 rounded bg-indigo-50 text-indigo-700">Total: <span x-text="previewData.tags.length"></span> tags</span>
-              </div>
-              <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs leading-relaxed text-slate-700 font-mono">
-                <span x-text="previewData.tags.join(', ')"></span>
-              </div>
-            </div>
-
-            <!-- 10 FAQs View -->
-            <div x-show="previewData && !loading && previewMode === 'faq'" class="p-8 overflow-y-auto max-h-[700px] space-y-4">
-              <h4 class="text-sm font-bold text-slate-800 mb-2">10 Questions and Answers (GEO / Generative Engine Optimization)</h4>
-              <template x-for="(faq, idx) in previewData.faq_items" :key="idx">
-                <div class="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
-                  <div class="text-xs font-bold text-indigo-700 mb-1 flex items-center">
-                    <span class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center mr-2 text-[10px]" x-text="idx + 1"></span>
-                    <span x-text="faq.question"></span>
-                  </div>
-                  <p class="text-xs text-slate-600 mt-2 pl-7 leading-relaxed" x-text="faq.answer"></p>
+            <!-- Preview View 2: Featured Image Thumbnail 16:9 -->
+            <div x-show="previewData && !loading && previewMode === 'thumbnail'" class="p-8 overflow-y-auto max-h-[620px] custom-scrollbar flex flex-col items-center justify-center space-y-4">
+              <div class="w-full max-w-2xl bg-slate-900 rounded-2xl overflow-hidden shadow-lg border border-slate-800 relative group">
+                <img :src="previewData.featured_image_base64 ? 'data:image/jpeg;base64,' + previewData.featured_image_base64 : (previewData.featured_media?.url || '/output/images/' + previewData.featured_image_filename)" 
+                     alt="Featured Image Preview" 
+                     class="w-full aspect-video object-cover">
+                <div class="absolute bottom-3 left-3 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-lg text-white text-xs font-mono">
+                  1200 x 675 (16:9) • <span x-text="previewData.featured_media?.generator || 'Featured Thumbnail'"></span>
                 </div>
-              </template>
+              </div>
+              <p class="text-xs text-slate-500 text-center max-w-md">
+                Gambar ini otomatis diunggah ke WordPress Media Library dan dipasang sebagai <strong>Featured Image</strong> saat diterbitkan.
+              </p>
             </div>
 
-            <!-- Raw HTML & Schema View -->
-            <div x-show="previewData && !loading && previewMode === 'raw'" class="p-6 overflow-y-auto max-h-[700px]">
-              <textarea readonly class="w-full h-[550px] font-mono text-xs p-4 bg-slate-900 text-slate-200 rounded-lg border border-slate-800" x-text="previewData.content_html"></textarea>
+            <!-- Preview View 3: 50 Tags Grid -->
+            <div x-show="previewData && !loading && previewMode === 'tags'" class="p-8 overflow-y-auto max-h-[620px] custom-scrollbar space-y-4">
+              <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-xs text-indigo-900 flex items-start gap-3">
+                <i class="fa-solid fa-shield-check text-indigo-600 text-base mt-0.5"></i>
+                <div>
+                  <h5 class="font-bold">Alokasi Taksonomi Bersih</h5>
+                  <p class="text-[11px] text-indigo-800 mt-0.5 leading-relaxed">
+                    Tepat 50 tag transaksional ini dialokasikan langsung ke <code>wp_set_post_tags</code> di WordPress. <strong>Sama sekali tidak dicantumkan di badan artikel HTML</strong> untuk menjaga kualitas dan menghindari penalti Google.
+                  </p>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-2">
+                <template x-for="(tag, idx) in previewData.tags" :key="idx">
+                  <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs bg-slate-100 text-slate-700 border border-slate-200">
+                    <span class="text-slate-400 font-mono text-[10px] mr-1.5" x-text="'#' + (idx + 1)"></span>
+                    <span x-text="tag"></span>
+                  </span>
+                </template>
+              </div>
+            </div>
+
+            <!-- Preview View 4: 10 GEO Q&A -->
+            <div x-show="previewData && !loading && previewMode === 'faq'" class="p-8 overflow-y-auto max-h-[620px] custom-scrollbar space-y-4">
+              <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs text-slate-700">
+                <strong>10 Q&A untuk Generative Engine Optimization (GEO):</strong> Diformulasikan untuk dikutip secara langsung oleh Google AI Overviews, Perplexity, dan Gemini Answer Engine.
+              </div>
+              <ol class="space-y-3">
+                <template x-for="(item, idx) in previewData.faq_items" :key="idx">
+                  <li class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm text-xs space-y-1">
+                    <div class="font-bold text-slate-900" x-text="(idx + 1) + '. ' + item.question"></div>
+                    <div class="text-slate-600 leading-relaxed" x-text="item.answer"></div>
+                  </li>
+                </template>
+              </ol>
+            </div>
+
+            <!-- Preview View 5: Schema JSON-LD -->
+            <div x-show="previewData && !loading && previewMode === 'raw'" class="p-6 overflow-y-auto max-h-[620px] custom-scrollbar">
+              <pre class="bg-slate-900 text-slate-200 p-4 rounded-xl text-xs font-mono overflow-x-auto leading-relaxed"><code x-text="previewData.content_html"></code></pre>
             </div>
 
           </div>
@@ -385,379 +486,462 @@
       </div>
     </div>
 
-    <!-- TAB 3: ARTICLE REGISTRY & LINKS -->
-    <div x-show="activeTab === 'registry'" x-cloak class="space-y-6">
-      <div class="flex justify-between items-center">
+    <!-- ========================================== -->
+    <!-- TAB 3: BATCH GENERATOR KOTA (BULK)         -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'bulk'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Generated Article Registry</h2>
-          <p class="text-sm text-slate-500">Persistent database repository of programmatic articles, URLs, and linking graph.</p>
+          <h2 class="text-base font-bold text-slate-900">Batch Matrix Generator (Multi-Kota)</h2>
+          <p class="text-xs text-slate-500 mt-1">Produksi dan publikasikan artikel matriks [Layanan] x [Kota] secara massal untuk mendominasi peringkat SEO lokal.</p>
         </div>
-        <button @click="loadArticles()" class="text-xs font-semibold px-3 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700">
-          <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh List
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Pilih Website</label>
+            <select x-model="bulkBrandId" @change="loadBulkServices()" class="w-full text-xs font-medium border-slate-200 rounded-xl p-2.5 border bg-white">
+              <template x-for="b in brands" :key="b.id">
+                <option :value="b.id" x-text="b.name"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Pilih Layanan</label>
+            <select x-model="bulkServiceId" class="w-full text-xs font-medium border-slate-200 rounded-xl p-2.5 border bg-white">
+              <template x-for="s in bulkServices" :key="s.id">
+                <option :value="s.id" x-text="s.name"></option>
+              </template>
+            </select>
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Wilayah</label>
+            <input type="text" x-model="bulkRegion" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1 text-xs">Daftar Kota Target (Pisahkan dengan Koma)</label>
+          <textarea x-model="bulkCitiesInput" rows="3" placeholder="Jakarta, Surabaya, Bandung, Semarang, Medan, Makassar, Denpasar" class="w-full text-xs border-slate-200 rounded-xl p-3 border font-sans"></textarea>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <input type="checkbox" id="autoPublish" x-model="bulkAutoPublish" class="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+          <label for="autoPublish" class="text-xs text-slate-700 font-medium">Langsung publikasikan ke situs WordPress setelah artikel selesai diproduksi</label>
+        </div>
+
+        <button @click="runBulkMatrix()" :disabled="bulkRunning" class="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition disabled:opacity-50 cursor-pointer">
+          <i class="fa-solid fa-play" x-show="!bulkRunning"></i>
+          <i class="fa-solid fa-circle-notch fa-spin" x-show="bulkRunning"></i>
+          <span x-text="bulkRunning ? 'Sedang Memproses Batch Kota...' : 'Jalankan Batch Generator'"></span>
+        </button>
+
+        <!-- Bulk Progress & Logs -->
+        <div x-show="bulkProgressLog.length > 0" class="mt-6 pt-6 border-t border-slate-100 space-y-3">
+          <div class="flex justify-between text-xs font-bold text-slate-700">
+            <span>Log Proses Eksekusi:</span>
+            <span x-text="bulkProgressLog.length + ' tugas tercatat'"></span>
+          </div>
+          <div class="bg-slate-900 text-emerald-400 p-4 rounded-xl text-xs font-mono max-h-60 overflow-y-auto space-y-1">
+            <template x-for="(log, idx) in bulkProgressLog" :key="idx">
+              <div x-text="log"></div>
+            </template>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: DAFTAR ARTIKEL TERBIT (REGISTRY)    -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'articles'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Repositori Artikel yang Sudah Terbit</h2>
+          <p class="text-xs text-slate-500 mt-1">Daftar artikel terbit digunakan oleh mesin untuk menyuntikkan contextual internal links antar klaster secara otomatis.</p>
+        </div>
+        <button @click="loadArticles()" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+          <i class="fa-solid fa-arrows-rotate"></i> Refresh Data
         </button>
       </div>
 
-      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
-        <table class="min-w-full divide-y divide-slate-200 text-xs">
-          <thead class="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider">
-            <tr>
-              <th class="px-6 py-3 text-left">Title / Keyword</th>
-              <th class="px-6 py-3 text-left">Brand</th>
-              <th class="px-6 py-3 text-left">Target City</th>
-              <th class="px-6 py-3 text-left">Tags</th>
-              <th class="px-6 py-3 text-left">Status</th>
-              <th class="px-6 py-3 text-left">Created At</th>
-              <th class="px-6 py-3 text-right">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-100 text-slate-600">
-            <template x-for="art in articles" :key="art.id">
-              <tr class="hover:bg-slate-50 transition">
-                <td class="px-6 py-4 font-medium text-slate-900">
-                  <div x-text="art.title"></div>
-                  <div class="text-[11px] text-slate-400 font-mono" x-text="art.slug"></div>
-                </td>
-                <td class="px-6 py-4 uppercase font-semibold text-slate-500" x-text="art.brand_id"></td>
-                <td class="px-6 py-4" x-text="art.target_location"></td>
-                <td class="px-6 py-4"><span class="font-bold text-indigo-600" x-text="art.tags_count"></span> tags</td>
-                <td class="px-6 py-4">
-                  <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="art.status === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" x-text="art.status"></span>
-                </td>
-                <td class="px-6 py-4 text-slate-400" x-text="art.created_at"></td>
-                <td class="px-6 py-4 text-right">
-                  <a :href="art.published_url || '#'" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-medium">View &rarr;</a>
-                </td>
+      <!-- Empty State -->
+      <div x-show="articles.length === 0" class="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-12 text-center">
+        <i class="fa-solid fa-newspaper text-3xl text-slate-300 mb-2"></i>
+        <h4 class="text-sm font-bold text-slate-700 mb-1">Belum Ada Artikel yang Terdaftar</h4>
+        <p class="text-xs text-slate-500">Mulai generate artikel di tab Studio Penulis Matriks untuk mengisi repositori.</p>
+      </div>
+
+      <!-- Articles Table -->
+      <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden" x-show="articles.length > 0">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-slate-200 text-xs">
+            <thead class="bg-slate-50 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
+              <tr>
+                <th class="px-6 py-3.5 text-left">Judul Artikel</th>
+                <th class="px-6 py-3.5 text-left">Brand</th>
+                <th class="px-6 py-3.5 text-left">Kota</th>
+                <th class="px-6 py-3.5 text-left">Status</th>
+                <th class="px-6 py-3.5 text-left">WordPress Post ID</th>
+                <th class="px-6 py-3.5 text-right">Aksi</th>
               </tr>
-            </template>
-            <tr x-show="articles.length === 0">
-              <td colspan="7" class="px-6 py-8 text-center text-slate-400 italic">No articles generated yet. Generate your first matrix above.</td>
-            </tr>
-          </tbody>
-        </table>
+            </thead>
+            <tbody class="divide-y divide-slate-100 text-slate-700">
+              <template x-for="art in articles" :key="art.id">
+                <tr class="hover:bg-slate-50/80 transition">
+                  <td class="px-6 py-4 font-bold text-slate-900 max-w-xs truncate" x-text="art.title"></td>
+                  <td class="px-6 py-4">
+                    <span class="px-2 py-0.5 rounded font-mono text-[10px] bg-indigo-50 text-indigo-700" x-text="art.brand_id"></span>
+                  </td>
+                  <td class="px-6 py-4" x-text="art.target_location"></td>
+                  <td class="px-6 py-4">
+                    <span class="px-2.5 py-1 rounded-full text-[10px] font-bold"
+                          :class="art.status === 'PUBLISHED' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-50 text-amber-700 border border-amber-200'"
+                          x-text="art.status"></span>
+                  </td>
+                  <td class="px-6 py-4 font-mono text-[11px] text-slate-500" x-text="art.wp_post_id ? '#' + art.wp_post_id : '-'"></td>
+                  <td class="px-6 py-4 text-right space-x-2">
+                    <a :href="art.published_url" target="_blank" class="text-indigo-600 hover:text-indigo-800 font-bold" title="Lihat Artikel di Website">
+                      <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                    </a>
+                    <button @click="deleteArticle(art.id)" class="text-rose-500 hover:text-rose-700 ml-2 cursor-pointer" title="Hapus dari Registry">
+                      <i class="fa-solid fa-trash-can"></i>
+                    </button>
+                  </td>
+                </tr>
+              </template>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <!-- TAB 4: WP BRIDGE & DIAGNOSTICS -->
-    <div x-show="activeTab === 'diagnostics'" x-cloak class="space-y-6">
-      <div>
-        <h2 class="text-xl font-bold text-slate-900">WordPress Bridge & System Diagnostics</h2>
-        <p class="text-sm text-slate-500">Test live connections, configure security keys, and manage the high-speed bridge plugin.</p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <!-- Bridge Plugin Card -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-lg">
-              <i class="fa-brands fa-wordpress"></i>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-slate-900">Unicam SEO Engine Bridge Plugin</h3>
-              <p class="text-xs text-slate-500">Fast 1ms publishing, sets 50 tags, bypasses Wordfence app password locks.</p>
-            </div>
-          </div>
-
-          <div class="bg-slate-50 p-4 rounded-lg border border-slate-100 text-xs space-y-2">
-            <div class="flex justify-between">
-              <span class="text-slate-500">Plugin Archive:</span>
-              <span class="font-mono text-slate-800">wordpress-plugin/unicam-seo-bridge.zip</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-500">Secret Header:</span>
-              <span class="font-mono text-slate-800">X-SEO-Engine-Key</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-500">Default Key:</span>
-              <span class="font-mono text-slate-800">unicam-geo-secret-key-2026</span>
-            </div>
-          </div>
-
-          <div class="pt-2">
-            <p class="text-xs text-slate-600 mb-3">Install this plugin directly on target WordPress sites to enable instant automated publishing without security blocks.</p>
-            <button @click="testWpEndpoint()" class="w-full py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold shadow">
-              <i class="fa-solid fa-plug mr-1.5"></i> Test Bridge Endpoint Health
-            </button>
-          </div>
-        </div>
-
-        <!-- Session Auth Diagnostic Card -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
-              <i class="fa-solid fa-lock-open"></i>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-slate-900">Custom Path Session Auth Diagnostic</h3>
-              <p class="text-xs text-slate-500">Bypasses Wordfence application password restrictions via /pawon/ login.</p>
-            </div>
-          </div>
-
-          <div class="bg-slate-50 p-4 rounded-lg border border-slate-100 text-xs space-y-2">
-            <div class="flex justify-between">
-              <span class="text-slate-500">Target Host:</span>
-              <span class="font-mono text-slate-800">https://segiatech.com</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-500">Login Path:</span>
-              <span class="font-mono text-slate-800">/pawon/</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-500">User:</span>
-              <span class="font-mono text-slate-800">Adib IT (Author)</span>
-            </div>
-          </div>
-
-          <div class="pt-2">
-            <button @click="testSessionAuth()" :disabled="sessionTesting" class="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow flex items-center justify-center space-x-2">
-              <i class="fa-solid fa-vial" x-show="!sessionTesting"></i>
-              <i class="fa-solid fa-spinner fa-spin" x-show="sessionTesting"></i>
-              <span x-text="sessionTesting ? 'Testing Auth & Nonce...' : 'Test Segiatech /pawon Session Auth'"></span>
-            </button>
-            <div x-show="sessionResult" class="mt-3 p-3 rounded-lg text-xs" :class="sessionResult && sessionResult.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'">
-              <span x-text="sessionResult ? JSON.stringify(sessionResult) : ''"></span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </div>
-
-    <!-- TAB 5: SPREADSHEET BANK DATA -->
-    <div x-show="activeTab === 'sheet'" x-cloak class="space-y-6">
-      <div class="flex justify-between items-center">
+    <!-- ========================================== -->
+    <!-- TAB 5: GOOGLE GEMINI AI (MULTI-AKUN)       -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'gemini'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 class="text-xl font-bold text-slate-900">Spreadsheet Matrix Bank Data</h2>
-          <p class="text-sm text-slate-500">Import bulk brands, services, target regions, and city matrices directly from Google Sheets or CSV.</p>
+          <h2 class="text-base font-bold text-slate-900">Manajemen Multi-Akun Google Gemini</h2>
+          <p class="text-xs text-slate-500 mt-1">Sistem menggunakan API Google Gemini langsung. Anda dapat memasukkan banyak API key sekaligus untuk rotasi otomatis saat batas kuota gratis tercapai.</p>
         </div>
-        <a href="/api/download-template" download="matrix_template.csv" class="inline-flex items-center text-xs font-semibold px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition shadow-sm">
-          <i class="fa-solid fa-file-csv mr-1.5 text-base"></i> Download CSV Template
+        <a href="https://aistudio.google.com/app/apikey" target="_blank" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-plus"></i> Buat API Key Gratis di Google AI Studio
         </a>
       </div>
 
+      <!-- Connected Accounts Grid -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        
-        <!-- Google Sheets Live Sync Card -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
-              <i class="fa-solid fa-file-spreadsheet"></i>
+        <!-- Accounts List -->
+        <div class="space-y-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Akun / API Key Terdaftar</h3>
+          
+          <div x-show="geminiAccounts.length === 0" class="p-6 rounded-2xl bg-slate-50 border border-slate-200 text-center text-xs text-slate-500">
+            Belum ada API Key Gemini yang disimpan. Masukkan API Key pada formulir di sebelah kanan.
+          </div>
+
+          <template x-for="acc in geminiAccounts" :key="acc.id">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+              <div class="flex justify-between items-start">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center font-bold text-sm">
+                    <i class="fa-brands fa-google"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-bold text-slate-900" x-text="acc.email"></h4>
+                    <p class="text-[11px] text-slate-400" x-text="acc.source"></p>
+                  </div>
+                </div>
+                <button @click="removeGeminiAccount(acc.id)" class="text-rose-500 hover:text-rose-700 text-xs cursor-pointer" title="Hapus Akun">
+                  <i class="fa-solid fa-trash-can"></i>
+                </button>
+              </div>
+
+              <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 flex items-center justify-between text-xs">
+                <span class="font-mono text-slate-600" x-text="acc.masked_credential"></span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800" x-text="acc.status || 'Verified'"></span>
+              </div>
             </div>
+          </template>
+        </div>
+
+        <!-- Add Account Form -->
+        <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">Hubungkan API Key Baru</h3>
+          <p class="text-xs text-slate-600 leading-relaxed">
+            API Key Gemini tersedia gratis dari Google dengan batas 15 request per menit. Kunci diverifikasi secara langsung saat disimpan.
+          </p>
+
+          <div class="space-y-3 text-xs">
             <div>
-              <h3 class="text-base font-bold text-slate-900">Google Sheets Live Sync</h3>
-              <p class="text-xs text-slate-500">Auto-converts view links to CSV export for real-time sync.</p>
+              <label class="block font-bold text-slate-700 mb-1">Label Akun (Opsional)</label>
+              <input type="text" x-model="newGeminiEmail" placeholder="Akun Kantor / Akun Personal" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
             </div>
-          </div>
 
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Google Sheets URL</label>
-            <input type="text" x-model="googleSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit..." class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 border">
-            <p class="text-[11px] text-slate-400 mt-1">Make sure Sheet sharing is set to: <strong class="text-slate-600">"Anyone with the link can view"</strong>.</p>
-          </div>
-
-          <button @click="syncGoogleSheet()" :disabled="sheetSyncing" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
-            <i class="fa-solid fa-arrows-rotate" x-show="!sheetSyncing"></i>
-            <i class="fa-solid fa-spinner fa-spin" x-show="sheetSyncing"></i>
-            <span x-text="sheetSyncing ? 'Synchronizing Google Sheet...' : 'Sync Bank Data from Google Sheet'"></span>
-          </button>
-        </div>
-
-        <!-- Raw CSV Import Card -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
-          <div class="flex items-center space-x-3">
-            <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg">
-              <i class="fa-solid fa-paste"></i>
-            </div>
             <div>
-              <h3 class="text-base font-bold text-slate-900">Paste or Upload CSV Content</h3>
-              <p class="text-xs text-slate-500">Quickly upload or paste rows formatted like the template.</p>
+              <label class="block font-bold text-slate-700 mb-1">Google Gemini API Key (AIzaSy...)</label>
+              <input type="password" x-model="newGeminiKey" placeholder="AIzaSy..." class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+              <p class="text-[11px] text-slate-400 mt-1">Dapatkan instan di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 underline">aistudio.google.com/app/apikey</a>.</p>
             </div>
+
+            <button @click="addGeminiAccount()" :disabled="!newGeminiKey.trim() || verifyingGemini" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer">
+              <i class="fa-solid fa-check" x-show="!verifyingGemini"></i>
+              <i class="fa-solid fa-circle-notch fa-spin" x-show="verifyingGemini"></i>
+              <span x-text="verifyingGemini ? 'Memverifikasi ke Google...' : 'Simpan & Verifikasi API Key'"></span>
+            </button>
           </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-1">Raw CSV Text</label>
-            <textarea x-model="rawCsvInput" rows="4" placeholder="brand_id,brand_name,service_name,target_region,cities..." class="w-full text-xs font-mono border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border"></textarea>
-          </div>
-
-          <button @click="importRawCsv()" :disabled="sheetSyncing || !rawCsvInput.trim()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
-            <i class="fa-solid fa-upload"></i>
-            <span>Import & Sync CSV Rows</span>
-          </button>
-        </div>
-
-      </div>
-
-      <!-- Sync Result Notification Box -->
-      <div x-show="sheetResult" class="p-4 rounded-xl text-xs space-y-2 border transition shadow-sm" :class="sheetResult && sheetResult.success ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : 'bg-rose-50 text-rose-900 border-rose-200'">
-        <div class="font-bold text-sm flex items-center">
-          <i class="fa-solid mr-2 text-base" :class="sheetResult && sheetResult.success ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-rose-600'"></i>
-          <span x-text="sheetResult && sheetResult.success ? 'Bank Data Successfully Synchronized!' : 'Sync Failed'"></span>
-        </div>
-        <div x-show="sheetResult && sheetResult.success" class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[11px]">
-          <div class="bg-white/80 p-2 rounded border border-emerald-100">Rows: <strong x-text="sheetResult ? sheetResult.rows_processed : 0"></strong></div>
-          <div class="bg-white/80 p-2 rounded border border-emerald-100">Brands: <strong x-text="sheetResult ? sheetResult.brands_synced : 0"></strong></div>
-          <div class="bg-white/80 p-2 rounded border border-emerald-100">Services: <strong x-text="sheetResult ? sheetResult.services_synced : 0"></strong></div>
-          <div class="bg-white/80 p-2 rounded border border-emerald-100">Locations: <strong x-text="sheetResult ? sheetResult.locations_synced : 0"></strong></div>
-        </div>
-        <div x-show="sheetResult && !sheetResult.success" x-text="sheetResult ? sheetResult.error : ''"></div>
-      </div>
-
-    </div>
-
-    <!-- MODAL: ADD BRAND -->
-    <div x-show="showAddBrandModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4" @click.away="showAddBrandModal = false">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
-            <i class="fa-solid fa-plus-circle text-indigo-600"></i> Setup Brand Baru
-          </h3>
-          <button @click="showAddBrandModal = false" class="text-slate-400 hover:text-slate-600">
-            <i class="fa-solid fa-xmark text-lg"></i>
-          </button>
-        </div>
-
-        <div class="space-y-3 text-xs">
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Nama Brand Studio *</label>
-            <input type="text" x-model="newBrand.name" placeholder="Contoh: UNIMASI Studio" class="w-full border-slate-200 rounded-lg p-2.5 border">
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">URL Domain WordPress *</label>
-            <input type="url" x-model="newBrand.domain_url" placeholder="https://unimasi.com" class="w-full border-slate-200 rounded-lg p-2.5 border">
-            <p class="text-[11px] text-slate-400 mt-0.5">Alamat website tempat plugin bridge akan dipasang.</p>
-          </div>
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Lokasi Markas (HQ)</label>
-              <input type="text" x-model="newBrand.hq_location" placeholder="Yogyakarta, Indonesia" class="w-full border-slate-200 rounded-lg p-2.5 border">
-            </div>
-            <div>
-              <label class="block font-semibold text-slate-600 mb-1">Bahasa Utama</label>
-              <select x-model="newBrand.default_language" class="w-full border-slate-200 rounded-lg p-2.5 border bg-white">
-                <option value="id">Bahasa Indonesia</option>
-                <option value="en">English (Global/Australia)</option>
-              </select>
-            </div>
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Layanan Utama Awal</label>
-            <input type="text" x-model="newBrand.service_name" placeholder="Contoh: 3D Marketing Video" class="w-full border-slate-200 rounded-lg p-2.5 border">
-          </div>
-          <div>
-            <label class="block font-semibold text-slate-600 mb-1">Wilayah / Negara Target</label>
-            <input type="text" x-model="newBrand.target_region" placeholder="Indonesia / Australia" class="w-full border-slate-200 rounded-lg p-2.5 border">
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-          <button @click="showAddBrandModal = false" class="px-4 py-2 border rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
-          <button @click="createBrand()" :disabled="!newBrand.name || !newBrand.domain_url" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow disabled:opacity-50">Simpan & Daftarkan Brand</button>
         </div>
       </div>
     </div>
 
-    <!-- MODAL: ONBOARDING WIZARD (PANDUAN SETUP AWAL) -->
-    <div x-show="showWizard" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div class="bg-white rounded-2xl max-w-2xl w-full p-7 shadow-2xl space-y-6" @click.away="showWizard = false">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
-          <div class="flex items-center gap-2">
-            <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">1/4</span>
-            <h3 class="text-base font-bold text-slate-900">Panduan Onboarding Awal (Orang Awam Friendly)</h3>
-          </div>
-          <button @click="showWizard = false" class="text-slate-400 hover:text-slate-600">
-            <i class="fa-solid fa-xmark text-lg"></i>
-          </button>
+    <!-- ========================================== -->
+    <!-- TAB 6: BANK DATA SPREADSHEET               -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'spreadsheet'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <div>
+          <h2 class="text-base font-bold text-slate-900">Bank Data Matriks dari Google Sheets / CSV</h2>
+          <p class="text-xs text-slate-500 mt-1">Impor ratusan kombinasi brand, layanan spesialis, dan kota target secara langsung dari spreadsheet.</p>
         </div>
 
-        <div class="space-y-4 text-xs">
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <i class="fa-brands fa-google text-emerald-600 text-base"></i> Langkah 1: Hubungkan Akun Gemini
-            </h4>
-            <p class="text-slate-600">Karena Anda menggunakan Mac ini, sistem secara otomatis mendeteksi sesi login Antigravity Desktop Anda (<strong class="text-indigo-600 font-mono">proofingunipics@gmail.com</strong>). Anda juga bisa menambahkan akun Google kedua/ketiga di tab "Akun Gemini" untuk rotasi kuota otomatis.</p>
+        <div class="space-y-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">URL Publik Google Sheets (Share: Anyone with the link can view)</label>
+            <input type="url" x-model="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit" class="w-full text-xs border-slate-200 rounded-xl p-3 border">
           </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <i class="fa-solid fa-globe text-indigo-600 text-base"></i> Langkah 2: Setup Brand Website Anda
-            </h4>
-            <p class="text-slate-600">Daftarkan website WordPress Anda satu per satu dengan mengklik tombol <strong>"+ Tambah Brand Baru"</strong>. Masukkan nama brand dan alamat domain WordPress Anda.</p>
+          <div class="flex flex-wrap gap-3">
+            <button @click="importFromSheet()" :disabled="!sheetUrlInput.trim() || sheetImporting" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-2 transition disabled:opacity-50 cursor-pointer">
+              <i class="fa-solid fa-file-import" x-show="!sheetImporting"></i>
+              <i class="fa-solid fa-circle-notch fa-spin" x-show="sheetImporting"></i>
+              <span x-text="sheetImporting ? 'Mengimpor dari Google Sheets...' : 'Impor dari Google Sheets'"></span>
+            </button>
+            <a href="/api/download-template" download="matrix_template.csv" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl flex items-center gap-2 transition cursor-pointer">
+              <i class="fa-solid fa-download"></i> Unduh Format Template CSV
+            </a>
           </div>
+        </div>
+      </div>
+    </div>
 
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <i class="fa-brands fa-wordpress text-sky-600 text-base"></i> Langkah 3: Pasang Plugin di WordPress
-            </h4>
-            <p class="text-slate-600">Unduh plugin WordPress jembatan <strong class="text-slate-800 font-mono">unicam-seo-bridge.zip</strong>. Di WordPress Admin target, buka menu <strong>Plugins -> Add New -> Upload Plugin</strong>, lalu klik Aktifkan. Plugin ini otomatis menyetel 50 tag dan gambar thumbnail tanpa error Wordfence.</p>
-            <div class="pt-1">
-              <a href="/api/diagnostics/system" class="inline-flex items-center gap-1.5 text-indigo-600 font-semibold hover:underline">
-                <i class="fa-solid fa-download"></i> File zip tersedia di folder: <code>wordpress-plugin/unicam-seo-bridge.zip</code>
-              </a>
+    <!-- ========================================== -->
+    <!-- TAB 7: KESEHATAN SISTEM & DIAGNOSTIK       -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'diagnostics'" x-cloak class="space-y-6">
+      <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+        <h2 class="text-base font-bold text-slate-900">Diagnostik Sistem & Port</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4 text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+            <span class="text-slate-400 font-medium">Status Port</span>
+            <div class="text-base font-bold text-emerald-600 mt-1 flex items-center gap-1.5">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span> Port 28420
             </div>
           </div>
-
-          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-              <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-base"></i> Langkah 4: Tulis & Terbitkan Artikel!
-            </h4>
-            <p class="text-slate-600">Pilih brand, layanan, dan kota di tab "Matrix Writer & Preview". Klik <strong>Generate 12-Block Preview</strong> untuk melihat hasilnya secara instan, lalu klik <strong>Publish to WordPress</strong>. Artikel langsung tayang dengan 50 tag dan thumbnail Gemini!</p>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+            <span class="text-slate-400 font-medium">Database SQLite</span>
+            <div class="text-base font-bold text-slate-800 mt-1">Operational</div>
           </div>
-        </div>
-
-        <div class="flex justify-end pt-2 border-t border-slate-100">
-          <button @click="showWizard = false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow">
-            Saya Mengerti, Mulai Sekarang &rarr;
-          </button>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+            <span class="text-slate-400 font-medium">Model Utama Gemini</span>
+            <div class="text-base font-bold text-indigo-600 mt-1">gemini-2.0-flash</div>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+            <span class="text-slate-400 font-medium">Thumbnail Engine</span>
+            <div class="text-base font-bold text-purple-600 mt-1">Imagen 3 + Canvas</div>
+          </div>
         </div>
       </div>
     </div>
 
   </main>
 
+  <!-- ========================================== -->
+  <!-- MODAL 1: TAMBAH WEBSITE BARU (WITH PING)   -->
+  <!-- ========================================== -->
+  <div x-show="showAddBrandModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl space-y-5" @click.away="showAddBrandModal = false">
+      <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <h3 class="text-base font-extrabold text-slate-900 flex items-center gap-2">
+          <i class="fa-solid fa-globe text-indigo-600"></i> Setup Website WordPress Baru
+        </h3>
+        <button @click="showAddBrandModal = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Nama Brand / Website</label>
+          <input type="text" x-model="newBrand.name" placeholder="UNICAM STUDIO" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">URL Domain WordPress (Lengkap dengan https://)</label>
+          <input type="url" x-model="newBrand.domain_url" placeholder="https://unicamstudio.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 mb-1">Secret Key Bridge (Sesuai di Plugin WordPress)</label>
+          <input type="text" x-model="newBrand.api_secret_key" placeholder="unicam-geo-secret-key-2026" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+          <p class="text-[11px] text-slate-400 mt-1">Kunci ini tercantum di WordPress Admin: menu <strong>SEO Engine</strong>.</p>
+        </div>
+
+        <!-- Real-Time Handshake Ping Check -->
+        <div class="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-200">
+          <div>
+            <span class="font-bold text-slate-700 block">Uji Koneksi WordPress:</span>
+            <span class="text-[11px]" :class="handshakeResult?.success ? 'text-emerald-600 font-bold' : (handshakeResult?.error ? 'text-rose-600' : 'text-slate-500')"
+                  x-text="handshakeResult?.details?.site_name ? ('🟢 ' + handshakeResult.details.site_name + ' (Online)') : (handshakeResult?.error || 'Belum diuji')"></span>
+          </div>
+          <button @click="testHandshake()" :disabled="!newBrand.domain_url || testingHandshake" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer disabled:opacity-50">
+            <i class="fa-solid fa-arrows-rotate" :class="testingHandshake ? 'fa-spin' : ''"></i>
+            <span>Tes Ping</span>
+          </button>
+        </div>
+
+        <!-- Optional Initial Service -->
+        <div class="grid grid-cols-2 gap-3 pt-1">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Layanan Utama (Opsional)</label>
+            <input type="text" x-model="newBrand.service_name" placeholder="Jasa Video Mapping" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Wilayah Target</label>
+            <input type="text" x-model="newBrand.target_region" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t border-slate-100">
+          <button @click="showAddBrandModal = false" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition cursor-pointer">
+            Batal
+          </button>
+          <button @click="createBrand()" :disabled="!newBrand.name || !newBrand.domain_url" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm transition disabled:opacity-50 cursor-pointer">
+            Simpan Website
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- MODAL 2: PUBLISH SUCCESS CELEBRATION       -->
+  <!-- ========================================== -->
+  <div x-show="showPublishSuccessModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl text-center space-y-4">
+      <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <h3 class="text-base font-extrabold text-slate-900">Artikel Berhasil Terbit!</h3>
+      <p class="text-xs text-slate-600" x-text="publishedPostInfo?.title"></p>
+      
+      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs space-y-2 text-left">
+        <div class="flex justify-between">
+          <span class="text-slate-400">Post ID:</span>
+          <span class="font-mono font-bold text-slate-700" x-text="'#' + publishedPostInfo?.wp_post_id"></span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Taksonomi Tags:</span>
+          <span class="font-bold text-emerald-600">50 Tags Terpasang</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-400">Featured Image:</span>
+          <span class="font-bold text-emerald-600">16:9 Thumbnail Terunggah</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-2 pt-2">
+        <a :href="publishedPostInfo?.url" target="_blank" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
+          <span>Buka Artikel di WordPress</span>
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+        <button @click="showPublishSuccessModal = false" class="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition cursor-pointer">
+          Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2">
+      <span>GEO SEO Engine • UNICAM STUDIO & Multi-Brand Automation Network</span>
+      <span class="font-mono text-[11px]">Port: 28420 • Native Local SEO Engine</span>
+    </div>
+  </footer>
+
+  <!-- Alpine.js Application Logic -->
   <script>
-    function geoApp() {
+    function geoEngineApp() {
       return {
-        activeTab: 'generator',
+        activeTab: 'brands',
         previewMode: 'rendered',
-        brands: [],
-        currentServices: [],
-        currentLocations: [],
-        articles: [],
-        
-        selectedBrandId: 'unimasi',
-        selectedServiceId: '',
-        selectedRegion: 'Australia',
-        citiesInput: 'Sydney, Melbourne, Brisbane, Perth',
-        
         loading: false,
-        sessionTesting: false,
-        previewData: null,
-        sessionResult: null,
+        publishing: false,
+        verifyingGemini: false,
+        testingHandshake: false,
+        bulkRunning: false,
+        sheetImporting: false,
 
-        googleSheetUrl: '',
-        rawCsvInput: '',
-        sheetSyncing: false,
-        sheetResult: null,
-
-        showWizard: false,
         showAddBrandModal: false,
+        showPublishSuccessModal: false,
+        showAddServiceModal: false,
+
+        brands: [],
+        selectedBrandId: '',
+        currentServices: [],
+        selectedServiceId: '',
+        currentLocations: [],
+        selectedRegion: '',
+        citiesInput: '',
+
+        previewData: null,
+        publishedPostInfo: null,
+        handshakeResult: null,
+
+        articles: [],
         geminiAccounts: [],
+        geminiActiveCount: 0,
         newGeminiEmail: '',
         newGeminiKey: '',
+
         newBrand: {
           name: '',
           domain_url: '',
+          api_secret_key: 'unicam-geo-secret-key-2026',
           hq_location: 'Yogyakarta, Indonesia',
           default_language: 'id',
           service_name: '',
           target_region: 'Indonesia'
         },
 
+        showKeyMap: {},
+        brandStatusMap: {},
+
+        bulkBrandId: '',
+        bulkServices: [],
+        bulkServiceId: '',
+        bulkRegion: 'Indonesia',
+        bulkCitiesInput: 'Jakarta, Surabaya, Bandung, Semarang, Medan, Bali',
+        bulkAutoPublish: true,
+        bulkProgressLog: [],
+
+        sheetUrlInput: '',
+
+        toasts: [],
+
         async init() {
           await this.loadGeminiAccounts();
           await this.loadBrands();
-          await this.loadBrandServices();
           await this.loadArticles();
+        },
+
+        showToast(title, message, type = 'info') {
+          const id = Date.now() + Math.random();
+          this.toasts.push({ id, title, message, type });
+          setTimeout(() => this.removeToast(id), 5000);
+        },
+
+        removeToast(id) {
+          this.toasts = this.toasts.filter(t => t.id !== id);
         },
 
         async loadGeminiAccounts() {
@@ -765,49 +949,38 @@
             const res = await fetch('/api/gemini/accounts');
             const data = await res.json();
             this.geminiAccounts = data.accounts || [];
+            this.geminiActiveCount = data.active_accounts || 0;
           } catch (e) {
-            console.error('Error loading gemini accounts', e);
-          }
-        },
-
-        async connectAntigravityAccount() {
-          try {
-            const res = await fetch('/api/gemini/connect-antigravity', { method: 'POST' });
-            const data = await res.json();
-            if (data.success) {
-              alert('Sesi Antigravity berhasil dihubungkan untuk akun: ' + data.account.email);
-              await this.loadGeminiAccounts();
-            } else {
-              alert('Koneksi gagal: ' + data.detail);
-            }
-          } catch (e) {
-            alert('Error: ' + e);
+            console.error('Error loading gemini accounts:', e);
           }
         },
 
         async addGeminiAccount() {
           if (!this.newGeminiKey.trim()) return;
+          this.verifyingGemini = true;
           try {
             const res = await fetch('/api/gemini/add-account', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                email: this.newGeminiEmail,
-                credential: this.newGeminiKey,
+                email: this.newGeminiEmail.trim(),
+                credential: this.newGeminiKey.trim(),
                 auth_type: 'api_key'
               })
             });
             const data = await res.json();
-            if (data.success) {
-              alert('Akun Google Gemini berhasil ditambahkan!');
+            if (res.ok && data.success) {
+              this.showToast('Sukses', 'API Key Google Gemini berhasil diverifikasi dan terhubung!', 'success');
               this.newGeminiKey = '';
               this.newGeminiEmail = '';
               await this.loadGeminiAccounts();
             } else {
-              alert('Gagal menambah akun: ' + (data.detail || data.error));
+              this.showToast('Gagal Verifikasi', data.detail || data.error || 'API Key tidak valid', 'error');
             }
           } catch (e) {
-            alert('Error: ' + e);
+            this.showToast('Error', e.message, 'error');
+          } finally {
+            this.verifyingGemini = false;
           }
         },
 
@@ -815,51 +988,10 @@
           if (!confirm('Hapus akun Gemini ini?')) return;
           try {
             await fetch(`/api/gemini/accounts/${accId}`, { method: 'DELETE' });
+            this.showToast('Dihapus', 'Akun Gemini berhasil dihapus.', 'info');
             await this.loadGeminiAccounts();
           } catch (e) {
-            console.error('Error removing account', e);
-          }
-        },
-
-        async createBrand() {
-          if (!this.newBrand.name || !this.newBrand.domain_url) return;
-          try {
-            const res = await fetch('/api/brands', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(this.newBrand)
-            });
-            const data = await res.json();
-            if (data.success) {
-              alert('Brand ' + data.brand.name + ' berhasil didaftarkan!');
-              this.showAddBrandModal = false;
-              this.newBrand.name = '';
-              this.newBrand.domain_url = '';
-              await this.loadBrands();
-              this.selectedBrandId = data.brand.id;
-              await this.loadBrandServices();
-            } else {
-              alert('Gagal membuat brand: ' + (data.detail || data.error));
-            }
-          } catch (e) {
-            alert('Error creating brand: ' + e);
-          }
-        },
-
-        async deleteBrand(brandId) {
-          if (!confirm('Hapus brand ' + brandId + ' beserta layanannya?')) return;
-          try {
-            await fetch(`/api/brands/${brandId}`, { method: 'DELETE' });
-            await this.loadBrands();
-            if (this.brands.length > 0) {
-              this.selectedBrandId = this.brands[0].id;
-              await this.loadBrandServices();
-            } else {
-              this.currentServices = [];
-              this.currentLocations = [];
-            }
-          } catch (e) {
-            alert('Error deleting brand: ' + e);
+            this.showToast('Error', e.message, 'error');
           }
         },
 
@@ -868,9 +1000,122 @@
             const res = await fetch('/api/brands');
             const data = await res.json();
             this.brands = data.brands || [];
+            if (this.brands.length > 0 && !this.selectedBrandId) {
+              this.selectedBrandId = this.brands[0].id;
+              this.bulkBrandId = this.brands[0].id;
+              await this.loadBrandServices();
+              await this.loadBulkServices();
+            }
           } catch (e) {
-            console.error('Error loading brands', e);
+            console.error('Error loading brands:', e);
           }
+        },
+
+        openAddBrandModal() {
+          this.handshakeResult = null;
+          this.showAddBrandModal = true;
+        },
+
+        async testHandshake() {
+          if (!this.newBrand.domain_url) return;
+          this.testingHandshake = true;
+          this.handshakeResult = null;
+          try {
+            const res = await fetch('/api/brands/verify-url', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                domain_url: this.newBrand.domain_url,
+                secret_key: this.newBrand.api_secret_key
+              })
+            });
+            const data = await res.json();
+            this.handshakeResult = data;
+            if (data.success) {
+              this.showToast('Koneksi Sukses', `Terhubung ke WordPress: ${data.details?.site_name}`, 'success');
+            } else {
+              this.showToast('Koneksi Gagal', data.error, 'error');
+            }
+          } catch (e) {
+            this.handshakeResult = { success: false, error: e.message };
+            this.showToast('Error', e.message, 'error');
+          } finally {
+            this.testingHandshake = false;
+          }
+        },
+
+        async createBrand() {
+          try {
+            const res = await fetch('/api/brands', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.newBrand)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              this.showToast('Website Tersimpan', `Website ${data.brand.name} berhasil didaftarkan!`, 'success');
+              this.showAddBrandModal = false;
+              this.newBrand = {
+                name: '',
+                domain_url: '',
+                api_secret_key: 'unicam-geo-secret-key-2026',
+                hq_location: 'Yogyakarta, Indonesia',
+                default_language: 'id',
+                service_name: '',
+                target_region: 'Indonesia'
+              };
+              await this.loadBrands();
+              this.selectedBrandId = data.brand.id;
+              await this.loadBrandServices();
+            } else {
+              this.showToast('Gagal', data.detail || 'Tidak dapat menyimpan website', 'error');
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
+          }
+        },
+
+        async testBrandConnection(brandId) {
+          this.brandStatusMap[brandId] = { status: 'testing', label: 'Menguji...' };
+          try {
+            const res = await fetch(`/api/brands/${brandId}/test-connection`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success && data.status === 'online') {
+              this.brandStatusMap[brandId] = { status: 'online', label: 'Online' };
+              this.showToast('Situs Online', `Situs aktif: ${data.details?.site_name} (${data.details?.total_posts} postingan)`, 'success');
+            } else {
+              this.brandStatusMap[brandId] = { status: 'offline', label: 'Offline' };
+              this.showToast('Situs Offline', data.error || 'Tidak dapat menjangkau endpoint plugin', 'error');
+            }
+          } catch (e) {
+            this.brandStatusMap[brandId] = { status: 'offline', label: 'Offline' };
+            this.showToast('Error', e.message, 'error');
+          }
+        },
+
+        async deleteBrand(brandId) {
+          if (!confirm(`Hapus website ${brandId} beserta semua data layanannya?`)) return;
+          try {
+            await fetch(`/api/brands/${brandId}`, { method: 'DELETE' });
+            this.showToast('Dihapus', `Website ${brandId} berhasil dihapus.`, 'info');
+            await this.loadBrands();
+            if (this.brands.length > 0) {
+              this.selectedBrandId = this.brands[0].id;
+              await this.loadBrandServices();
+            } else {
+              this.selectedBrandId = '';
+              this.currentServices = [];
+              this.currentLocations = [];
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
+          }
+        },
+
+        openWriterForBrand(brandId) {
+          this.selectedBrandId = brandId;
+          this.loadBrandServices();
+          this.activeTab = 'writer';
         },
 
         async loadBrandServices() {
@@ -880,7 +1125,6 @@
             const data = await res.json();
             this.currentServices = data.services || [];
             this.currentLocations = data.locations || [];
-            
             if (this.currentServices.length > 0) {
               this.selectedServiceId = this.currentServices[0].id;
             }
@@ -889,30 +1133,30 @@
               this.updateDefaultCities();
             }
           } catch (e) {
-            console.error('Error loading brand context', e);
+            console.error('Error loading brand services:', e);
           }
         },
 
         updateDefaultCities() {
           const loc = this.currentLocations.find(l => l.region_name === this.selectedRegion);
-          if (loc && loc.sub_cities && loc.sub_cities.length > 0) {
-            this.citiesInput = loc.sub_cities.join(', ');
+          if (loc && loc.sub_cities) {
+            const cities = typeof loc.sub_cities === 'string' ? JSON.parse(loc.sub_cities) : loc.sub_cities;
+            this.citiesInput = cities.join(', ');
           } else {
             this.citiesInput = this.selectedRegion;
           }
         },
 
-        selectBrandForMatrix(brandId) {
-          this.selectedBrandId = brandId;
-          this.activeTab = 'generator';
-          this.loadBrandServices();
-        },
-
         async generatePreview() {
+          if (!this.selectedBrandId || !this.selectedServiceId || !this.selectedRegion) {
+            this.showToast('Peringatan', 'Silakan lengkapi pilihan Website, Layanan, dan Wilayah terlebih dahulu.', 'warning');
+            return;
+          }
+
           this.loading = true;
           this.previewData = null;
-          
           const firstCity = this.citiesInput.split(',')[0].trim() || this.selectedRegion;
+
           try {
             const res = await fetch('/api/preview', {
               method: 'POST',
@@ -925,62 +1169,26 @@
               })
             });
             const data = await res.json();
-            if (data.success) {
+            if (res.ok && data.success) {
               this.previewData = data;
+              this.showToast('Sukses', 'Artikel 12-blok dan thumbnail 16:9 berhasil diproduksi!', 'success');
             } else {
-              alert('Generation failed: ' + (data.detail || data.error));
+              this.showToast('Gagal Generate', data.detail || data.error || 'Terjadi kesalahan saat memproduksi artikel', 'error');
             }
           } catch (e) {
-            alert('Error generating preview: ' + e);
+            this.showToast('Error', e.message, 'error');
           } finally {
             this.loading = false;
           }
         },
 
-        async generateBulkMatrix() {
-          const cities = this.citiesInput.split(',').map(c => c.trim()).filter(Boolean);
-          if (cities.length === 0) {
-            alert('Please specify at least 1 city.');
-            return;
-          }
-          if (!confirm(`Generate ${cities.length} programmatic articles across ${cities.join(', ')}?`)) return;
-
-          this.loading = true;
-          try {
-            const res = await fetch('/api/generate-bulk', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                brand_id: this.selectedBrandId,
-                service_id: this.selectedServiceId,
-                location_region: this.selectedRegion,
-                cities: cities,
-                auto_publish: false
-              })
-            });
-            const data = await res.json();
-            if (data.success) {
-              alert(`Successfully generated ${data.total_generated} articles in SQLite database!`);
-              await this.loadArticles();
-              this.activeTab = 'registry';
-            } else {
-              alert('Bulk generation error: ' + JSON.stringify(data));
-            }
-          } catch (e) {
-            alert('Bulk generation error: ' + e);
-          } finally {
-            this.loading = false;
-          }
-        },
-
-        async publishCurrentArticle() {
+        async publishPreviewDirectly() {
           if (!this.previewData) return;
-          if (!confirm(`Publish "${this.previewData.title}" directly to WordPress site?`)) return;
-
-          this.loading = true;
           const firstCity = this.citiesInput.split(',')[0].trim() || this.selectedRegion;
+
+          this.publishing = true;
           try {
-            const res = await fetch('/api/publish', {
+            const res = await fetch('/api/publish-preview', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -988,19 +1196,88 @@
                 service_id: this.selectedServiceId,
                 location_region: this.selectedRegion,
                 city_name: firstCity,
-                status: 'publish',
-                username: '',
-                password: '',
-                login_path: '/wp-login.php'
+                title: this.previewData.title,
+                slug: this.previewData.slug,
+                primary_keyword: this.previewData.primary_keyword,
+                meta_description: this.previewData.meta_description,
+                content_html: this.previewData.content_html,
+                tags: this.previewData.tags,
+                featured_image_base64: this.previewData.featured_image_base64,
+                featured_image_filename: this.previewData.featured_image_filename,
+                status: 'publish'
               })
             });
             const data = await res.json();
-            alert('Publishing completed!\nStatus: ' + data.status + '\nURL: ' + data.url);
-            await this.loadArticles();
+            if (res.ok && data.success) {
+              this.publishedPostInfo = data;
+              this.showPublishSuccessModal = true;
+              this.showToast('Sukses Terbit', `Artikel berhasil dipublikasikan di ${data.url}`, 'success');
+              await this.loadArticles();
+            } else {
+              this.showToast('Gagal Menerbitkan', data.error || 'WordPress menolak permintaan publikasi.', 'error');
+            }
           } catch (e) {
-            alert('Publish error: ' + e);
+            this.showToast('Error Publikasi', e.message, 'error');
           } finally {
-            this.loading = false;
+            this.publishing = false;
+          }
+        },
+
+        async loadBulkServices() {
+          if (!this.bulkBrandId) return;
+          try {
+            const res = await fetch(`/api/brands/${this.bulkBrandId}/context`);
+            const data = await res.json();
+            this.bulkServices = data.services || [];
+            if (this.bulkServices.length > 0) {
+              this.bulkServiceId = this.bulkServices[0].id;
+            }
+          } catch (e) {
+            console.error('Error loading bulk services:', e);
+          }
+        },
+
+        async runBulkMatrix() {
+          if (!this.bulkBrandId || !this.bulkServiceId) {
+            this.showToast('Peringatan', 'Pilih website dan layanan terlebih dahulu.', 'warning');
+            return;
+          }
+          const rawCities = this.bulkCitiesInput.split(',').map(c => c.trim()).filter(c => c);
+          if (rawCities.length === 0) {
+            this.showToast('Peringatan', 'Masukkan minimal 1 nama kota.', 'warning');
+            return;
+          }
+
+          this.bulkRunning = true;
+          this.bulkProgressLog = [];
+          this.bulkProgressLog.push(`[${new Date().toLocaleTimeString()}] Memulai batch untuk ${rawCities.length} kota...`);
+
+          try {
+            const res = await fetch('/api/generate-bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                brand_id: this.bulkBrandId,
+                service_id: this.bulkServiceId,
+                location_region: this.bulkRegion,
+                cities: rawCities,
+                auto_publish: this.bulkAutoPublish
+              })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              this.bulkProgressLog.push(`[${new Date().toLocaleTimeString()}] Selesai! Berhasil memproduksi ${data.total_generated} artikel.`);
+              this.showToast('Batch Selesai', `Berhasil memproduksi ${data.total_generated} artikel.`, 'success');
+              await this.loadArticles();
+            } else {
+              this.bulkProgressLog.push(`[${new Date().toLocaleTimeString()}] Gagal: ${data.detail || data.error}`);
+              this.showToast('Gagal Batch', data.detail || data.error, 'error');
+            }
+          } catch (e) {
+            this.bulkProgressLog.push(`[${new Date().toLocaleTimeString()}] Exception: ${e.message}`);
+            this.showToast('Error', e.message, 'error');
+          } finally {
+            this.bulkRunning = false;
           }
         },
 
@@ -1010,83 +1287,42 @@
             const data = await res.json();
             this.articles = data.articles || [];
           } catch (e) {
-            console.error('Error loading articles', e);
+            console.error('Error loading articles:', e);
           }
         },
 
-        async testSessionAuth() {
-          this.sessionTesting = true;
-          this.sessionResult = null;
+        async deleteArticle(artId) {
+          if (!confirm('Hapus riwayat artikel ini dari repositori internal?')) return;
           try {
-            const res = await fetch('/api/diagnostics/session-test', {
-              method: 'POST'
-            });
-            const data = await res.json();
-            this.sessionResult = data;
+            await fetch(`/api/articles/${artId}`, { method: 'DELETE' });
+            this.showToast('Dihapus', 'Artikel berhasil dihapus dari repositori.', 'info');
+            await this.loadArticles();
           } catch (e) {
-            this.sessionResult = { success: false, error: String(e) };
-          } finally {
-            this.sessionTesting = false;
+            this.showToast('Error', e.message, 'error');
           }
         },
 
-        async testWpEndpoint() {
-          alert('Checking Bridge endpoint for selected brand: ' + this.selectedBrandId);
-          try {
-            const res = await fetch(`/api/diagnostics/wp-test?brand_id=${this.selectedBrandId}`, { method: 'POST' });
-            const data = await res.json();
-            alert('Bridge Status: ' + JSON.stringify(data, null, 2));
-          } catch (e) {
-            alert('Endpoint check error: ' + e);
-          }
-        },
-
-        async syncGoogleSheet() {
-          if (!this.googleSheetUrl.trim()) {
-            alert('Please enter a Google Sheets URL');
-            return;
-          }
-          this.sheetSyncing = true;
-          this.sheetResult = null;
+        async importFromSheet() {
+          if (!this.sheetUrlInput.trim()) return;
+          this.sheetImporting = true;
           try {
             const res = await fetch('/api/import-sheet', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ sheet_url: this.googleSheetUrl })
+              body: JSON.stringify({ sheet_url: this.sheetUrlInput.trim() })
             });
             const data = await res.json();
-            this.sheetResult = data;
-            if (data.success) {
+            if (res.ok && data.success) {
+              this.showToast('Impor Sukses', `Berhasil menyinkronkan ${data.rows_processed} baris data matriks!`, 'success');
               await this.loadBrands();
-              await this.loadBrandServices();
+              this.activeTab = 'brands';
+            } else {
+              this.showToast('Gagal Impor', data.detail || 'Pastikan spreadsheet di-share publik (Viewer).', 'error');
             }
           } catch (e) {
-            this.sheetResult = { success: false, error: String(e) };
+            this.showToast('Error Impor', e.message, 'error');
           } finally {
-            this.sheetSyncing = false;
-          }
-        },
-
-        async importRawCsv() {
-          if (!this.rawCsvInput.trim()) return;
-          this.sheetSyncing = true;
-          this.sheetResult = null;
-          try {
-            const res = await fetch('/api/import-sheet', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ csv_content: this.rawCsvInput })
-            });
-            const data = await res.json();
-            this.sheetResult = data;
-            if (data.success) {
-              await this.loadBrands();
-              await this.loadBrandServices();
-            }
-          } catch (e) {
-            this.sheetResult = { success: false, error: String(e) };
-          } finally {
-            this.sheetSyncing = false;
+            this.sheetImporting = false;
           }
         }
       }

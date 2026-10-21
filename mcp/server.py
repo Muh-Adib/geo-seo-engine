@@ -118,7 +118,12 @@ def tool_preview_seo_article(
             "tags_count": len(generated["tags"]),
             "faq_items_count": len(generated["faq_items"]),
             "content_html": full_html,
-            "faq_items": generated["faq_items"]
+            "faq_items": generated["faq_items"],
+            "featured_media": generated.get("featured_media"),
+            "featured_image_base64": generated.get("featured_image_base64"),
+            "featured_image_filename": generated.get("featured_image_filename"),
+            "ai_generated": generated.get("ai_generated", False),
+            "model_used": generated.get("model_used")
         }
     finally:
         db.close()
@@ -156,15 +161,26 @@ def tool_publish_to_site(
                 "status": status,
                 "meta_description": preview["meta_description"],
                 "primary_keyword": preview["primary_keyword"],
-                "tags": preview["tags"]
+                "tags": preview["tags"],
+                "featured_image_base64": preview.get("featured_image_base64"),
+                "featured_image_filename": preview.get("featured_image_filename")
             },
             login_credentials=login_credentials
         )
 
-        article_id = f"art-{uuid.uuid4().hex[:10]}"
         is_published = publish_result.get("success", False)
+        if not is_published:
+            return {
+                "success": False,
+                "error": publish_result.get("error", "Gagal mempublikasikan ke situs WordPress."),
+                "brand_id": brand_id,
+                "title": preview["title"],
+                "details": publish_result
+            }
+
+        article_id = f"art-{uuid.uuid4().hex[:10]}"
         
-        # 3. Store record in database
+        # 3. Store record in database with verified WordPress credentials
         article_record = Article(
             id=article_id,
             brand_id=brand_id,
@@ -178,9 +194,9 @@ def tool_publish_to_site(
             faq_data=json.dumps(preview["faq_items"]),
             meta_description=preview["meta_description"],
             tags=json.dumps(preview["tags"]),
-            published_url=publish_result.get("url") or f"{brand.domain_url.rstrip('/')}/{preview['slug']}/",
+            published_url=publish_result.get("url"),
             wp_post_id=publish_result.get("post_id"),
-            status="PUBLISHED" if is_published else "DRAFT"
+            status="PUBLISHED"
         )
         db.add(article_record)
         db.commit()
@@ -190,9 +206,10 @@ def tool_publish_to_site(
             "article_id": article_id,
             "title": preview["title"],
             "url": article_record.published_url,
-            "status": article_record.status,
+            "status": "PUBLISHED",
             "wp_post_id": article_record.wp_post_id,
             "tags_count": preview["tags_count"],
+            "featured_image_url": publish_result.get("featured_image_url"),
             "bridge_response": publish_result
         }
     finally:

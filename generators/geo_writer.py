@@ -112,6 +112,8 @@ class ProgrammaticGEOWriter:
             slug=slug
         )
         article_payload["featured_media"] = thumbnail_info
+        article_payload["featured_image_base64"] = thumbnail_info.get("base64_data", "")
+        article_payload["featured_image_filename"] = thumbnail_info.get("filename", f"thumb-{slug[:35]}.jpg")
 
         return article_payload
 
@@ -415,43 +417,58 @@ Return VALID JSON ONLY with this structure:
 }}
 """
         max_attempts = max(1, len(self.gemini.auth.accounts))
-        for _ in range(max_attempts):
-            auth_info = self.gemini.auth.get_active_auth_headers_or_param()
-            if not auth_info:
-                break
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
-            headers = {"Content-Type": "application/json"}
-            headers.update(auth_info.get("headers", {}))
-            params = auth_info.get("param", {})
+        models_to_try = [self.model, "gemini-2.0-flash", "gemini-1.5-flash"]
+        # De-duplicate while preserving order
+        models_to_try = list(dict.fromkeys(models_to_try))
 
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}],
-                "generationConfig": {
-                    "temperature": 0.5,
-                    "responseMimeType": "application/json"
+        for model in models_to_try:
+            for _ in range(max_attempts):
+                auth_info = self.gemini.auth.get_active_auth_headers_or_param()
+                if not auth_info:
+                    break
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+                headers = {"Content-Type": "application/json"}
+                headers.update(auth_info.get("headers", {}))
+                params = auth_info.get("param", {})
+
+                payload = {
+                    "contents": [{"parts": [{"text": prompt}]}],
+                    "generationConfig": {
+                        "temperature": 0.5,
+                        "responseMimeType": "application/json"
+                    }
                 }
-            }
 
-            try:
-                resp = requests.post(url, headers=headers, params=params, json=payload, timeout=20)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    candidates = data.get("candidates", [])
-                    if candidates and "content" in candidates[0]:
-                        parts = candidates[0]["content"].get("parts", [])
-                        if parts and "text" in parts[0]:
-                            parsed = json.loads(parts[0]["text"])
-                            if "content_html" in parsed and len(parsed.get("faq_items", [])) == 10:
-                                logger.info(f"[GEOWriter] Successfully generated via user Gemini account ({self.model})")
-                                return parsed
-                elif resp.status_code in [429, 403]:
-                    logger.warning("[GEOWriter] Gemini quota hit. Rotating to next user account...")
+                try:
+                    resp = requests.post(url, headers=headers, params=params, json=payload, timeout=25)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        candidates = data.get("candidates", [])
+                        if candidates and "content" in candidates[0]:
+                            parts = candidates[0]["content"].get("parts", [])
+                            if parts and "text" in parts[0]:
+                                raw_text = parts[0]["text"].strip()
+                                # Clean markdown JSON wrappers if present
+                                if raw_text.startswith("```"):
+                                    raw_text = re.sub(r'^```(?:json)?\s*', '', raw_text)
+                                    raw_text = re.sub(r'\s*```$', '', raw_text)
+                                raw_text = raw_text.strip()
+                                parsed = json.loads(raw_text)
+                                if "content_html" in parsed:
+                                    logger.info(f"[GEOWriter] Successfully generated via user Gemini account ({model})")
+                                    parsed["ai_generated"] = True
+                                    parsed["model_used"] = model
+                                    return parsed
+                    elif resp.status_code in [429, 403]:
+                        logger.warning(f"[GEOWriter] Gemini quota/auth hit on {model}. Rotating account...")
+                        self.gemini.auth.rotate()
+                    else:
+                        logger.warning(f"[GEOWriter] Gemini API error ({resp.status_code}) on {model}: {resp.text[:150]}")
+                        self.gemini.auth.rotate()
+                except Exception as e:
+                    logger.warning(f"[GEOWriter] Gemini request exception on {model}: {e}")
                     self.gemini.auth.rotate()
-                else:
-                    logger.warning(f"[GEOWriter] Gemini API error ({resp.status_code}): {resp.text[:150]}")
-                    self.gemini.auth.rotate()
-            except Exception as e:
-                logger.warning(f"[GEOWriter] Gemini request exception: {e}")
-                self.gemini.auth.rotate()
+
+        return None
 
         return None

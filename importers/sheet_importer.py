@@ -48,7 +48,7 @@ class SpreadsheetImporter:
 
     def parse_and_sync(self, csv_content: str, db: Session) -> Dict[str, Any]:
         """
-        Parses CSV string and syncs brands, services, and locations into SQLite database.
+        Parses CSV data and upserts Brand, Service, and LocationTarget records into SQLite.
         """
         f = io.StringIO(csv_content.strip())
         reader = csv.DictReader(f)
@@ -160,3 +160,6 @@ class SpreadsheetImporter:
             "locations_synced": len(locations_synced),
             "brand_ids": list(brands_synced)
         }
+
+    # Alias for API compatibility
+    import_from_csv_text = parse_and_sync

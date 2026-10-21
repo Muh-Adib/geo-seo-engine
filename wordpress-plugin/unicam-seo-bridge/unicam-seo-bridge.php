@@ -238,6 +238,7 @@ class Unicam_SEO_Engine_Bridge {
             'status' => get_post_status($post_id),
             'tags_count' => $assigned_tags_count,
             'featured_media_id' => $featured_thumb_id,
+            'featured_image_url' => $featured_thumb_id ? wp_get_attachment_url($featured_thumb_id) : null,
             'message' => 'Article successfully published with 50 tags and GEO schema.'
         ));
     }

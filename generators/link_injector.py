@@ -175,15 +175,23 @@ class LinkInjector:
             )
             count += 1
 
-        # Fallback items if database has few articles yet
+        # Dynamic fallback items if database has few published articles yet: link to brand's actual services & location overview
         if len(items_html) < 4:
-            fallback_regions = ["Australia", "United Arab Emirates", "United States", "Indonesia"]
-            for reg in fallback_regions:
-                if reg.lower() != target_location.lower() and len(items_html) < 6:
+            brand_services = brand_data.get("services", [])
+            for s in brand_services:
+                s_name = s.get("name") if isinstance(s, dict) else str(s)
+                s_url = s.get("pillar_url", f"{domain}/services/") if isinstance(s, dict) else f"{domain}/services/"
+                if s_name and s_name.lower() != service_name.lower() and len(items_html) < 6:
                     items_html.append(
-                        f'<li><a href="{pillar_url}?region={reg.lower().replace(" ", "-")}" style="color: #4b5563; text-decoration: none;">'
-                        f'{service_name} in {reg} Studio Hub</a></li>'
+                        f'<li><a href="{s_url}" style="color: #4b5563; text-decoration: none;">'
+                        f'{s_name} Overview & Case Studies</a></li>'
                     )
+
+            if len(items_html) < 4:
+                items_html.append(
+                    f'<li><a href="{pillar_url}" style="color: #4b5563; text-decoration: none;">'
+                    f'Client Case Studies in {target_location} & Global Portfolio</a></li>'
+                )
 
         list_items = "\n      ".join(items_html)
 

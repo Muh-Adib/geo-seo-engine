@@ -83,7 +83,9 @@ class WordPressBridgeClient:
             "primary_focus_keyword": payload.get("primary_keyword", ""),
             "tags": payload.get("tags", []),
             "categories": payload.get("categories", ["Insights"]),
-            "schedule_date": payload.get("schedule_date")
+            "schedule_date": payload.get("schedule_date"),
+            "featured_image_base64": payload.get("featured_image_base64"),
+            "featured_image_filename": payload.get("featured_image_filename", "featured-thumbnail.jpg")
         }
 
         try:
@@ -97,7 +99,18 @@ class WordPressBridgeClient:
                     "slug": data.get("slug"),
                     "status": data.get("status"),
                     "tags_count": data.get("tags_count", len(payload.get("tags", []))),
+                    "featured_image_url": data.get("featured_image_url"),
                     "raw": data
+                }
+            elif resp.status_code == 403:
+                return {
+                    "success": False,
+                    "error": f"HTTP 403 Forbidden: Secret Key tidak cocok. Periksa pengaturan Secret Key di WordPress Admin (menu SEO Engine) atau pastikan Secret Key di pengaturan situs ini sudah sesuai."
+                }
+            elif resp.status_code == 404:
+                return {
+                    "success": False,
+                    "error": f"HTTP 404 Not Found: Plugin Unicam SEO Bridge belum terpasang atau belum diaktifkan di situs {endpoint_url}. Unduh dan aktifkan unicam-seo-bridge.zip di WordPress."
                 }
             else:
                 return {
