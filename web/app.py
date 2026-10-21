@@ -16,11 +16,12 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from db.session import get_db, SessionLocal
-from db.models import Brand, Service, LocationTarget, Article
+from db.models import Brand, Service, LocationTarget, Article, KeywordBankItem
 from generators.geo_writer import ProgrammaticGEOWriter
 from generators.link_injector import LinkInjector
 from core.bridge_client import WordPressBridgeClient
 from core.router_client import LLMRouterClient
+from core.gsc_client import GSCClient
 import mcp.server as mcp_tools
 
 logger = logging.getLogger("seo_web_app")
@@ -43,6 +44,7 @@ geo_writer = ProgrammaticGEOWriter()
 link_injector = LinkInjector()
 bridge_client = WordPressBridgeClient()
 router_client = geo_writer.router
+gsc_client = GSCClient()
 
 # Request Models
 class RouterSettingsRequest(BaseModel):
@@ -124,6 +126,74 @@ class CreateBrandRequest(BaseModel):
 class VerifyUrlRequest(BaseModel):
     domain_url: str
     secret_key: Optional[str] = "unicam-geo-secret-key-2026"
+
+class BrandSettingsRequest(BaseModel):
+    name: Optional[str] = None
+    domain_url: Optional[str] = None
+    api_secret_key: Optional[str] = None
+    logo_url: Optional[str] = None
+    tagline: Optional[str] = None
+    industry_focus: Optional[str] = None
+    contact_whatsapp: Optional[str] = None
+    contact_email: Optional[str] = None
+    consultation_url: Optional[str] = None
+    gsc_site_url: Optional[str] = None
+    gsc_service_account_json: Optional[str] = None
+    core_pain_points: Optional[List[str]] = None
+    core_solutions: Optional[List[str]] = None
+    hq_location: Optional[str] = None
+    default_language: Optional[str] = None
+    revision_guarantee: Optional[str] = None
+    master_output_spec: Optional[str] = None
+    cta_tagline: Optional[str] = None
+
+class KeywordBankCreateRequest(BaseModel):
+    category: str # "action", "subject", "predicate", "city"
+    value: str
+    brand_id: Optional[str] = None
+
+class KeywordMatrixGenerateRequest(BaseModel):
+    brand_id: Optional[str] = None
+    actions: Optional[List[str]] = None
+    subjects: Optional[List[str]] = None
+    predicates: Optional[List[str]] = None
+    cities: Optional[List[str]] = None
+    limit: Optional[int] = 50
+
+DEFAULT_KEYWORD_BANK = [
+    # Actions (Intent)
+    {"category": "action", "value": "Jasa Pembuatan"},
+    {"category": "action", "value": "Software House"},
+    {"category": "action", "value": "Vendor Profesional"},
+    {"category": "action", "value": "Konsultan IT"},
+    {"category": "action", "value": "Jasa Rekayasa"},
+    {"category": "action", "value": "Partner Digital"},
+    # Subjects (Service/Product)
+    {"category": "subject", "value": "Website Enterprise"},
+    {"category": "subject", "value": "Aplikasi Web Kustom"},
+    {"category": "subject", "value": "Sistem ERP & CRM"},
+    {"category": "subject", "value": "Portal Berita & Media"},
+    {"category": "subject", "value": "Aplikasi Mobile iOS & Android"},
+    {"category": "subject", "value": "Landing Page Konversi Tinggi"},
+    # Predicates (Problem Solving / Value Proposition)
+    {"category": "predicate", "value": "Arsitektur Headless Cloud-Ready"},
+    {"category": "predicate", "value": "Performa Kecepatan Sub-Detik"},
+    {"category": "predicate", "value": "Keamanan Data Standar OWASP"},
+    {"category": "predicate", "value": "Otomasi Proses Bisnis Terpadu"},
+    {"category": "predicate", "value": "Garansi Bebas Bug & SLA 24/7"},
+    {"category": "predicate", "value": "Desain UI/UX Modern & Responsif"},
+    # Cities (Target Location)
+    {"category": "city", "value": "Jakarta"},
+    {"category": "city", "value": "Surabaya"},
+    {"category": "city", "value": "Bandung"},
+    {"category": "city", "value": "Semarang"},
+    {"category": "city", "value": "Yogyakarta"},
+    {"category": "city", "value": "Medan"},
+    {"category": "city", "value": "Denpasar"},
+    {"category": "city", "value": "Makassar"},
+    {"category": "city", "value": "Tangerang"},
+    {"category": "city", "value": "Bekasi"}
+]
 
 # Routes
 @app.get("/", response_class=HTMLResponse)
@@ -315,6 +385,307 @@ def test_brand_connection(brand_id: str, db: Session = Depends(get_db)):
         return {"success": False, "status": "error", "error": f"HTTP {resp.status_code}: {resp.text[:150]}"}
     except Exception as e:
         return {"success": False, "status": "offline", "error": str(e)}
+
+# Extended Brand Settings & Integrations
+@app.get("/api/brands/{brand_id}/settings")
+def get_brand_settings(brand_id: str, db: Session = Depends(get_db)):
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+    data = brand.to_dict()
+    data["gsc_service_account_json"] = brand.gsc_service_account_json or ""
+    return {"success": True, "settings": data}
+
+@app.put("/api/brands/{brand_id}/settings")
+def update_brand_settings(brand_id: str, req: BrandSettingsRequest, db: Session = Depends(get_db)):
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+    
+    if req.name is not None and req.name.strip():
+        brand.name = req.name.strip()
+    if req.domain_url is not None:
+        clean_domain = req.domain_url.strip().rstrip('/')
+        if clean_domain and not clean_domain.startswith("http://") and not clean_domain.startswith("https://"):
+            clean_domain = f"https://{clean_domain}"
+        brand.domain_url = clean_domain
+        brand.wp_endpoint_url = f"{clean_domain}/wp-json/seo-engine/v1/publish"
+    if req.api_secret_key is not None:
+        brand.api_secret_key = req.api_secret_key.strip()
+    if req.logo_url is not None:
+        brand.logo_url = req.logo_url.strip()
+    if req.tagline is not None:
+        brand.tagline = req.tagline.strip()
+    if req.industry_focus is not None:
+        brand.industry_focus = req.industry_focus.strip()
+    if req.contact_whatsapp is not None:
+        brand.contact_whatsapp = req.contact_whatsapp.strip()
+    if req.contact_email is not None:
+        brand.contact_email = req.contact_email.strip()
+    if req.consultation_url is not None:
+        brand.consultation_url = req.consultation_url.strip()
+    if req.gsc_site_url is not None:
+        brand.gsc_site_url = req.gsc_site_url.strip()
+    if req.gsc_service_account_json is not None:
+        brand.gsc_service_account_json = req.gsc_service_account_json.strip()
+    if req.core_pain_points is not None:
+        brand.core_pain_points = json.dumps(req.core_pain_points)
+    if req.core_solutions is not None:
+        brand.core_solutions = json.dumps(req.core_solutions)
+    if req.hq_location is not None:
+        brand.hq_location = req.hq_location.strip()
+    if req.default_language is not None:
+        brand.default_language = req.default_language.strip()
+    if req.revision_guarantee is not None:
+        brand.revision_guarantee = req.revision_guarantee.strip()
+    if req.master_output_spec is not None:
+        brand.master_output_spec = req.master_output_spec.strip()
+    if req.cta_tagline is not None:
+        brand.cta_tagline = req.cta_tagline.strip()
+
+    db.commit()
+    return {"success": True, "brand": brand.to_dict()}
+
+@app.post("/api/brands/{brand_id}/sync-wp-articles")
+def sync_wordpress_articles(brand_id: str, db: Session = Depends(get_db)):
+    """Pulls live articles directly from WordPress REST API into the database."""
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+    
+    sync_res = bridge_client.sync_live_articles(brand.to_dict(), limit=100)
+    if not sync_res.get("success"):
+        return sync_res
+    
+    articles_data = sync_res.get("articles", [])
+    synced_count = 0
+    updated_count = 0
+    
+    for art in articles_data:
+        wp_id = art.get("wp_post_id")
+        pub_url = art.get("published_url")
+        title = art.get("title", "")
+        slug = art.get("slug", "")
+        
+        existing = None
+        if wp_id:
+            existing = db.query(Article).filter(Article.wp_post_id == wp_id, Article.brand_id == brand_id).first()
+        if not existing and pub_url:
+            existing = db.query(Article).filter(Article.published_url == pub_url, Article.brand_id == brand_id).first()
+        
+        if existing:
+            existing.title = title or existing.title
+            existing.status = art.get("status", "PUBLISHED")
+            existing.published_url = pub_url or existing.published_url
+            updated_count += 1
+        else:
+            srv = db.query(Service).filter(Service.brand_id == brand_id).first()
+            srv_id = srv.id if srv else f"{brand_id}-general"
+            new_id = f"art-{uuid.uuid4().hex[:12]}"
+            new_article = Article(
+                id=new_id,
+                brand_id=brand_id,
+                service_id=srv_id,
+                primary_keyword=title[:100] if title else "Live Article",
+                target_location=brand.hq_location or "Indonesia",
+                title=title or "Live WordPress Article",
+                slug=slug or (re.sub(r'[^a-z0-9]+', '-', title.lower()).strip('-') if title else f"wp-{wp_id}"),
+                meta_description=f"Artikel resmi dari {brand.name}: {title}",
+                content_html="<p>Artikel telah disinkronkan langsung dari situs WordPress live.</p>",
+                published_url=pub_url,
+                wp_post_id=wp_id,
+                status=art.get("status", "PUBLISHED")
+            )
+            db.add(new_article)
+            synced_count += 1
+            
+    db.commit()
+    return {
+        "success": True,
+        "source": sync_res.get("source"),
+        "total_from_wp": len(articles_data),
+        "synced_new": synced_count,
+        "updated_existing": updated_count,
+        "articles": [a.to_dict() for a in db.query(Article).filter(Article.brand_id == brand_id).order_by(Article.created_at.desc()).limit(100).all()]
+    }
+
+@app.get("/api/brands/{brand_id}/gsc-performance")
+def get_brand_gsc_performance(brand_id: str, days: int = 28, db: Session = Depends(get_db)):
+    """Fetches real search performance from Google Search Console via Service Account."""
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+    
+    site_url = brand.gsc_site_url or brand.domain_url
+    if not site_url:
+        return {
+            "success": False,
+            "configured": False,
+            "error": "URL Situs / Property GSC belum diatur di Pengaturan Brand.",
+            "overview": {"totalClicks": 0, "totalImpressions": 0, "averageCtr": "0.0%", "averagePosition": 0.0},
+            "queries": [],
+            "pages": []
+        }
+    
+    cred_json = brand.gsc_service_account_json
+    return gsc_client.get_search_analytics(site_url=site_url, days=days, credentials_json=cred_json)
+
+@app.post("/api/brands/{brand_id}/gsc-test")
+def test_brand_gsc_connection(brand_id: str, db: Session = Depends(get_db)):
+    """Tests authentication & permission of the Service Account on GSC."""
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+    
+    site_url = brand.gsc_site_url or brand.domain_url
+    cred_json = brand.gsc_service_account_json
+    return gsc_client.test_connection(site_url=site_url, credentials_json=cred_json)
+
+# Marketing Keyword Bank Routes
+@app.get("/api/keywords/bank")
+def get_keyword_bank(brand_id: Optional[str] = None, category: Optional[str] = None, db: Session = Depends(get_db)):
+    """Lists keyword bank items grouped into Action, Subject, Predicate, City."""
+    query = db.query(KeywordBankItem)
+    if brand_id:
+        query = query.filter((KeywordBankItem.brand_id == brand_id) | (KeywordBankItem.brand_id == None))
+    if category:
+        query = query.filter(KeywordBankItem.category == category.lower())
+    
+    items = query.order_by(KeywordBankItem.created_at.asc()).all()
+    
+    # Auto-seed if database keyword bank is empty
+    if not items and db.query(KeywordBankItem).count() == 0:
+        for d in DEFAULT_KEYWORD_BANK:
+            item = KeywordBankItem(
+                id=f"kb-{uuid.uuid4().hex[:10]}",
+                brand_id=None,
+                category=d["category"],
+                value=d["value"],
+                is_active=True
+            )
+            db.add(item)
+        db.commit()
+        items = db.query(KeywordBankItem).order_by(KeywordBankItem.created_at.asc()).all()
+
+    grouped = {"action": [], "subject": [], "predicate": [], "city": []}
+    for it in items:
+        cat = it.category.lower()
+        if cat in grouped:
+            grouped[cat].append(it.to_dict())
+        else:
+            grouped.setdefault(cat, []).append(it.to_dict())
+
+    return {
+        "success": True,
+        "total": len(items),
+        "items": [it.to_dict() for it in items],
+        "grouped": grouped
+    }
+
+@app.post("/api/keywords/bank")
+def create_keyword_bank_item(req: KeywordBankCreateRequest, db: Session = Depends(get_db)):
+    """Adds a new keyword to the bank."""
+    cat = req.category.strip().lower()
+    val = req.value.strip()
+    if not val:
+        raise HTTPException(status_code=400, detail="Nilai kata kunci tidak boleh kosong.")
+    
+    existing = db.query(KeywordBankItem).filter(
+        KeywordBankItem.category == cat,
+        KeywordBankItem.value == val,
+        KeywordBankItem.brand_id == req.brand_id
+    ).first()
+    if existing:
+        return {"success": True, "item": existing.to_dict(), "message": "Kata kunci sudah terdaftar di bank."}
+
+    new_id = f"kb-{uuid.uuid4().hex[:10]}"
+    item = KeywordBankItem(
+        id=new_id,
+        brand_id=req.brand_id,
+        category=cat,
+        value=val,
+        is_active=True
+    )
+    db.add(item)
+    db.commit()
+    return {"success": True, "item": item.to_dict()}
+
+@app.delete("/api/keywords/bank/{item_id}")
+def delete_keyword_bank_item(item_id: str, db: Session = Depends(get_db)):
+    """Removes a keyword from the bank."""
+    item = db.query(KeywordBankItem).filter(KeywordBankItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Item tidak ditemukan.")
+    db.delete(item)
+    db.commit()
+    return {"success": True, "deleted": item_id}
+
+@app.post("/api/keywords/generate-matrix")
+def generate_keyword_matrix(req: KeywordMatrixGenerateRequest, db: Session = Depends(get_db)):
+    """Combines Action + Subject + Predicate + City into high-conversion programmatic keywords."""
+    actions = req.actions or []
+    subjects = req.subjects or []
+    predicates = req.predicates or []
+    cities = req.cities or []
+
+    if not actions:
+        actions = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "action", KeywordBankItem.is_active == True).all()]
+    if not subjects:
+        subjects = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "subject", KeywordBankItem.is_active == True).all()]
+    if not predicates:
+        predicates = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "predicate", KeywordBankItem.is_active == True).all()]
+    if not cities:
+        cities = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "city", KeywordBankItem.is_active == True).all()]
+
+    if not actions: actions = ["Jasa Pembuatan", "Software House", "Konsultan IT"]
+    if not subjects: subjects = ["Website Enterprise", "Aplikasi Web Kustom", "Sistem ERP"]
+    if not predicates: predicates = ["Arsitektur Headless Cloud-Ready", "Performa Kecepatan Sub-Detik", "Garansi Bebas Bug"]
+    if not cities: cities = ["Jakarta", "Surabaya", "Bandung", "Yogyakarta"]
+
+    combinations = []
+    limit = req.limit or 50
+
+    for city in cities:
+        for subj in subjects:
+            for act in actions:
+                for pred in predicates:
+                    primary_kw = f"{act} {subj} {city}"
+                    title = f"{act} {subj} di {city} - {pred}"
+                    meta_preview = f"Mencari {act.lower()} {subj.lower()} profesional di {city}? Kami hadirkan solusi terpercaya dengan {pred.lower()} dan garansi purna-jual."
+                    
+                    combinations.append({
+                        "id": f"matrix-{uuid.uuid4().hex[:8]}",
+                        "action": act,
+                        "subject": subj,
+                        "predicate": pred,
+                        "city": city,
+                        "primary_keyword": primary_kw,
+                        "suggested_title": title,
+                        "meta_preview": meta_preview,
+                        "intent": "Commercial / High-Intent Problem Solving",
+                        "problem_addressed": f"Tantangan performa dan skalabilitas {subj.lower()} di {city}",
+                        "solution_offered": pred
+                    })
+                    if len(combinations) >= limit:
+                        break
+                if len(combinations) >= limit:
+                    break
+            if len(combinations) >= limit:
+                break
+        if len(combinations) >= limit:
+            break
+
+    return {
+        "success": True,
+        "total_generated": len(combinations),
+        "dimensions": {
+            "actions_count": len(actions),
+            "subjects_count": len(subjects),
+            "predicates_count": len(predicates),
+            "cities_count": len(cities)
+        },
+        "matrix": combinations
+    }
 
 # Gemini Multi-Account Endpoints
 @app.get("/api/gemini/accounts")

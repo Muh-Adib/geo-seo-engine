@@ -17,6 +17,11 @@ server.log
 data/gemini_accounts.json
 data/router_config.json
 data/image_gallery.json
+data/gsc_service_account.json
+data/*.json
+!data/brands.json
+!data/services.json
+!data/locations.json
 
 # Database
 *.db

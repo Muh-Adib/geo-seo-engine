@@ -271,3 +271,90 @@ class WordPressBridgeClient:
             pass
 
         return []
+
+    def sync_live_articles(self, brand_data: Dict[str, Any], limit: int = 50) -> Dict[str, Any]:
+        """
+        Synchronizes actual published articles directly from the live WordPress website.
+        Pulls post ID, rendered title, permalink, slug, date, status, and featured image.
+        """
+        domain = brand_data.get("domain_url", "").rstrip("/")
+        endpoint = brand_data.get("wp_endpoint_url")
+        secret_key = brand_data.get("api_secret_key", "unicam-geo-secret-key-2026")
+
+        if not domain and endpoint:
+            domain = endpoint.split("/wp-json")[0]
+
+        if not domain:
+            return {"success": False, "error": "URL Domain website belum diatur."}
+
+        # 1. Try Bridge articles endpoint first
+        if endpoint:
+            bridge_url = endpoint.replace("/publish", "/articles")
+            try:
+                resp = self.session.get(
+                    bridge_url,
+                    headers={"X-SEO-Engine-Key": secret_key},
+                    timeout=12
+                )
+                if resp.status_code == 200:
+                    data = resp.json()
+                    articles = data.get("articles", [])
+                    return {
+                        "success": True,
+                        "source": "bridge_plugin",
+                        "total": len(articles),
+                        "articles": articles
+                    }
+            except Exception as e:
+                logger.warning(f"Bridge sync error: {e}")
+
+        # 2. Query WordPress Core REST API (/wp-json/wp/v2/posts)
+        rest_url = f"{domain}/wp-json/wp/v2/posts?per_page={min(limit, 100)}&_embed=1"
+        try:
+            resp = self.session.get(
+                rest_url,
+                headers={"Accept": "application/json"},
+                timeout=15
+            )
+            if resp.status_code == 200:
+                raw_posts = resp.json()
+                synced = []
+                for p in raw_posts:
+                    title_raw = p.get("title", {})
+                    title_text = title_raw.get("rendered", "") if isinstance(title_raw, dict) else str(title_raw or "")
+                    # Clean HTML entities from title
+                    title_clean = re.sub(r'&#[0-9]+;', '', title_text).strip()
+
+                    # Extract featured image if embedded
+                    thumb_url = None
+                    embedded = p.get("_embedded", {})
+                    featured_media = embedded.get("wp:featuredmedia", [])
+                    if featured_media and isinstance(featured_media, list) and len(featured_media) > 0:
+                        thumb_url = featured_media[0].get("source_url")
+
+                    synced.append({
+                        "wp_post_id": p.get("id"),
+                        "title": title_clean or p.get("slug", ""),
+                        "slug": p.get("slug", ""),
+                        "published_url": p.get("link", ""),
+                        "date": p.get("date", ""),
+                        "status": p.get("status", "publish").upper(),
+                        "featured_image_url": thumb_url
+                    })
+
+                return {
+                    "success": True,
+                    "source": "wordpress_rest_api",
+                    "total": len(synced),
+                    "articles": synced
+                }
+            else:
+                return {
+                    "success": False,
+                    "error": f"WordPress REST API error HTTP {resp.status_code}: {resp.text[:120]}"
+                }
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"Tidak dapat menyinkronkan artikel dari {domain}: {str(e)}"
+            }

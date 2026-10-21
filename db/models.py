@@ -25,6 +25,18 @@ class Brand(Base):
     master_output_spec = Column(String(100), default="Uncompressed 4K master files")
     cta_tagline = Column(String(255), default="🎥 Elevate your visual content with our world-class studio.")
 
+    # Extended Brand & GSC Settings
+    logo_url = Column(String(500), nullable=True) # Logo image URL or local path to overlay on thumbnail
+    tagline = Column(String(255), nullable=True) # Official brand tagline
+    industry_focus = Column(String(100), default="Technology & Software") # e.g. Software House, Creative Media
+    contact_whatsapp = Column(String(50), nullable=True) # WhatsApp consultation number
+    contact_email = Column(String(100), nullable=True)
+    consultation_url = Column(String(255), nullable=True) # Consultation link (e.g. /kontak)
+    gsc_site_url = Column(String(255), nullable=True) # GSC Property (e.g. https://www.segiatech.com or sc-domain:segiatech.com)
+    gsc_service_account_json = Column(Text, nullable=True) # Service account JSON credentials for GSC
+    core_pain_points = Column(Text, default="[]") # JSON list of client pain points solved
+    core_solutions = Column(Text, default="[]") # JSON list of solutions provided
+
     # Relationships
     services = relationship("Service", back_populates="brand", cascade="all, delete-orphan")
     locations = relationship("LocationTarget", back_populates="brand", cascade="all, delete-orphan")
@@ -42,11 +54,21 @@ class Brand(Base):
             "api_secret_key": self.api_secret_key,
             "hq_location": self.hq_location,
             "default_language": self.default_language,
-            "brand_voice": self.brand_voice,
+            "brand_voice": self.brand_voice or "Professional, Solutif, Enterprise Tech",
             "core_value_pillars": json.loads(self.core_value_pillars or "[]"),
             "revision_guarantee": self.revision_guarantee,
             "master_output_spec": self.master_output_spec,
             "cta_tagline": self.cta_tagline,
+            "logo_url": self.logo_url or "",
+            "tagline": self.tagline or self.cta_tagline,
+            "industry_focus": self.industry_focus or "Technology & Software",
+            "contact_whatsapp": self.contact_whatsapp or "",
+            "contact_email": self.contact_email or "",
+            "consultation_url": self.consultation_url or "",
+            "gsc_site_url": self.gsc_site_url or self.domain_url,
+            "has_gsc_credentials": bool(self.gsc_service_account_json and len(self.gsc_service_account_json.strip()) > 10),
+            "core_pain_points": json.loads(self.core_pain_points or "[]"),
+            "core_solutions": json.loads(self.core_solutions or "[]"),
             "services_count": len(self.services) if self.services else 0,
             "articles_count": len(self.articles) if self.articles else 0
         }
@@ -180,4 +202,31 @@ class Article(Base):
             "wp_post_id": self.wp_post_id,
             "status": self.status,
             "created_at": self.created_at.strftime("%Y-%m-%d %H:%M:%S") if self.created_at else ""
+        }
+
+class KeywordBankItem(Base):
+    """
+    Marketing Matrix Keyword Bank.
+    Combines 4 dimensions:
+    - action (Intent/Action: Jasa Pembuatan, Software House, Vendor, Konsultan)
+    - subject (Product/Service: Website Enterprise, Aplikasi Web Kustom, Sistem ERP)
+    - predicate (Value Prop/Problem Solved: Arsitektur Headless Cloud-Ready, Solusi Otomasi Bisnis)
+    - city (Target Region/City: Jakarta, Surabaya, Bandung, dll.)
+    """
+    __tablename__ = "keyword_bank"
+
+    id = Column(String(50), primary_key=True)
+    brand_id = Column(String(50), ForeignKey("brands.id", ondelete="CASCADE"), nullable=True)
+    category = Column(String(30), nullable=False) # "action", "subject", "predicate", "city"
+    value = Column(String(150), nullable=False)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "id": self.id,
+            "brand_id": self.brand_id,
+            "category": self.category,
+            "value": self.value,
+            "is_active": self.is_active
         }
