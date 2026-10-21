@@ -202,3 +202,64 @@ def test_brand_asset_upload(test_db_brand, tmp_path):
     assert "upload-" in data["asset"]["filename"]
     assert f"/output/assets/{brand_id}/images/" in data["asset"]["url"]
     assert os.path.exists(data["asset"]["file_path"])
+
+def test_brand_logo_upload(test_db_brand, tmp_path):
+    brand_id = test_db_brand["brand_id"]
+    test_logo_path = tmp_path / "brand_logo.png"
+    logo_img = Image.new("RGBA", (200, 60), color=(79, 70, 229, 255))
+    logo_img.save(test_logo_path, "PNG")
+
+    with open(test_logo_path, "rb") as f:
+        res = client.post(
+            f"/api/brands/{brand_id}/logo/upload",
+            files={"file": ("brand_logo.png", f, "image/png")}
+        )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert f"/output/assets/{brand_id}/images/logo.png" in data["logo_url"]
+    assert data["brand"]["logo_url"] == data["logo_url"]
+
+def test_brand_asset_delete(test_db_brand, tmp_path):
+    brand_id = test_db_brand["brand_id"]
+    test_img_path = tmp_path / "to_delete.jpg"
+    test_img = Image.new("RGB", (600, 400), color=(15, 23, 42))
+    test_img.save(test_img_path, "JPEG")
+
+    # Upload first
+    with open(test_img_path, "rb") as f:
+        up_res = client.post(
+            f"/api/brands/{brand_id}/assets/upload",
+            files={"file": ("to_delete.jpg", f, "image/jpeg")}
+        )
+    filename = up_res.json()["asset"]["filename"]
+    filepath = up_res.json()["asset"]["file_path"]
+    assert os.path.exists(filepath)
+
+    # Delete
+    del_res = client.delete(f"/api/brands/{brand_id}/assets/{filename}")
+    assert del_res.status_code == 200
+    assert del_res.json()["success"] is True
+    assert not os.path.exists(filepath)
+
+def test_custom_image_aspect_ratios_and_branding(test_db_brand):
+    brand_id = test_db_brand["brand_id"]
+    
+    # Test 4:3 and 1:1 ratios
+    for ratio in ["4:3", "1:1", "9:16"]:
+        res = client.post(
+            f"/api/brands/{brand_id}/generate-image",
+            json={
+                "prompt": f"Modern High Tech UI {ratio}",
+                "aspect_ratio": ratio,
+                "style": "photorealistic",
+                "brand_color_primary": "#059669",
+                "brand_color_accent": "#10b981",
+                "watermark_logo": True
+            }
+        )
+        assert res.status_code == 200
+        data = res.json()
+        assert data["success"] is True
+        assert data["aspect_ratio"] == ratio
+        assert os.path.exists(data["file_path"])

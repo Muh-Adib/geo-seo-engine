@@ -21,6 +21,20 @@ SessionLocal = scoped_session(sessionmaker(autocommit=False, autoflush=False, bi
 def init_db():
     """Initializes tables and seeds base brands if empty."""
     Base.metadata.create_all(bind=engine)
+    # Automatic migration helper for SQLite: add any missing columns in brands
+    if "sqlite" in DATABASE_URL:
+        with engine.connect() as conn:
+            from sqlalchemy import text
+            try:
+                res = conn.execute(text("PRAGMA table_info(brands)"))
+                existing_cols = {row[1] for row in res.fetchall()}
+                if "brand_color_primary" not in existing_cols:
+                    conn.execute(text("ALTER TABLE brands ADD COLUMN brand_color_primary VARCHAR(30) DEFAULT '#4f46e5'"))
+                if "brand_color_accent" not in existing_cols:
+                    conn.execute(text("ALTER TABLE brands ADD COLUMN brand_color_accent VARCHAR(30) DEFAULT '#7c3aed'"))
+                conn.commit()
+            except Exception:
+                pass
 
 def get_db():
     """Dependency helper for FastAPI endpoints."""

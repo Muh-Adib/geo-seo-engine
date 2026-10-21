@@ -189,6 +189,15 @@
           Modul Situs Aktif
         </div>
 
+        <!-- 0. Profil & Branding Situs (Active Site) -->
+        <button @click="activeTab = 'brand_profile'"
+                :class="activeTab === 'brand_profile' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Profil & Branding Situs">
+          <i class="fa-solid fa-id-card text-sm w-5 text-center flex-shrink-0" :class="activeTab === 'brand_profile' ? 'text-white' : 'text-indigo-400'"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Profil & Branding</span>
+        </button>
+
         <!-- 1. Bank Kata Kunci Marketing (Scoped to Site) -->
         <button @click="activeTab = 'keywordbank'; loadKeywordBank()"
                 :class="activeTab === 'keywordbank' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
@@ -356,6 +365,370 @@
     <main class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 space-y-6">
 
     <!-- ========================================== -->
+    <!-- TAB 0: PROFIL & BRANDING SITUS (WORKSPACE) -->
+    <!-- ========================================== -->
+    <div x-show="activeTab === 'brand_profile'" x-cloak class="space-y-6">
+      
+      <!-- When Brand Exists -->
+      <template x-if="currentBrand">
+        <div class="space-y-6">
+          
+          <!-- Top Header Banner with Brand Context -->
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div class="flex items-start gap-4">
+              <!-- Brand Logo with Hover Upload Button -->
+              <div class="relative group w-16 h-16 rounded-2xl bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-inner">
+                <template x-if="currentBrand.logo_url">
+                  <img :src="currentBrand.logo_url" :alt="currentBrand.name" class="w-full h-full object-contain p-1.5">
+                </template>
+                <template x-if="!currentBrand.logo_url">
+                  <span class="text-xl font-extrabold text-white uppercase" x-text="currentBrand.name.substring(0, 2)"></span>
+                </template>
+                <label class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center text-white text-[9px] font-bold cursor-pointer backdrop-blur-[1px]">
+                  <i class="fa-solid fa-camera mb-0.5"></i>
+                  <span>Ganti</span>
+                  <input type="file" @change="uploadBrandLogo($event)" accept="image/*" class="hidden">
+                </label>
+              </div>
+
+              <!-- Brand Name & Details -->
+              <div class="space-y-1">
+                <div class="flex items-center gap-2.5 flex-wrap">
+                  <h2 class="text-xl font-extrabold text-slate-900" x-text="currentBrand.name"></h2>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200" x-text="'ID: ' + currentBrand.id"></span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
+                        :style="'background-color: ' + (currentBrand.brand_color_primary || '#4f46e5') + '15; color: ' + (currentBrand.brand_color_primary || '#4f46e5') + '; border-color: ' + (currentBrand.brand_color_primary || '#4f46e5') + '40;'"
+                        x-text="currentBrand.industry_focus || 'Technology'"></span>
+                </div>
+                <div class="flex items-center gap-3 text-xs text-slate-500">
+                  <a :href="currentBrand.domain_url" target="_blank" class="hover:text-indigo-600 hover:underline flex items-center gap-1 font-medium">
+                    <i class="fa-solid fa-globe text-slate-400"></i>
+                    <span x-text="currentBrand.domain_url"></span>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-[10px] text-slate-400"></i>
+                  </a>
+                  <span>•</span>
+                  <span class="flex items-center gap-1">
+                    <i class="fa-solid fa-location-dot text-slate-400"></i>
+                    <span x-text="currentBrand.hq_location"></span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actions Right -->
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <!-- Live Ping Badge -->
+              <button @click="testBrandConnection(currentBrand.id)" class="px-3 py-2 text-xs rounded-xl font-semibold border flex items-center gap-2 transition cursor-pointer"
+                      :class="brandStatusMap[currentBrand.id]?.status === 'online' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'">
+                <span class="w-2 h-2 rounded-full" :class="brandStatusMap[currentBrand.id]?.status === 'online' ? 'bg-emerald-500' : (brandStatusMap[currentBrand.id]?.status === 'testing' ? 'bg-indigo-500 animate-ping' : 'bg-slate-400')"></span>
+                <span x-text="brandStatusMap[currentBrand.id]?.label || 'Cek Ping Situs'"></span>
+              </button>
+
+              <!-- Save Changes Button -->
+              <button @click="saveBrandProfile()" :disabled="savingSettings" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-2 transition cursor-pointer disabled:opacity-50">
+                <i class="fa-solid fa-circle-notch fa-spin" x-show="savingSettings"></i>
+                <i class="fa-solid fa-floppy-disk" x-show="!savingSettings"></i>
+                <span>Simpan Perubahan</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2 Columns Grid: Left = Visual & Tokens, Right = Marketing Matrix & Integrations -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- LEFT COLUMN (7 cols): Visual Identity, Design Tokens & Contacts -->
+            <div class="lg:col-span-7 space-y-6">
+              
+              <!-- Card: Visual Identity & Design Tokens (/brand) -->
+              <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+                <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-palette text-indigo-600"></i> Identitas Visual & Token Warna Brand
+                  </h3>
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">Design System</span>
+                </div>
+
+                <!-- Logo Uploader & URL -->
+                <div class="space-y-2">
+                  <label class="block text-xs font-bold text-slate-700">Official Brand Logo</label>
+                  <div class="flex items-center gap-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
+                    <div class="w-14 h-14 rounded-xl bg-slate-900 border border-slate-300 flex items-center justify-center p-1 overflow-hidden flex-shrink-0">
+                      <template x-if="currentBrand.logo_url">
+                        <img :src="currentBrand.logo_url" class="max-h-full max-w-full object-contain">
+                      </template>
+                      <template x-if="!currentBrand.logo_url">
+                        <span class="text-xs font-bold text-white uppercase" x-text="currentBrand.name.substring(0, 2)"></span>
+                      </template>
+                    </div>
+                    <div class="flex-1 space-y-1.5">
+                      <div class="flex items-center gap-2">
+                        <label class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-pointer">
+                          <i class="fa-solid fa-arrow-up-from-bracket text-indigo-600"></i> Unggah File Logo
+                          <input type="file" @change="uploadBrandLogo($event)" accept="image/*" class="hidden">
+                        </label>
+                        <span class="text-[11px] text-slate-400">PNG, SVG, atau WebP (Transparan disarankan)</span>
+                      </div>
+                      <input type="text" x-model="currentBrand.logo_url" placeholder="https://... atau /output/assets/brand/images/logo.png" class="w-full text-xs border-slate-200 rounded-lg p-2 border font-mono bg-white">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Color Tokens: Primary & Accent Pickers -->
+                <div class="space-y-2">
+                  <label class="block text-xs font-bold text-slate-700">Palet Warna Resmi (Design Tokens)</label>
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <!-- Primary Color -->
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                      <span class="text-[11px] font-bold text-slate-600 block">Warna Utama (Primary)</span>
+                      <div class="flex items-center gap-2">
+                        <input type="color" x-model="currentBrand.brand_color_primary" class="w-9 h-9 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
+                        <input type="text" x-model="currentBrand.brand_color_primary" placeholder="#4f46e5" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
+                      </div>
+                      <span class="text-[10px] text-slate-400">Digunakan untuk Tombol CTA, Header Banner & Border</span>
+                    </div>
+
+                    <!-- Accent Color -->
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
+                      <span class="text-[11px] font-bold text-slate-600 block">Warna Aksen (Accent)</span>
+                      <div class="flex items-center gap-2">
+                        <input type="color" x-model="currentBrand.brand_color_accent" class="w-9 h-9 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
+                        <input type="text" x-model="currentBrand.brand_color_accent" placeholder="#7c3aed" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
+                      </div>
+                      <span class="text-[10px] text-slate-400">Digunakan untuk Glow Visual, Badge & Highlight</span>
+                    </div>
+                  </div>
+
+                  <!-- Live UI Swatch Preview -->
+                  <div class="p-4 rounded-xl border border-slate-200 space-y-3"
+                       :style="'background: linear-gradient(135deg, ' + (currentBrand.brand_color_primary || '#4f46e5') + '10, ' + (currentBrand.brand_color_accent || '#7c3aed') + '15); border-color: ' + (currentBrand.brand_color_primary || '#4f46e5') + '40;'">
+                    <span class="text-[11px] font-bold text-slate-700 block">Preview Komponen UI dengan Token Warna:</span>
+                    <div class="flex items-center gap-3 flex-wrap">
+                      <button type="button" class="px-4 py-2 text-white text-xs font-bold rounded-xl shadow-md transition cursor-pointer"
+                              :style="'background: linear-gradient(to right, ' + (currentBrand.brand_color_primary || '#4f46e5') + ', ' + (currentBrand.brand_color_accent || '#7c3aed') + ');'">
+                        ✦ Contoh Tombol CTA
+                      </button>
+                      <span class="px-3 py-1 rounded-full text-xs font-bold border"
+                            :style="'background-color: ' + (currentBrand.brand_color_primary || '#4f46e5') + '20; color: ' + (currentBrand.brand_color_primary || '#4f46e5') + '; border-color: ' + (currentBrand.brand_color_primary || '#4f46e5') + '60;'">
+                        Badge Spesialis
+                      </span>
+                      <span class="text-xs font-bold" :style="'color: ' + (currentBrand.brand_color_accent || '#7c3aed') + ';'">
+                        Teks Aksen Terpilih
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Tagline & CTA Slogan -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Tagline Resmi Brand</label>
+                    <input type="text" x-model="currentBrand.tagline" placeholder="Solusi Pemetaan Drone LiDAR Presisi Tinggi" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">CTA Footer Tagline</label>
+                    <input type="text" x-model="currentBrand.cta_tagline" placeholder="Konsultasikan kebutuhan Anda sekarang bersama kami." class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                  </div>
+                </div>
+
+                <!-- Industry Focus & HQ -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Fokus Industri / Pasar</label>
+                    <input type="text" x-model="currentBrand.industry_focus" placeholder="Konstruksi, Pertambangan, Perkebunan" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                  </div>
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Lokasi Kantor Pusat (HQ)</label>
+                    <input type="text" x-model="currentBrand.hq_location" placeholder="Yogyakarta, Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                  </div>
+                </div>
+
+                <!-- Contact & Lead Gen -->
+                <div class="pt-2 border-t border-slate-100">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Lead-Gen</label>
+                      <div class="flex items-center gap-2">
+                        <input type="text" x-model="currentBrand.contact_whatsapp" placeholder="+6281234567890" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+                        <template x-if="currentBrand.contact_whatsapp">
+                          <a :href="'https://wa.me/' + currentBrand.contact_whatsapp.replace(/[^0-9]/g, '')" target="_blank" class="px-2.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs flex items-center justify-center flex-shrink-0 cursor-pointer" title="Uji Link WhatsApp">
+                            <i class="fa-brands fa-whatsapp text-sm"></i>
+                          </a>
+                        </template>
+                      </div>
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-700 mb-1">Email Resmi</label>
+                      <input type="email" x-model="currentBrand.contact_email" placeholder="official@domain.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- RIGHT COLUMN (5 cols): Problem-Solution Marketing Architecture & Bridges -->
+            <div class="lg:col-span-5 space-y-6">
+              
+              <!-- Card: Problem-Solution Architecture -->
+              <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+                <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-bullseye text-amber-500"></i> Matriks Masalah & Solusi Klien
+                  </h3>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200">Marketing Core</span>
+                </div>
+                <p class="text-xs text-slate-500 leading-relaxed">
+                  Formula generator artikel akan secara dinamis menyuntikkan masalah nyata klien dan solusi pembeda brand ini ke dalam setiap paragraf artikel.
+                </p>
+
+                <!-- Pain Points Section -->
+                <div class="space-y-2">
+                  <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> Masalah Utama Klien (Pain Points):
+                  </span>
+                  <div class="flex flex-wrap gap-1.5 min-h-[36px] p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <template x-for="(p, idx) in currentBrand.core_pain_points" :key="idx">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-900 border border-amber-200 text-xs font-medium">
+                        <span x-text="p"></span>
+                        <button type="button" @click="currentBrand.core_pain_points.splice(idx, 1)" class="text-amber-500 hover:text-amber-800 text-[10px] cursor-pointer">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </span>
+                    </template>
+                    <span x-show="!currentBrand.core_pain_points || currentBrand.core_pain_points.length === 0" class="text-xs text-slate-400 italic">Belum ada pain point ditambahkan</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <input type="text" x-ref="newPainPointInput" @keydown.enter.prevent="if($refs.newPainPointInput.value.trim()){ if(!currentBrand.core_pain_points) currentBrand.core_pain_points=[]; currentBrand.core_pain_points.push($refs.newPainPointInput.value.trim()); $refs.newPainPointInput.value=''; }" placeholder="Tambah masalah klien..." class="flex-1 text-xs border-slate-200 rounded-xl p-2 border">
+                    <button type="button" @click="if($refs.newPainPointInput.value.trim()){ if(!currentBrand.core_pain_points) currentBrand.core_pain_points=[]; currentBrand.core_pain_points.push($refs.newPainPointInput.value.trim()); $refs.newPainPointInput.value=''; }" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                      + Tambah
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Core Solutions Section -->
+                <div class="space-y-2 pt-2 border-t border-slate-100">
+                  <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                    <i class="fa-solid fa-circle-check text-emerald-500"></i> Solusi Unggulan Brand (Unique Solutions):
+                  </span>
+                  <div class="flex flex-wrap gap-1.5 min-h-[36px] p-2 bg-slate-50 rounded-xl border border-slate-200">
+                    <template x-for="(s, idx) in currentBrand.core_solutions" :key="idx">
+                      <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-900 border border-emerald-200 text-xs font-medium">
+                        <span x-text="s"></span>
+                        <button type="button" @click="currentBrand.core_solutions.splice(idx, 1)" class="text-emerald-500 hover:text-emerald-800 text-[10px] cursor-pointer">
+                          <i class="fa-solid fa-xmark"></i>
+                        </button>
+                      </span>
+                    </template>
+                    <span x-show="!currentBrand.core_solutions || currentBrand.core_solutions.length === 0" class="text-xs text-slate-400 italic">Belum ada solusi ditambahkan</span>
+                  </div>
+                  <div class="flex gap-2">
+                    <input type="text" x-ref="newSolutionInput" @keydown.enter.prevent="if($refs.newSolutionInput.value.trim()){ if(!currentBrand.core_solutions) currentBrand.core_solutions=[]; currentBrand.core_solutions.push($refs.newSolutionInput.value.trim()); $refs.newSolutionInput.value=''; }" placeholder="Tambah solusi unik brand..." class="flex-1 text-xs border-slate-200 rounded-xl p-2 border">
+                    <button type="button" @click="if($refs.newSolutionInput.value.trim()){ if(!currentBrand.core_solutions) currentBrand.core_solutions=[]; currentBrand.core_solutions.push($refs.newSolutionInput.value.trim()); $refs.newSolutionInput.value=''; }" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
+                      + Tambah
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card: WordPress Bridge Connection -->
+              <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-brands fa-wordpress text-indigo-600"></i> Jembatan WordPress Bridge
+                  </h3>
+                  <a href="/api/download-plugin" download="unicam-seo-bridge.zip" class="text-[11px] font-bold text-indigo-600 hover:underline flex items-center gap-1 cursor-pointer">
+                    <i class="fa-solid fa-download"></i> Unduh Plugin ZIP
+                  </a>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Alamat Domain WordPress</label>
+                    <input type="text" x-model="currentBrand.domain_url" placeholder="https://domain-anda.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+                  </div>
+                  <div>
+                    <div class="flex justify-between items-center mb-1">
+                      <label class="text-[11px] font-bold text-slate-600">Kunci Rahasia API (Secret Key)</label>
+                      <button type="button" @click="showKeyMap[currentBrand.id] = !showKeyMap[currentBrand.id]" class="text-[10px] text-slate-400 hover:text-slate-600 cursor-pointer">
+                        <i class="fa-solid" :class="showKeyMap[currentBrand.id] ? 'fa-eye-slash' : 'fa-eye'"></i>
+                        <span x-text="showKeyMap[currentBrand.id] ? 'Sembunyikan' : 'Tampilkan'"></span>
+                      </button>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <input :type="showKeyMap[currentBrand.id] ? 'text' : 'password'" x-model="currentBrand.api_secret_key" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono bg-slate-50">
+                      <button type="button" @click="copyToClipboard(currentBrand.api_secret_key, 'Secret key disalin!')" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs flex items-center justify-center flex-shrink-0 cursor-pointer" title="Salin Secret Key">
+                        <i class="fa-solid fa-copy"></i>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card: Google Search Console (GSC) Connector -->
+              <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+                <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+                  <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-emerald-600"></i> Konektor Google Search Console
+                  </h3>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded"
+                        :class="currentBrand.has_gsc_credentials ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-500'">
+                    <i class="fa-solid" :class="currentBrand.has_gsc_credentials ? 'fa-check text-emerald-600' : 'fa-circle-exclamation text-slate-400'"></i>
+                    <span x-text="currentBrand.has_gsc_credentials ? 'Terkoneksi' : 'Belum Ada JSON'"></span>
+                  </span>
+                </div>
+
+                <div class="space-y-3">
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">GSC Property URL</label>
+                    <input type="text" x-model="currentBrand.gsc_site_url" placeholder="https://domain-anda.com/ atau sc-domain:domain-anda.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+                  </div>
+                  <div>
+                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Service Account JSON (Google Cloud Console)</label>
+                    <textarea x-model="currentBrand.gsc_service_account_json" rows="3" placeholder='{"type": "service_account", "project_id": "...", ...}' class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono"></textarea>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Bottom Footer Bar -->
+          <div class="p-4 bg-white rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <button @click="deleteBrand(currentBrand.id)" class="px-3.5 py-2 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+              <i class="fa-solid fa-trash-can"></i> Hapus Website Ini
+            </button>
+            <div class="flex items-center gap-3">
+              <button @click="openAddBrandModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-plus"></i> Tambah Website Baru
+              </button>
+              <button @click="saveBrandProfile()" :disabled="savingSettings" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-2 transition cursor-pointer disabled:opacity-50">
+                <i class="fa-solid fa-floppy-disk" x-show="!savingSettings"></i>
+                <i class="fa-solid fa-circle-notch fa-spin" x-show="savingSettings"></i>
+                <span>Simpan Perubahan Branding</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </template>
+
+      <!-- When No Brand Exists Yet -->
+      <template x-if="!currentBrand">
+        <div class="bg-white rounded-2xl border-2 border-dashed border-indigo-200 p-12 text-center shadow-sm max-w-2xl mx-auto my-8">
+          <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 text-2xl shadow-inner">
+            <i class="fa-solid fa-id-card"></i>
+          </div>
+          <h3 class="text-lg font-bold text-slate-900 mb-1">Belum Ada Website yang Terpilih</h3>
+          <p class="text-xs text-slate-500 max-w-md mx-auto mb-6 leading-relaxed">
+            Daftarkan situs WordPress Anda untuk mulai mengelola Bank Kata Kunci, Studio Penulis SEO, Studio Visual AI, dan Integrasi Google Search Console secara terisolasi.
+          </p>
+          <button @click="openAddBrandModal()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md transition inline-flex items-center gap-2 cursor-pointer">
+            <i class="fa-solid fa-plus"></i> Daftarkan Website Baru Sekarang
+          </button>
+        </div>
+      </template>
+    </div>
+
+    <!-- ========================================== -->
     <!-- TAB 1: SITUS & BRAND (WEBSITES MANAGER)     -->
     <!-- ========================================== -->
     <div x-show="activeTab === 'brands'" x-cloak class="space-y-6">
@@ -493,14 +866,12 @@
       <!-- Toolbar Header -->
       <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div class="flex flex-wrap items-center gap-3">
-          <!-- Site Selector -->
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-700">Pilih Situs:</span>
-            <select x-model="visualizerSiteId" @change="switchVisualizerSite($event.target.value)" class="text-xs font-semibold border-slate-200 rounded-xl px-3 py-2 bg-slate-50 border focus:bg-white">
-              <template x-for="b in brands" :key="b.id">
-                <option :value="b.id" x-text="b.name + ' (' + b.domain_url + ')'"></option>
-              </template>
-            </select>
+          <!-- Active Site Badge -->
+          <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            <template x-if="currentBrand && currentBrand.logo_url">
+              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+            </template>
+            <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
 
           <!-- URL Input / Address -->
@@ -613,13 +984,11 @@
           </p>
         </div>
         <div class="flex items-center gap-2">
-          <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
-            <span class="text-xs font-semibold text-slate-500">Situs:</span>
-            <select x-model="selectedBrandId" @change="onBrandSelect($event.target.value)" class="text-xs font-bold bg-transparent border-none p-0 focus:ring-0 text-slate-800 cursor-pointer">
-              <template x-for="b in brands" :key="b.id">
-                <option :value="b.id" x-text="b.name"></option>
-              </template>
-            </select>
+          <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            <template x-if="currentBrand && currentBrand.logo_url">
+              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+            </template>
+            <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
           <button @click="loadKeywordBank()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
             <i class="fa-solid fa-arrows-rotate"></i> Muat Ulang
@@ -860,14 +1229,21 @@
             <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100">12 Blok Standar</span>
           </div>
 
-          <!-- Website Selector -->
+          <!-- Active Website Display -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Target Website / Brand</label>
-            <select x-model="selectedBrandId" @change="loadBrandServices()" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
-              <template x-for="brand in brands" :key="brand.id">
-                <option :value="brand.id" x-text="brand.name + ' (' + brand.domain_url.replace('https://', '') + ')'"></option>
-              </template>
-            </select>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Target Website / Brand (Aktif)</label>
+            <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <template x-if="currentBrand && currentBrand.logo_url">
+                  <img :src="currentBrand.logo_url" class="w-6 h-6 rounded-md object-contain border border-slate-200 bg-white p-0.5">
+                </template>
+                <div>
+                  <span class="text-xs font-bold text-slate-900 block" x-text="currentBrand?.name || 'Situs Aktif'"></span>
+                  <span class="text-[10px] text-slate-500 font-mono" x-text="currentBrand?.domain_url"></span>
+                </div>
+              </div>
+              <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100">Situs Terpilih</span>
+            </div>
           </div>
 
           <!-- Specialized Service Selector -->
@@ -1144,15 +1520,12 @@
         </div>
         
         <div class="flex items-center gap-2 flex-wrap">
-          <!-- Brand Selector for Sync -->
-          <div class="flex items-center gap-1.5 text-xs">
-            <span class="text-slate-500 font-medium">Situs:</span>
-            <select x-model="selectedArticlesBrandId" class="text-xs border-slate-200 rounded-xl px-2.5 py-1.5 bg-slate-50 border font-semibold">
-              <option value="">Semua Brand</option>
-              <template x-for="b in brands" :key="b.id">
-                <option :value="b.id" x-text="b.name"></option>
-              </template>
-            </select>
+          <!-- Active Brand Badge -->
+          <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            <template x-if="currentBrand && currentBrand.logo_url">
+              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+            </template>
+            <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
 
           <!-- Sync Live Button -->
@@ -1251,14 +1624,12 @@
           </div>
         </div>
         <div class="flex items-center gap-2">
-          <!-- Site Switcher -->
-          <div class="bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/20 text-xs">
-            <span class="text-white/60 mr-1.5">Situs:</span>
-            <select x-model="selectedBrandId" @change="onBrandSelect($event.target.value)" class="bg-transparent text-white font-bold border-none p-0 focus:ring-0 cursor-pointer">
-              <template x-for="b in brands" :key="b.id">
-                <option :value="b.id" class="bg-slate-900 text-white" x-text="b.name"></option>
-              </template>
-            </select>
+          <!-- Active Brand Badge -->
+          <div class="bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/20 text-xs flex items-center gap-2">
+            <template x-if="currentBrand && currentBrand.logo_url">
+              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+            </template>
+            <span class="text-white font-bold" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
           <span class="px-3 py-2 bg-white/10 rounded-xl text-xs font-semibold backdrop-blur-sm flex items-center gap-1.5">
             <i class="fa-solid fa-images"></i> <span x-text="imageGallery.length"></span> Asset
@@ -1280,7 +1651,7 @@
                 <p class="text-[11px] text-slate-400 mt-0.5">Prompt dirancang berdasarkan pain points & solusi layanan brand</p>
               </div>
               <button type="button" @click="createSmartImagePrompt()" class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Buat Prompt
+                <i class="fa-solid fa-wand-magic-sparkles"></i> 🪄 Buat Prompt
               </button>
             </div>
 
@@ -1302,7 +1673,7 @@
 
             <!-- Prompt Presets Chips -->
             <div class="pt-2 border-t border-slate-100">
-              <span class="text-[11px] text-slate-400 block mb-1.5 font-medium">Preset Cepat:</span>
+              <span class="text-[11px] text-slate-400 block mb-1.5 font-medium">Preset Cepat Industri:</span>
               <div class="flex flex-wrap gap-1.5">
                 <button type="button" @click="imagePrompt = 'Modern software house developer workstation with dual curved screens displaying clean code and enterprise glassmorphism web dashboard 8k'" class="text-[11px] px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg transition cursor-pointer">
                   💻 Software House 8K
@@ -1310,11 +1681,11 @@
                 <button type="button" @click="imagePrompt = 'Futuristic cloud server infrastructure and API microservices architecture dashboard interface'" class="text-[11px] px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-medium rounded-lg transition cursor-pointer">
                   ☁️ Cloud System UI
                 </button>
-                <button type="button" @click="imagePrompt = 'Commercial Video Production Studio with 4K Cine Camera and Master Lighting'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
+                <button type="button" @click="imagePrompt = 'Commercial Video Production Studio with 4K Cine Camera and Master Lighting'" class="text-[11px] px-2.5 py-1 bg-purple-50 hover:bg-purple-100 text-purple-700 font-medium rounded-lg transition cursor-pointer">
                   🎥 Video Studio 4K
                 </button>
-                <button type="button" @click="imagePrompt = 'Aerial Drone Cinematography over Modern City Architecture at Sunset 8K'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
-                  🚁 Aerial Drone 8K
+                <button type="button" @click="imagePrompt = 'Aerial Drone Survey and LiDAR Mapping over Modern Industrial Plant at Sunset 8K'" class="text-[11px] px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium rounded-lg transition cursor-pointer">
+                  🚁 Drone LiDAR 8K
                 </button>
               </div>
             </div>
@@ -1332,26 +1703,32 @@
               </div>
             </div>
 
-            <!-- Aspect Ratio Selector -->
+            <!-- Aspect Ratio Selector (4 Ratios) -->
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-2">Aspek Rasio Gambar</label>
-              <div class="grid grid-cols-3 gap-3">
-                <button type="button" @click="imageRatio = '16:9'" :class="imageRatio === '16:9' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
-                  <div class="w-12 h-7 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">16:9</div>
-                  <span class="text-xs font-bold">Landscape</span>
-                  <span class="text-[10px] text-slate-400">Thumbnail WP (1200x675)</span>
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <button type="button" @click="imageRatio = '16:9'" :class="imageRatio === '16:9' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500 font-bold' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-2.5 border rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer">
+                  <div class="w-10 h-6 border-2 border-current rounded flex items-center justify-center text-[9px] font-bold">16:9</div>
+                  <span class="text-xs">Landscape</span>
+                  <span class="text-[9px] text-slate-400">1200x675 WP</span>
                 </button>
 
-                <button type="button" @click="imageRatio = '1:1'" :class="imageRatio === '1:1' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
-                  <div class="w-8 h-8 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">1:1</div>
-                  <span class="text-xs font-bold">Square</span>
-                  <span class="text-[10px] text-slate-400">Feed (1000x1000)</span>
+                <button type="button" @click="imageRatio = '1:1'" :class="imageRatio === '1:1' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500 font-bold' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-2.5 border rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer">
+                  <div class="w-7 h-7 border-2 border-current rounded flex items-center justify-center text-[9px] font-bold">1:1</div>
+                  <span class="text-xs">Square</span>
+                  <span class="text-[9px] text-slate-400">1080x1080 Feed</span>
                 </button>
 
-                <button type="button" @click="imageRatio = '9:16'" :class="imageRatio === '9:16' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
-                  <div class="w-6 h-10 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">9:16</div>
-                  <span class="text-xs font-bold">Portrait</span>
-                  <span class="text-[10px] text-slate-400">Story/Reels (720x1280)</span>
+                <button type="button" @click="imageRatio = '9:16'" :class="imageRatio === '9:16' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500 font-bold' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-2.5 border rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer">
+                  <div class="w-5 h-8 border-2 border-current rounded flex items-center justify-center text-[9px] font-bold">9:16</div>
+                  <span class="text-xs">Portrait</span>
+                  <span class="text-[9px] text-slate-400">720x1280 Story</span>
+                </button>
+
+                <button type="button" @click="imageRatio = '4:3'" :class="imageRatio === '4:3' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500 font-bold' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-2.5 border rounded-xl flex flex-col items-center gap-1 text-center transition cursor-pointer">
+                  <div class="w-8 h-6 border-2 border-current rounded flex items-center justify-center text-[9px] font-bold">4:3</div>
+                  <span class="text-xs">Showcase</span>
+                  <span class="text-[9px] text-slate-400">1200x900 Card</span>
                 </button>
               </div>
             </div>
@@ -1359,15 +1736,18 @@
             <!-- Style Selector -->
             <div>
               <label class="block text-xs font-bold text-slate-700 mb-2">Gaya Visual (Aesthetic Style)</label>
-              <div class="grid grid-cols-3 gap-3">
-                <button type="button" @click="imageStyle = 'photorealistic'" :class="imageStyle === 'photorealistic' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                  <i class="fa-solid fa-camera"></i> Photorealistic
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                <button type="button" @click="imageStyle = 'photorealistic'" :class="imageStyle === 'photorealistic' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2 px-2.5 border rounded-xl text-xs flex items-center justify-center gap-1 transition cursor-pointer">
+                  <i class="fa-solid fa-camera"></i> Enterprise
                 </button>
-                <button type="button" @click="imageStyle = 'cyberpunk'" :class="imageStyle === 'cyberpunk' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                  <i class="fa-solid fa-bolt"></i> Cyberpunk
+                <button type="button" @click="imageStyle = 'creative'" :class="imageStyle === 'creative' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2 px-2.5 border rounded-xl text-xs flex items-center justify-center gap-1 transition cursor-pointer">
+                  <i class="fa-solid fa-palette"></i> Creative 3D
                 </button>
-                <button type="button" @click="imageStyle = 'minimalist'" :class="imageStyle === 'minimalist' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                  <i class="fa-solid fa-cube"></i> Minimalist
+                <button type="button" @click="imageStyle = 'industrial'" :class="imageStyle === 'industrial' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2 px-2.5 border rounded-xl text-xs flex items-center justify-center gap-1 transition cursor-pointer">
+                  <i class="fa-solid fa-compass-drafting"></i> Blueprint
+                </button>
+                <button type="button" @click="imageStyle = 'editorial'" :class="imageStyle === 'editorial' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2 px-2.5 border rounded-xl text-xs flex items-center justify-center gap-1 transition cursor-pointer">
+                  <i class="fa-solid fa-cube"></i> Editorial
                 </button>
               </div>
             </div>
@@ -1376,20 +1756,20 @@
             <button @click="generateCustomImage()" :disabled="!imagePrompt.trim() || generatingImage" class="w-full py-3.5 bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-700 hover:to-indigo-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer">
               <i class="fa-solid fa-sparkles" x-show="!generatingImage"></i>
               <i class="fa-solid fa-circle-notch fa-spin" x-show="generatingImage"></i>
-              <span x-text="generatingImage ? 'Sedang Merender Visual AI...' : '🚀 Eksekusi Render AI (Sesi Gemini/Antigravity)'"></span>
+              <span x-text="generatingImage ? 'Sedang Merender Visual AI...' : '🚀 Eksekusi Render Visual (Imagen 3 / Studio)'"></span>
             </button>
           </div>
 
-          <!-- Card 3: Upload / Import File dari Antigravity -->
+          <!-- Card 3: Upload / Import File dari Disk / Antigravity -->
           <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
             <div class="flex justify-between items-center border-b border-slate-100 pb-2">
               <h3 class="text-xs font-bold text-slate-800 flex items-center gap-2">
-                <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Langkah 3: Import File dari Antigravity
+                <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Langkah 3: Import File Asset Langsung
               </h3>
               <span class="text-[10px] text-slate-400">Ke output/assets/<span x-text="selectedBrandId || 'brand'"></span>/images/</span>
             </div>
             <p class="text-xs text-slate-500">
-              Jika Anda telah merender gambar di percakapan Antigravity, Anda dapat mengunggah file tersebut langsung ke Bank Asset situs ini.
+              Unggah file gambar dari komputer Anda atau hasil render Antigravity langsung ke Bank Asset situs ini.
             </p>
             <input type="file" @change="handleAssetFileUpload($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
           </div>
@@ -1403,13 +1783,13 @@
                 <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
                   <i class="fa-solid fa-eye text-indigo-600"></i> Hasil Visual Terbaru
                 </h3>
-                <span x-show="latestGeneratedImage" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" x-text="latestGeneratedImage?.aspect_ratio + ' • ' + latestGeneratedImage?.width + 'x' + latestGeneratedImage?.height"></span>
+                <span x-show="latestGeneratedImage" class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200" x-text="(latestGeneratedImage?.aspect_ratio || '16:9') + ' • ' + (latestGeneratedImage?.width || '1200') + 'x' + (latestGeneratedImage?.height || '675')"></span>
               </div>
 
               <!-- Preview Frame -->
               <div class="bg-slate-900 rounded-xl p-3 flex items-center justify-center min-h-[300px] border border-slate-800 relative overflow-hidden">
                 <template x-if="latestGeneratedImage">
-                  <img :src="latestGeneratedImage.url" :alt="latestGeneratedImage.prompt" class="max-h-[360px] w-auto object-contain rounded-lg shadow-2xl">
+                  <img :src="latestGeneratedImage.url" :alt="latestGeneratedImage.prompt" class="max-h-[360px] w-auto object-contain rounded-lg shadow-2xl cursor-pointer" @click="inspectAsset(latestGeneratedImage)">
                 </template>
                 <template x-if="!latestGeneratedImage">
                   <div class="text-center text-slate-500 py-16 space-y-3">
@@ -1417,7 +1797,7 @@
                       <i class="fa-solid fa-image"></i>
                     </div>
                     <p class="text-xs">Belum ada gambar yang digenerate dalam sesi ini.</p>
-                    <p class="text-[11px] text-slate-600">Buat prompt di sebelah kiri dan klik tombol Eksekusi Render AI.</p>
+                    <p class="text-[11px] text-slate-600">Pilih prompt di sebelah kiri dan klik tombol Eksekusi Render Visual.</p>
                   </div>
                 </template>
               </div>
@@ -1427,75 +1807,158 @@
                 <div class="font-bold text-slate-800" x-text="latestGeneratedImage?.prompt"></div>
                 <div class="text-[11px] text-slate-500 flex flex-wrap items-center gap-3 font-mono">
                   <span>File: <strong class="text-slate-700" x-text="latestGeneratedImage?.filename"></strong></span>
-                  <span>URL: <strong class="text-indigo-600" x-text="latestGeneratedImage?.url"></strong></span>
+                  <span>Engine: <span class="px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-bold" x-text="latestGeneratedImage?.source || 'Studio Engine'"></span></span>
                 </div>
               </div>
             </div>
 
             <!-- Action Buttons for latest image -->
             <div x-show="latestGeneratedImage" class="pt-4 flex flex-wrap gap-2 border-t border-slate-100 mt-4">
-              <a :href="latestGeneratedImage?.url" :download="latestGeneratedImage?.filename" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+              <a :href="latestGeneratedImage?.url" :download="latestGeneratedImage?.filename" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 transition cursor-pointer">
                 <i class="fa-solid fa-download"></i> Unduh File
               </a>
               <button @click="copyToClipboard(window.location.origin + latestGeneratedImage?.url, 'URL Gambar disalin!')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
                 <i class="fa-solid fa-link"></i> Salin URL
               </button>
-              <button @click="selectAsArticleThumbnail(latestGeneratedImage)" class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
-                <i class="fa-solid fa-wand-magic-sparkles"></i> Jadikan Thumbnail Penulis
+              <button @click="useAsArticleThumbnail(latestGeneratedImage?.url)" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-thumbtack"></i> Pasang Sebagai Thumbnail Penulis
               </button>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Image Gallery Section -->
+      <!-- Image Gallery Section with Filter Tabs -->
       <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-3">
           <div>
             <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
               <i class="fa-solid fa-grip text-indigo-600"></i> Bank Asset Visual Website: <span class="text-indigo-600" x-text="currentBrand?.name || 'Situs Aktif'"></span>
             </h3>
             <p class="text-xs text-slate-500 mt-0.5">Asset tersimpan di <code class="font-mono text-slate-700" x-text="'output/assets/' + (selectedBrandId || 'brand') + '/images/'"></code></p>
           </div>
-          <button @click="loadBrandAssets()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer">
-            <i class="fa-solid fa-rotate-right"></i> Refresh Bank Asset
-          </button>
+          
+          <!-- Filter Tabs -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <button @click="galleryFilterRatio = 'all'" :class="galleryFilterRatio === 'all' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+              Semua
+            </button>
+            <button @click="galleryFilterRatio = '16:9'" :class="galleryFilterRatio === '16:9' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+              16:9 Landscape
+            </button>
+            <button @click="galleryFilterRatio = '1:1'" :class="galleryFilterRatio === '1:1' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+              1:1 Square
+            </button>
+            <button @click="galleryFilterRatio = '9:16'" :class="galleryFilterRatio === '9:16' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+              9:16 Story
+            </button>
+            <button @click="galleryFilterRatio = '4:3'" :class="galleryFilterRatio === '4:3' ? 'bg-indigo-600 text-white font-bold' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'" class="px-2.5 py-1 rounded-lg text-xs transition cursor-pointer">
+              4:3 Card
+            </button>
+            <button @click="loadBrandAssets()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1 ml-2 cursor-pointer">
+              <i class="fa-solid fa-rotate-right"></i> Refresh
+            </button>
+          </div>
         </div>
 
         <!-- Empty Gallery -->
-        <div x-show="imageGallery.length === 0" class="p-8 text-center text-xs text-slate-400">
-          Belum ada asset di bank visual situs ini. Buat prompt di atas atau render gambar pertama Anda.
+        <div x-show="filteredImageGallery.length === 0" class="p-8 text-center text-xs text-slate-400">
+          Belum ada asset di kategori ini. Buat prompt di atas atau render gambar pertama Anda.
         </div>
 
         <!-- Gallery Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" x-show="imageGallery.length > 0">
-          <template x-for="item in imageGallery" :key="item.id || item.filename">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4" x-show="filteredImageGallery.length > 0">
+          <template x-for="item in filteredImageGallery" :key="item.id || item.filename">
             <div class="border border-slate-200 rounded-xl overflow-hidden bg-slate-50 hover:shadow-md transition flex flex-col justify-between group">
-              <div class="relative aspect-video bg-slate-900 flex items-center justify-center overflow-hidden">
+              <div class="relative aspect-video bg-slate-900 flex items-center justify-center overflow-hidden cursor-pointer" @click="inspectAsset(item)">
                 <img :src="item.url" :alt="item.prompt" class="w-full h-full object-cover group-hover:scale-105 transition duration-300">
                 <span class="absolute top-2 left-2 px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-black/70 text-white backdrop-blur-sm" x-text="item.aspect_ratio || '16:9'"></span>
+                <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center gap-2">
+                  <span class="px-2.5 py-1 bg-white text-slate-900 rounded-lg text-[11px] font-bold shadow">🔍 Inspeksi</span>
+                </div>
               </div>
               <div class="p-3 space-y-2 flex-1 flex flex-col justify-between">
                 <div>
-                  <h4 class="text-xs font-bold text-slate-800 line-clamp-2" x-text="item.prompt"></h4>
+                  <h4 class="text-xs font-bold text-slate-800 line-clamp-2" x-text="item.prompt || item.filename"></h4>
                   <p class="text-[10px] text-slate-400 mt-1 font-mono truncate" x-text="item.filename"></p>
                 </div>
                 <div class="pt-2 border-t border-slate-200 flex flex-wrap justify-between items-center text-[11px] gap-2">
                   <div class="flex items-center gap-2">
                     <a :href="item.url" :download="item.filename" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1" title="Unduh File">
-                      <i class="fa-solid fa-download"></i> Unduh
+                      <i class="fa-solid fa-download"></i>
                     </a>
-                    <button @click="copyToClipboard(window.location.origin + item.url, 'URL Gambar disalin!')" class="text-slate-500 hover:text-slate-800" title="Salin URL">
-                      <i class="fa-solid fa-copy"></i>
+                    <button @click="copyToClipboard('![' + (item.prompt || 'Visual') + '](' + item.url + ')', 'Markdown link disalin!')" class="text-slate-500 hover:text-slate-800" title="Salin Markdown Link">
+                      <i class="fa-brands fa-markdown"></i>
+                    </button>
+                    <button @click="deleteBrandAsset(item.filename)" class="text-rose-500 hover:text-rose-700" title="Hapus Asset">
+                      <i class="fa-solid fa-trash-can"></i>
                     </button>
                   </div>
-                  <button @click="selectAsArticleThumbnail(item)" class="text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1 text-[10px]" title="Pilih sebagai Thumbnail Artikel">
-                    <i class="fa-solid fa-image"></i> Thumbnail
+                  <button @click="useAsArticleThumbnail(item.url)" class="px-2 py-1 rounded bg-purple-50 text-purple-700 hover:bg-purple-100 font-bold flex items-center gap-1 text-[10px] cursor-pointer" title="Pasang sebagai Thumbnail Artikel">
+                    <i class="fa-solid fa-thumbtack"></i> Thumbnail
                   </button>
                 </div>
               </div>
             </div>
           </template>
+        </div>
+      </div>
+
+      <!-- Asset Inspector Modal -->
+      <div x-show="inspectingAsset" x-cloak class="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div @click.away="inspectingAsset = null" class="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 space-y-4 shadow-2xl">
+          <div class="flex justify-between items-start border-b border-slate-100 pb-3">
+            <div>
+              <h3 class="text-base font-bold text-slate-900" x-text="inspectingAsset?.prompt || inspectingAsset?.filename"></h3>
+              <p class="text-xs text-slate-500 font-mono mt-0.5" x-text="inspectingAsset?.filename"></p>
+            </div>
+            <button @click="inspectingAsset = null" class="text-slate-400 hover:text-slate-700 p-1 text-base cursor-pointer">
+              <i class="fa-solid fa-xmark"></i>
+            </button>
+          </div>
+
+          <!-- Image Display -->
+          <div class="bg-slate-950 rounded-xl p-2 flex items-center justify-center max-h-[460px] overflow-hidden">
+            <img :src="inspectingAsset?.url" class="max-h-[440px] w-auto object-contain rounded shadow">
+          </div>
+
+          <!-- Metadata Grid -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+            <div>
+              <span class="text-slate-400 block text-[10px]">Rasio:</span>
+              <strong class="font-bold text-slate-800" x-text="inspectingAsset?.aspect_ratio || '16:9'"></strong>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-[10px]">Resolusi:</span>
+              <strong class="font-bold text-slate-800" x-text="(inspectingAsset?.width || '1200') + 'x' + (inspectingAsset?.height || '675')"></strong>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-[10px]">Source Engine:</span>
+              <strong class="font-bold text-indigo-600" x-text="inspectingAsset?.source || 'Studio Engine'"></strong>
+            </div>
+            <div>
+              <span class="text-slate-400 block text-[10px]">Brand Terikat:</span>
+              <strong class="font-bold text-slate-800" x-text="currentBrand?.name"></strong>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="pt-3 border-t border-slate-100 flex flex-wrap justify-between items-center gap-3">
+            <button @click="deleteBrandAsset(inspectingAsset?.filename)" class="px-3.5 py-2 text-rose-600 hover:bg-rose-50 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+              <i class="fa-solid fa-trash-can"></i> Hapus Asset
+            </button>
+            <div class="flex items-center gap-2 flex-wrap">
+              <button @click="copyToClipboard('![' + (inspectingAsset?.prompt || 'Visual') + '](' + inspectingAsset?.url + ')', 'Markdown link disalin!')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-brands fa-markdown"></i> Salin Markdown
+              </button>
+              <button @click="copyToClipboard(window.location.origin + inspectingAsset?.url, 'URL Gambar disalin!')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-link"></i> Salin URL
+              </button>
+              <button @click="useAsArticleThumbnail(inspectingAsset?.url)" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-thumbtack"></i> Pasang Sebagai Thumbnail
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1520,14 +1983,12 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <!-- Site Selector -->
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-bold text-slate-600">Situs:</span>
-            <select x-model="gscBrandId" @change="loadGSCPerformance()" class="text-xs font-semibold border-slate-200 rounded-xl px-3 py-2 bg-slate-50 border focus:bg-white">
-              <template x-for="b in brands" :key="b.id">
-                <option :value="b.id" x-text="b.name"></option>
-              </template>
-            </select>
+          <!-- Active Site Badge -->
+          <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
+            <template x-if="currentBrand && currentBrand.logo_url">
+              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+            </template>
+            <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
 
           <!-- Test / Refresh Button -->
@@ -2196,7 +2657,7 @@
     function geoEngineApp() {
       return {
         sidebarCollapsed: false,
-        activeTab: 'brands',
+        activeTab: 'brand_profile',
         previewMode: 'rendered',
         loading: false,
         publishing: false,
@@ -2249,6 +2710,17 @@
         imageGallery: [],
         imageBrandId: '',
         imageWatermarkLogo: true,
+        inspectingAsset: null,
+        galleryFilterRatio: 'all',
+
+        get filteredImageGallery() {
+          if (this.galleryFilterRatio === 'all') return this.imageGallery;
+          return this.imageGallery.filter(item => (item.aspect_ratio || '16:9') === this.galleryFilterRatio);
+        },
+
+        inspectAsset(item) {
+          this.inspectingAsset = item;
+        },
 
         visualizerSiteId: '',
         visualizerUrl: '',
@@ -2311,6 +2783,7 @@
 
         getActiveTabTitle() {
           const titles = {
+            'brand_profile': 'Profil & Branding Situs',
             'brands': 'Jaringan Semua Situs',
             'visualizer': 'Visualisasi Website Real',
             'keywordbank': 'Bank Kata Kunci Marketing',
@@ -2327,10 +2800,12 @@
 
         onBrandSelect(brandId) {
           this.selectedBrandId = brandId;
+          try { localStorage.setItem('selected_brand_id', brandId); } catch(e){}
           this.visualizerSiteId = brandId;
           this.gscBrandId = brandId;
           this.selectedArticlesBrandId = brandId;
           this.imageBrandId = brandId;
+          this.bulkBrandId = brandId;
 
           if (this.activeTab === 'keywordbank') {
             this.loadKeywordBank();
@@ -2342,6 +2817,110 @@
             this.switchVisualizerSite(brandId);
           } else if (this.activeTab === 'writer') {
             this.loadBrandServices();
+          }
+        },
+
+        async uploadBrandLogo(event) {
+          const file = event.target.files[0];
+          if (!file || !this.selectedBrandId) return;
+          const formData = new FormData();
+          formData.append('file', file);
+          try {
+            const res = await fetch(`/api/brands/${this.selectedBrandId}/logo/upload`, {
+              method: 'POST',
+              body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              if (this.currentBrand) {
+                this.currentBrand.logo_url = data.logo_url;
+              }
+              this.showToast('Logo Brand Diperbarui', 'Logo resmi berhasil diunggah dan disimpan ke server.', 'success');
+              await this.loadBrands();
+            } else {
+              this.showToast('Gagal Upload', data.detail || 'Terjadi kesalahan saat mengunggah logo.', 'error');
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
+          }
+        },
+
+        async saveBrandProfile() {
+          if (!this.selectedBrandId || !this.currentBrand) return;
+          this.savingSettings = true;
+          try {
+            const payload = {
+              name: this.currentBrand.name,
+              domain_url: this.currentBrand.domain_url,
+              api_secret_key: this.currentBrand.api_secret_key,
+              logo_url: this.currentBrand.logo_url,
+              tagline: this.currentBrand.tagline,
+              cta_tagline: this.currentBrand.cta_tagline,
+              industry_focus: this.currentBrand.industry_focus,
+              contact_whatsapp: this.currentBrand.contact_whatsapp,
+              contact_email: this.currentBrand.contact_email,
+              brand_color_primary: this.currentBrand.brand_color_primary || '#4f46e5',
+              brand_color_accent: this.currentBrand.brand_color_accent || '#7c3aed',
+              hq_location: this.currentBrand.hq_location,
+              core_pain_points: this.currentBrand.core_pain_points || [],
+              core_solutions: this.currentBrand.core_solutions || [],
+              gsc_site_url: this.currentBrand.gsc_site_url,
+              gsc_service_account_json: this.currentBrand.gsc_service_account_json
+            };
+            const res = await fetch(`/api/brands/${this.selectedBrandId}/settings`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              this.showToast('Branding Disimpan', 'Identitas, warna, dan matriks solusi brand berhasil disimpan.', 'success');
+              await this.loadBrands();
+            } else {
+              this.showToast('Gagal Menyimpan', data.detail || 'Terjadi kesalahan.', 'error');
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
+          } finally {
+            this.savingSettings = false;
+          }
+        },
+
+        useAsArticleThumbnail(imageUrl) {
+          if (!imageUrl) return;
+          this.selectedThumbnailUrl = imageUrl;
+          if (this.previewData) {
+            this.previewData.featured_image = {
+              url: imageUrl,
+              alt: this.currentBrand ? `${this.currentBrand.name} Visual` : 'Featured Visual',
+              caption: 'Visual resmi solusi brand.'
+            };
+            this.previewData.featured_media = {
+              url: imageUrl,
+              source: 'brand_asset_bank'
+            };
+          }
+          this.showToast('Thumbnail Dipasang', 'Asset berhasil dipasang sebagai featured thumbnail di Studio Penulis.', 'success');
+          this.activeTab = 'writer';
+        },
+
+        async deleteBrandAsset(filename) {
+          if (!confirm(`Hapus asset "${filename}" secara permanen?`)) return;
+          if (!this.selectedBrandId) return;
+          try {
+            const res = await fetch(`/api/brands/${this.selectedBrandId}/assets/${filename}`, {
+              method: 'DELETE'
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              this.showToast('Asset Dihapus', data.message, 'success');
+              this.inspectingAsset = null;
+              await this.loadBrandAssets();
+            } else {
+              this.showToast('Gagal Hapus', data.detail || 'Gagal menghapus asset.', 'error');
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
           }
         },
 
@@ -2421,9 +3000,21 @@
             const res = await fetch('/api/brands');
             const data = await res.json();
             this.brands = data.brands || [];
-            if (this.brands.length > 0 && !this.selectedBrandId) {
+            
+            const savedBrandId = localStorage.getItem('selected_brand_id');
+            if (savedBrandId && this.brands.some(b => b.id === savedBrandId)) {
+              this.selectedBrandId = savedBrandId;
+            } else if (this.brands.length > 0 && (!this.selectedBrandId || !this.brands.some(b => b.id === this.selectedBrandId))) {
               this.selectedBrandId = this.brands[0].id;
-              this.bulkBrandId = this.brands[0].id;
+            }
+
+            this.bulkBrandId = this.selectedBrandId;
+            this.visualizerSiteId = this.selectedBrandId;
+            this.gscBrandId = this.selectedBrandId;
+            this.selectedArticlesBrandId = this.selectedBrandId;
+            this.imageBrandId = this.selectedBrandId;
+
+            if (this.selectedBrandId) {
               await this.loadBrandServices();
               await this.loadBulkServices();
             }
@@ -2870,7 +3461,10 @@
                 brand_id: targetBrandId,
                 brand_name: this.currentBrand?.name || this.imageBrand || 'GEO Studio',
                 location: this.currentBrand?.hq_location || this.imageLocation || 'Indonesia',
-                logo_url: this.imageWatermarkLogo ? this.currentBrand?.logo_url : null
+                logo_url: this.imageWatermarkLogo ? this.currentBrand?.logo_url : null,
+                watermark_logo: this.imageWatermarkLogo,
+                brand_color_primary: this.currentBrand?.brand_color_primary || '#4f46e5',
+                brand_color_accent: this.currentBrand?.brand_color_accent || '#7c3aed'
               })
             });
             const data = await res.json();

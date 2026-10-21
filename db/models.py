@@ -36,6 +36,8 @@ class Brand(Base):
     gsc_service_account_json = Column(Text, nullable=True) # Service account JSON credentials for GSC
     core_pain_points = Column(Text, default="[]") # JSON list of client pain points solved
     core_solutions = Column(Text, default="[]") # JSON list of solutions provided
+    brand_color_primary = Column(String(30), default="#4f46e5")
+    brand_color_accent = Column(String(30), default="#7c3aed")
 
     # Relationships
     services = relationship("Service", back_populates="brand", cascade="all, delete-orphan")
@@ -69,6 +71,8 @@ class Brand(Base):
             "has_gsc_credentials": bool(self.gsc_service_account_json and len(self.gsc_service_account_json.strip()) > 10),
             "core_pain_points": json.loads(self.core_pain_points or "[]"),
             "core_solutions": json.loads(self.core_solutions or "[]"),
+            "brand_color_primary": self.brand_color_primary or "#4f46e5",
+            "brand_color_accent": self.brand_color_accent or "#7c3aed",
             "services_count": len(self.services) if self.services else 0,
             "articles_count": len(self.articles) if self.articles else 0
         }

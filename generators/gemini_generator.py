@@ -247,12 +247,22 @@ class GeminiMultiAccountEngine:
                     resp = requests.get(logo_clean, timeout=5)
                     if resp.status_code == 200:
                         logo_img = Image.open(BytesIO(resp.content))
-                elif os.path.exists(logo_clean):
-                    logo_img = Image.open(logo_clean)
+                else:
+                    candidates = [
+                        logo_clean,
+                        logo_clean.lstrip("/"),
+                        os.path.join(self.base_output_dir, "..", logo_clean.lstrip("/")),
+                        os.path.join(self.base_output_dir, logo_clean.lstrip("/")),
+                        os.path.join(os.getcwd(), logo_clean.lstrip("/"))
+                    ]
+                    for cand in candidates:
+                        if os.path.exists(cand) and os.path.isfile(cand):
+                            logo_img = Image.open(cand)
+                            break
 
                 if logo_img:
                     logo_img = logo_img.convert("RGBA")
-                    max_w, max_h = 200, 55
+                    max_w, max_h = 220, 60
                     logo_img.thumbnail((max_w, max_h), Image.Resampling.LANCZOS)
                     
                     lw, lh = logo_img.size
@@ -261,10 +271,10 @@ class GeminiMultiAccountEngine:
                     box_x2 = width - 40
                     box_y2 = box_y1 + lh + 20
 
-                    # Draw glass backdrop for logo
+                    # Draw sleek glass backdrop for logo
                     overlay = Image.new("RGBA", canvas.size, (255, 255, 255, 0))
                     draw_o = ImageDraw.Draw(overlay)
-                    draw_o.rounded_rectangle([(box_x1, box_y1), (box_x2, box_y2)], radius=12, fill=(15, 23, 42, 210), outline=(99, 102, 241, 200), width=1)
+                    draw_o.rounded_rectangle([(box_x1, box_y1), (box_x2, box_y2)], radius=12, fill=(15, 23, 42, 220), outline=(99, 102, 241, 180), width=1)
                     canvas.paste(Image.alpha_composite(canvas.convert("RGBA"), overlay).convert("RGB"))
                     
                     # Paste logo with alpha mask
@@ -358,10 +368,14 @@ class GeminiMultiAccountEngine:
         aspect_ratio: str = "16:9",
         style: str = "photorealistic",
         logo_url: Optional[str] = None,
-        brand_id: Optional[str] = None
+        brand_id: Optional[str] = None,
+        brand_color_primary: Optional[str] = "#4f46e5",
+        brand_color_accent: Optional[str] = "#7c3aed",
+        watermark_logo: bool = True
     ) -> Dict[str, Any]:
         """
-        Interactive visual generator supporting 16:9, 1:1, 9:16 aspect ratios and brand logo watermarking.
+        Production image generator supporting 16:9, 1:1, 9:16, 4:3 aspect ratios,
+        Google Imagen 3 API integration, and brand color palette / logo watermarking.
         Stores into per-brand asset directory output/assets/{brand_id}/images/ when specified.
         """
         import time
@@ -373,49 +387,149 @@ class GeminiMultiAccountEngine:
         filepath = os.path.join(target_dir, filename)
         web_url = self.get_brand_asset_url(brand_id, filename)
 
+        # Resolution map
         width, height = 1200, 675
+        imagen_ratio = "16:9"
         if aspect_ratio == "1:1":
-            width, height = 1000, 1000
+            width, height = 1080, 1080
+            imagen_ratio = "1:1"
         elif aspect_ratio == "9:16":
             width, height = 720, 1280
+            imagen_ratio = "9:16"
+        elif aspect_ratio == "4:3":
+            width, height = 1200, 900
+            imagen_ratio = "4:3"
+
+        # Style prompt enrichment
+        style_enrichment = ""
+        if style == "photorealistic" or style == "enterprise":
+            style_enrichment = "Award-winning commercial photography, architectural glass office, high-end enterprise technology aesthetic, 8k resolution, cinematic lighting. "
+        elif style == "creative":
+            style_enrichment = "Vibrant modern agency branding visual, glassmorphic 3D elements, dynamic gradient lighting, ultra-clean commercial composition. "
+        elif style == "industrial":
+            style_enrichment = "Precision engineering schematic, technical LiDAR blueprint, industrial grade commercial photography, crisp studio lighting. "
+        elif style == "editorial":
+            style_enrichment = "Minimalist luxury editorial aesthetic, soft natural studio lighting, high fashion typography layout, perfect negative space. "
+
+        full_prompt = f"{style_enrichment}{prompt}. Official brand visual for {brand_name} in {location}."
+
+        # 1. Attempt Google Imagen 3 via Gemini authentication / Antigravity session
+        attempts = max(1, len(self.auth.accounts))
+        for _ in range(attempts):
+            auth_info = self.auth.get_active_auth_headers_or_param()
+            if not auth_info:
+                break
+
+            headers = {"Content-Type": "application/json"}
+            headers.update(auth_info.get("headers", {}))
+            params = auth_info.get("param", {})
+
+            url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict"
+            payload = {
+                "instances": [{"prompt": full_prompt}],
+                "parameters": {
+                    "sampleCount": 1,
+                    "aspectRatio": imagen_ratio,
+                    "personGeneration": "ALLOW_ADULT"
+                }
+            }
+
+            try:
+                resp = requests.post(url, headers=headers, params=params, json=payload, timeout=25)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    predictions = data.get("predictions", [])
+                    if predictions and "bytesBase64Encoded" in predictions[0]:
+                        raw_bytes = base64.b64decode(predictions[0]["bytesBase64Encoded"])
+                        base_img = Image.open(BytesIO(raw_bytes)).convert("RGB")
+                        base_img = base_img.resize((width, height), Image.Resampling.LANCZOS)
+
+                        # Overlay logo watermark if enabled
+                        if watermark_logo and (logo_url or brand_name):
+                            self._draw_logo_on_canvas(base_img, logo_url, brand_name, width, height)
+
+                        base_img.save(filepath, "JPEG", quality=92)
+                        with open(filepath, "rb") as f:
+                            b64_res = base64.b64encode(f.read()).decode("utf-8")
+
+                        logger.info(f"[GeminiEngine] Successfully generated custom Imagen 3 visual: {filepath}")
+                        result = {
+                            "success": True,
+                            "source": "gemini_imagen_3",
+                            "id": f"img-{uuid.uuid4().hex[:8]}",
+                            "filename": filename,
+                            "file_path": filepath,
+                            "url": web_url,
+                            "brand_id": brand_id,
+                            "prompt": prompt,
+                            "brand_name": brand_name,
+                            "aspect_ratio": aspect_ratio,
+                            "style": style,
+                            "width": width,
+                            "height": height,
+                            "base64_data": b64_res
+                        }
+                        self._record_gallery_item(result, brand_id=brand_id)
+                        return result
+                elif resp.status_code in [429, 403]:
+                    self.auth.rotate()
+                else:
+                    self.auth.rotate()
+            except Exception as e:
+                logger.warning(f"[GeminiEngine] Imagen generation request error: {e}")
+                self.auth.rotate()
+
+        # 2. Resilient High-Aesthetic Studio Canvas Engine (Fallback)
+        # Parse brand color tokens
+        def parse_hex(hex_val, fallback):
+            try:
+                h = (hex_val or "").lstrip("#")
+                if len(h) == 6:
+                    return tuple(int(h[i:i+2], 16) for i in (0, 2, 4))
+            except Exception:
+                pass
+            return fallback
+
+        c_primary = parse_hex(brand_color_primary, (79, 70, 229))
+        c_accent = parse_hex(brand_color_accent, (124, 58, 237))
 
         img = Image.new("RGB", (width, height), color=(15, 23, 42))
         draw = ImageDraw.Draw(img)
 
-        # Ambient gradient background
+        # Ambient gradient background incorporating brand colors
         for y in range(height):
             ratio = y / height
-            if style == "cyberpunk":
-                r = int(18 + (30 * ratio))
-                g = int(10 + (15 * ratio))
-                b = int(45 + (60 * ratio))
-            elif style == "minimalist":
-                r = int(24 + (16 * ratio))
-                g = int(27 + (18 * ratio))
-                b = int(35 + (22 * ratio))
-            else:
-                r = int(15 + (18 * ratio))
-                g = int(23 + (12 * ratio))
-                b = int(42 + (35 * ratio))
-            draw.line([(0, y), (width, y)], fill=(r, g, b))
+            r = int(12 + ((c_primary[0] * 0.12) * ratio))
+            g = int(18 + ((c_primary[1] * 0.12) * ratio))
+            b = int(32 + ((c_accent[2] * 0.18) * ratio))
+            draw.line([(0, y), (width, y)], fill=(min(r, 255), min(g, 255), min(b, 255)))
 
-        # Accent border
-        draw.rounded_rectangle([(24, 24), (width - 24, height - 24)], radius=20, outline=(99, 102, 241), width=2)
+        # Modern tech grid overlay (subtle lines)
+        grid_step = 60
+        for gx in range(0, width, grid_step):
+            draw.line([(gx, 0), (gx, height)], fill=(255, 255, 255, 8))
+        for gy in range(0, height, grid_step):
+            draw.line([(0, gy), (width, gy)], fill=(255, 255, 255, 8))
 
-        # Header Badge
+        # Brand accent border
+        draw.rounded_rectangle([(24, 24), (width - 24, height - 24)], radius=20, outline=c_primary, width=2)
+        draw.rounded_rectangle([(28, 28), (width - 28, height - 28)], radius=18, outline=c_accent, width=1)
+
+        # Header Category Badge (Left)
         badge_text = f"  ✦ {brand_name.upper()}  •  {style.upper()}  •  {location.upper()}  "
-        draw.rounded_rectangle([(50, 50), (min(width - 50, 520), 100)], radius=12, fill=(67, 56, 202))
-        draw.text((65, 66), badge_text, fill=(255, 255, 255))
+        badge_w = min(width - 50, 520) if width >= 800 else width - 60
+        draw.rounded_rectangle([(50, 45), (badge_w, 95)], radius=12, fill=c_primary)
+        draw.text((65, 61), badge_text, fill=(255, 255, 255))
 
-        # Logo on Top Right if width allows
-        if width >= 900:
+        # Logo on Top Right if enabled
+        if watermark_logo and width >= 700:
             self._draw_logo_on_canvas(img, logo_url, brand_name, width, height)
 
-        # Prompt Title Text Wrap
+        # Main Prompt Headline (Wrap text cleanly)
         words = prompt.split()
         lines = []
         cur = []
-        max_chars = 34 if width >= 1000 else 22
+        max_chars = 36 if width >= 1000 else (26 if width >= 700 else 18)
         for w in words:
             if len(" ".join(cur + [w])) <= max_chars:
                 cur.append(w)
@@ -425,16 +539,23 @@ class GeminiMultiAccountEngine:
         if cur:
             lines.append(" ".join(cur))
 
-        y_pos = int(height * 0.32)
+        y_pos = int(height * 0.30)
+        line_height = 64 if height >= 900 else 52
         for line in lines[:4]:
-            draw.text((54, y_pos + 2), line, fill=(0, 0, 0))
+            draw.text((54, y_pos + 3), line, fill=(0, 0, 0))
             draw.text((50, y_pos), line, fill=(248, 250, 252))
-            y_pos += 65
+            y_pos += line_height
 
-        # Footer pill
-        footer_y = height - 90
-        draw.rounded_rectangle([(50, footer_y), (width - 50, footer_y + 45)], radius=10, fill=(30, 41, 59))
-        draw.text((65, footer_y + 14), f"✨ Generated by GEO Studio AI • Ratio {aspect_ratio} • Resolution {width}x{height}", fill=(148, 163, 184))
+        # Problem-Solution Value Pill
+        if height >= 600:
+            sol_y = y_pos + 20
+            draw.rounded_rectangle([(50, sol_y), (min(width - 50, 680), sol_y + 40)], radius=8, fill=(30, 41, 59))
+            draw.text((65, sol_y + 11), f"✓ Solusi Terpercaya  •  ✓ Bergaransi Resmi  •  ✓ Konsultasi Langsung", fill=(52, 211, 153))
+
+        # Footer Status Pill
+        footer_y = height - 85
+        draw.rounded_rectangle([(50, footer_y), (width - 50, footer_y + 45)], radius=10, fill=(15, 23, 42), outline=(51, 65, 85), width=1)
+        draw.text((65, footer_y + 14), f"✨ GEO Engine Studio Visual • Rasio {aspect_ratio} ({width}x{height}px) • {brand_name}", fill=(148, 163, 184))
 
         img.save(filepath, "JPEG", quality=92)
 
@@ -443,6 +564,7 @@ class GeminiMultiAccountEngine:
 
         result = {
             "success": True,
+            "source": "studio_canvas_fallback",
             "id": f"img-{uuid.uuid4().hex[:8]}",
             "filename": filename,
             "file_path": filepath,

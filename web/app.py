@@ -62,6 +62,9 @@ class GenerateCustomImageRequest(BaseModel):
     style: Optional[str] = "photorealistic"
     service_name: Optional[str] = None
     logo_url: Optional[str] = None
+    watermark_logo: Optional[bool] = True
+    brand_color_primary: Optional[str] = None
+    brand_color_accent: Optional[str] = None
 
 class CreateImagePromptRequest(BaseModel):
     brand_id: Optional[str] = None
@@ -152,6 +155,8 @@ class BrandSettingsRequest(BaseModel):
     gsc_service_account_json: Optional[str] = None
     core_pain_points: Optional[List[str]] = None
     core_solutions: Optional[List[str]] = None
+    brand_color_primary: Optional[str] = None
+    brand_color_accent: Optional[str] = None
     hq_location: Optional[str] = None
     default_language: Optional[str] = None
     revision_guarantee: Optional[str] = None
@@ -443,6 +448,10 @@ def update_brand_settings(brand_id: str, req: BrandSettingsRequest, db: Session 
         brand.core_pain_points = json.dumps(req.core_pain_points)
     if req.core_solutions is not None:
         brand.core_solutions = json.dumps(req.core_solutions)
+    if req.brand_color_primary is not None:
+        brand.brand_color_primary = req.brand_color_primary.strip()
+    if req.brand_color_accent is not None:
+        brand.brand_color_accent = req.brand_color_accent.strip()
     if req.hq_location is not None:
         brand.hq_location = req.hq_location.strip()
     if req.default_language is not None:
@@ -810,7 +819,7 @@ def test_router_completion(req: TestCompletionRequest):
 @app.post("/api/images/generate")
 @app.post("/api/brands/{brand_id}/generate-image")
 def generate_custom_image(req: GenerateCustomImageRequest, brand_id: Optional[str] = None, db: Session = Depends(get_db)):
-    """Generates custom graphic/thumbnail with specified aspect ratio (16:9, 1:1, 9:16) and saves into per-brand asset directory."""
+    """Generates custom graphic/thumbnail with specified aspect ratio (16:9, 1:1, 9:16, 4:3) and saves into per-brand asset directory."""
     if not req.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt tidak boleh kosong.")
     
@@ -818,6 +827,8 @@ def generate_custom_image(req: GenerateCustomImageRequest, brand_id: Optional[st
     brand_name = req.brand_name or "GEO Studio"
     location = req.location or "Indonesia"
     logo_url = req.logo_url
+    brand_color_primary = req.brand_color_primary or "#4f46e5"
+    brand_color_accent = req.brand_color_accent or "#7c3aed"
 
     if effective_brand_id:
         brand = db.query(Brand).filter(Brand.id == effective_brand_id).first()
@@ -825,6 +836,8 @@ def generate_custom_image(req: GenerateCustomImageRequest, brand_id: Optional[st
             brand_name = brand.name
             location = brand.hq_location or location
             logo_url = brand.logo_url or logo_url
+            brand_color_primary = brand.brand_color_primary or brand_color_primary
+            brand_color_accent = brand.brand_color_accent or brand_color_accent
     
     result = geo_writer.gemini.generate_custom_image(
         prompt=req.prompt.strip(),
@@ -833,7 +846,10 @@ def generate_custom_image(req: GenerateCustomImageRequest, brand_id: Optional[st
         aspect_ratio=req.aspect_ratio or "16:9",
         style=req.style or "photorealistic",
         logo_url=logo_url,
-        brand_id=effective_brand_id
+        brand_id=effective_brand_id,
+        brand_color_primary=brand_color_primary,
+        brand_color_accent=brand_color_accent,
+        watermark_logo=req.watermark_logo if req.watermark_logo is not None else True
     )
 
     # Persist in MediaAsset table if brand_id is specified
@@ -955,6 +971,75 @@ async def upload_brand_asset(brand_id: str, file: UploadFile = File(...), db: Se
         "message": f"Asset '{file.filename}' berhasil disimpan ke bank asset situs {brand.name}.",
         "asset": asset_record
     }
+
+@app.post("/api/brands/{brand_id}/logo/upload")
+async def upload_brand_logo(brand_id: str, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Uploads official brand logo, saves to output/assets/{brand_id}/logo.[ext], and updates brand.logo_url."""
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+
+    brand_dir = geo_writer.gemini.get_brand_asset_dir(brand_id)
+    os.makedirs(brand_dir, exist_ok=True)
+
+    ext = os.path.splitext(file.filename)[1].lower() or ".png"
+    if ext not in [".png", ".jpg", ".jpeg", ".svg", ".webp"]:
+        ext = ".png"
+
+    logo_filename = f"logo{ext}"
+    dest_path = os.path.join(brand_dir, logo_filename)
+
+    contents = await file.read()
+    with open(dest_path, "wb") as f:
+        f.write(contents)
+
+    logo_url = geo_writer.gemini.get_brand_asset_url(brand_id, logo_filename)
+    brand.logo_url = logo_url
+    db.commit()
+
+    return {
+        "success": True,
+        "message": f"Logo brand '{brand.name}' berhasil diperbarui.",
+        "logo_url": logo_url,
+        "brand": brand.to_dict()
+    }
+
+@app.delete("/api/brands/{brand_id}/assets/{filename}")
+def delete_brand_asset(brand_id: str, filename: str, db: Session = Depends(get_db)):
+    """Deletes an asset from the brand asset directory, database, and gallery index."""
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+
+    brand_dir = geo_writer.gemini.get_brand_asset_dir(brand_id)
+    filepath = os.path.join(brand_dir, filename)
+    if os.path.exists(filepath):
+        try:
+            os.remove(filepath)
+        except Exception as e:
+            logging.warning(f"Failed to delete file {filepath}: {e}")
+
+    # Remove from MediaAsset table
+    file_url = geo_writer.gemini.get_brand_asset_url(brand_id, filename)
+    db.query(MediaAsset).filter(
+        MediaAsset.brand_id == brand_id,
+        (MediaAsset.file_url == file_url) | (MediaAsset.title_template == filename)
+    ).delete(synchronize_session=False)
+    db.commit()
+
+    # Clean from gallery.json if present
+    gallery_file = os.path.join(brand_dir, "gallery.json")
+    if os.path.exists(gallery_file):
+        try:
+            with open(gallery_file, "r") as f:
+                items = json.load(f)
+            items = [it for it in items if it.get("filename") != filename]
+            with open(gallery_file, "w") as f:
+                json.dump(items, f, indent=2)
+        except Exception:
+            pass
+
+    return {"success": True, "message": f"Asset '{filename}' berhasil dihapus."}
 
 @app.get("/api/images/gallery")
 def get_image_gallery(brand_id: Optional[str] = None):
