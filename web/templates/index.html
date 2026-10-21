@@ -49,6 +49,22 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Accessible Interactive States (Lighthouse & A11y Standards) */
+    button:focus-visible, 
+    input:focus-visible, 
+    select:focus-visible, 
+    textarea:focus-visible,
+    a:focus-visible {
+      outline: 2px solid #4f46e5 !important;
+      outline-offset: 2px !important;
+    }
+
+    /* WCAG AA Color Contrast Fixes (>= 4.5:1 ratio) */
+    footer span {
+      color: #475569 !important; /* slate-600 */
+      font-size: 14px;
+    }
   </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans antialiased h-screen overflow-hidden flex" x-data="geoEngineApp()" x-init="init()">
@@ -132,14 +148,14 @@
                 <div class="flex items-center gap-2.5 min-w-0 flex-1">
                   <div class="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0 text-white font-bold text-xs">
                     <template x-if="currentBrand && currentBrand.logo_url">
-                      <img :src="currentBrand.logo_url" class="w-full h-full object-cover">
+                      <img :src="currentBrand.logo_url" :alt="currentBrand?.name ? currentBrand.name + ' Logo' : 'Logo Situs'" class="w-full h-full object-cover">
                     </template>
                     <template x-if="!currentBrand || !currentBrand.logo_url">
                       <span x-text="(currentBrand?.name || 'S').substring(0, 1).toUpperCase()"></span>
                     </template>
                   </div>
                   <div class="min-w-0 flex-1">
-                    <select x-model="selectedBrandId" @change="onBrandSelect($event.target.value)" 
+                    <select id="sidebar-active-brand" aria-label="Pilih Situs Aktif" x-model="selectedBrandId" @change="onBrandSelect($event.target.value)" 
                             class="w-full bg-transparent text-xs font-bold text-white border-none p-0 focus:ring-0 cursor-pointer truncate">
                       <template x-for="b in brands" :key="b.id">
                         <option :value="b.id" class="bg-slate-900 text-white" x-text="b.name"></option>
@@ -159,7 +175,7 @@
                         class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white relative hover:border-indigo-500 transition cursor-pointer"
                         :title="(currentBrand?.name || 'Situs') + ' - Klik untuk pengaturan'">
                   <template x-if="currentBrand && currentBrand.logo_url">
-                    <img :src="currentBrand.logo_url" class="w-8 h-8 rounded-lg object-cover">
+                    <img :src="currentBrand.logo_url" :alt="currentBrand?.name ? currentBrand.name + ' Logo' : 'Logo Situs'" class="w-8 h-8 rounded-lg object-cover">
                   </template>
                   <template x-if="!currentBrand || !currentBrand.logo_url">
                     <span class="text-xs font-bold" x-text="(currentBrand?.name || 'S').substring(0, 1).toUpperCase()"></span>
@@ -362,7 +378,7 @@
     </header>
 
     <!-- Scrollable Tab Content Container -->
-    <main class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 space-y-6">
+    <main class="flex-1 overflow-y-auto custom-scrollbar p-4 sm:p-6 lg:p-8 space-y-6 pb-12 min-w-0">
 
     <!-- ========================================== -->
     <!-- TAB 0: PROFIL & BRANDING SITUS (WORKSPACE) -->
@@ -379,7 +395,7 @@
               <!-- Brand Logo with Hover Upload Button -->
               <div class="relative group w-16 h-16 rounded-2xl bg-slate-900 border border-slate-200 overflow-hidden flex items-center justify-center flex-shrink-0 shadow-inner">
                 <template x-if="currentBrand.logo_url">
-                  <img :src="currentBrand.logo_url" :alt="currentBrand.name" class="w-full h-full object-contain p-1.5">
+                  <img :src="currentBrand.logo_url" :alt="currentBrand?.name ? currentBrand.name + ' Logo' : 'Logo Brand'" class="w-full h-full object-contain p-1.5">
                 </template>
                 <template x-if="!currentBrand.logo_url">
                   <span class="text-xl font-extrabold text-white uppercase" x-text="currentBrand.name.substring(0, 2)"></span>
@@ -387,7 +403,7 @@
                 <label class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition flex flex-col items-center justify-center text-white text-[9px] font-bold cursor-pointer backdrop-blur-[1px]">
                   <i class="fa-solid fa-camera mb-0.5"></i>
                   <span>Ganti</span>
-                  <input type="file" @change="uploadBrandLogo($event)" accept="image/*" class="hidden">
+                  <input type="file" aria-label="Unggah File Logo Brand" @change="uploadBrandLogo($event)" accept="image/*" class="hidden">
                 </label>
               </div>
 
@@ -434,10 +450,10 @@
           </div>
 
           <!-- 2 Columns Grid: Left = Visual & Tokens, Right = Marketing Matrix & Integrations -->
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 min-w-0">
             
             <!-- LEFT COLUMN (7 cols): Visual Identity, Design Tokens & Contacts -->
-            <div class="lg:col-span-7 space-y-6">
+            <div class="lg:col-span-7 min-w-0 space-y-6">
               
               <!-- Card: Visual Identity & Design Tokens (/brand) -->
               <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
@@ -450,11 +466,11 @@
 
                 <!-- Logo Uploader & URL -->
                 <div class="space-y-2">
-                  <label class="block text-xs font-bold text-slate-700">Official Brand Logo</label>
+                  <label for="brand_profile_logo_url" class="block text-xs font-bold text-slate-700">Official Brand Logo</label>
                   <div class="flex items-center gap-4 p-3.5 bg-slate-50 rounded-xl border border-slate-200">
                     <div class="w-14 h-14 rounded-xl bg-slate-900 border border-slate-300 flex items-center justify-center p-1 overflow-hidden flex-shrink-0">
                       <template x-if="currentBrand.logo_url">
-                        <img :src="currentBrand.logo_url" class="max-h-full max-w-full object-contain">
+                        <img :src="currentBrand.logo_url" :alt="(currentBrand?.name || 'Brand') + ' Logo'" class="max-h-full max-w-full object-contain">
                       </template>
                       <template x-if="!currentBrand.logo_url">
                         <span class="text-xs font-bold text-white uppercase" x-text="currentBrand.name.substring(0, 2)"></span>
@@ -464,11 +480,11 @@
                       <div class="flex items-center gap-2">
                         <label class="px-3 py-1.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition flex items-center gap-1.5 cursor-pointer">
                           <i class="fa-solid fa-arrow-up-from-bracket text-indigo-600"></i> Unggah File Logo
-                          <input type="file" @change="uploadBrandLogo($event)" accept="image/*" class="hidden">
+                          <input type="file" aria-label="Unggah File Logo Brand" @change="uploadBrandLogo($event)" accept="image/*" class="hidden">
                         </label>
-                        <span class="text-[11px] text-slate-400">PNG, SVG, atau WebP (Transparan disarankan)</span>
+                        <span class="text-[11px] text-slate-500">PNG, SVG, atau WebP (Transparan disarankan)</span>
                       </div>
-                      <input type="text" x-model="currentBrand.logo_url" placeholder="https://... atau /output/assets/brand/images/logo.png" class="w-full text-xs border-slate-200 rounded-lg p-2 border font-mono bg-white">
+                      <input type="text" id="brand_profile_logo_url" aria-label="URL Logo Brand" x-model="currentBrand.logo_url" placeholder="https://... atau /output/assets/brand/images/logo.png" class="w-full text-xs border-slate-200 rounded-lg p-2 border font-mono bg-white">
                     </div>
                   </div>
                 </div>
@@ -479,22 +495,22 @@
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <!-- Primary Color -->
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-                      <span class="text-[11px] font-bold text-slate-600 block">Warna Utama (Primary)</span>
+                      <label for="brand_color_primary_picker" class="text-[11px] font-bold text-slate-600 block">Warna Utama (Primary)</label>
                       <div class="flex items-center gap-2">
-                        <input type="color" x-model="currentBrand.brand_color_primary" class="w-9 h-9 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
-                        <input type="text" x-model="currentBrand.brand_color_primary" placeholder="#4f46e5" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
+                        <input type="color" id="brand_color_primary_picker" aria-label="Pemilih Warna Utama Brand" x-model="currentBrand.brand_color_primary" class="w-9 h-9 min-h-[36px] rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
+                        <input type="text" id="brand_color_primary_hex" aria-label="Kode Hex Warna Utama Brand" x-model="currentBrand.brand_color_primary" placeholder="#4f46e5" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
                       </div>
-                      <span class="text-[10px] text-slate-400">Digunakan untuk Tombol CTA, Header Banner & Border</span>
+                      <span class="text-[10px] text-slate-500">Digunakan untuk Tombol CTA, Header Banner & Border</span>
                     </div>
 
                     <!-- Accent Color -->
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-1.5">
-                      <span class="text-[11px] font-bold text-slate-600 block">Warna Aksen (Accent)</span>
+                      <label for="brand_color_accent_picker" class="text-[11px] font-bold text-slate-600 block">Warna Aksen (Accent)</label>
                       <div class="flex items-center gap-2">
-                        <input type="color" x-model="currentBrand.brand_color_accent" class="w-9 h-9 rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
-                        <input type="text" x-model="currentBrand.brand_color_accent" placeholder="#7c3aed" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
+                        <input type="color" id="brand_color_accent_picker" aria-label="Pemilih Warna Aksen Brand" x-model="currentBrand.brand_color_accent" class="w-9 h-9 min-h-[36px] rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
+                        <input type="text" id="brand_color_accent_hex" aria-label="Kode Hex Warna Aksen Brand" x-model="currentBrand.brand_color_accent" placeholder="#7c3aed" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
                       </div>
-                      <span class="text-[10px] text-slate-400">Digunakan untuk Glow Visual, Badge & Highlight</span>
+                      <span class="text-[10px] text-slate-500">Digunakan untuk Glow Visual, Badge & Highlight</span>
                     </div>
                   </div>
 
@@ -521,24 +537,24 @@
                 <!-- Tagline & CTA Slogan -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Tagline Resmi Brand</label>
-                    <input type="text" x-model="currentBrand.tagline" placeholder="Solusi Pemetaan Drone LiDAR Presisi Tinggi" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                    <label for="current_brand_tagline" class="block text-xs font-bold text-slate-700 mb-1">Tagline Resmi Brand</label>
+                    <input type="text" id="current_brand_tagline" aria-label="Tagline Resmi Brand" x-model="currentBrand.tagline" placeholder="Solusi Pemetaan Drone LiDAR Presisi Tinggi" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
                   </div>
                   <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">CTA Footer Tagline</label>
-                    <input type="text" x-model="currentBrand.cta_tagline" placeholder="Konsultasikan kebutuhan Anda sekarang bersama kami." class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                    <label for="current_brand_cta_tagline" class="block text-xs font-bold text-slate-700 mb-1">CTA Footer Tagline</label>
+                    <input type="text" id="current_brand_cta_tagline" aria-label="CTA Footer Tagline" x-model="currentBrand.cta_tagline" placeholder="Konsultasikan kebutuhan Anda sekarang bersama kami." class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
                   </div>
                 </div>
 
                 <!-- Industry Focus & HQ -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Fokus Industri / Pasar</label>
-                    <input type="text" x-model="currentBrand.industry_focus" placeholder="Konstruksi, Pertambangan, Perkebunan" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                    <label for="current_brand_industry" class="block text-xs font-bold text-slate-700 mb-1">Fokus Industri / Pasar</label>
+                    <input type="text" id="current_brand_industry" aria-label="Fokus Industri atau Pasar" x-model="currentBrand.industry_focus" placeholder="Konstruksi, Pertambangan, Perkebunan" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
                   </div>
                   <div>
-                    <label class="block text-xs font-bold text-slate-700 mb-1">Lokasi Kantor Pusat (HQ)</label>
-                    <input type="text" x-model="currentBrand.hq_location" placeholder="Yogyakarta, Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                    <label for="current_brand_hq" class="block text-xs font-bold text-slate-700 mb-1">Lokasi Kantor Pusat (HQ)</label>
+                    <input type="text" id="current_brand_hq" aria-label="Lokasi Kantor Pusat HQ" x-model="currentBrand.hq_location" placeholder="Yogyakarta, Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
                   </div>
                 </div>
 
@@ -546,9 +562,9 @@
                 <div class="pt-2 border-t border-slate-100">
                   <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Lead-Gen</label>
+                      <label for="current_brand_whatsapp" class="block text-xs font-bold text-slate-700 mb-1">Nomor WhatsApp Lead-Gen</label>
                       <div class="flex items-center gap-2">
-                        <input type="text" x-model="currentBrand.contact_whatsapp" placeholder="+6281234567890" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+                        <input type="text" id="current_brand_whatsapp" aria-label="Nomor WhatsApp Lead-Gen" x-model="currentBrand.contact_whatsapp" placeholder="+6281234567890" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
                         <template x-if="currentBrand.contact_whatsapp">
                           <a :href="'https://wa.me/' + currentBrand.contact_whatsapp.replace(/[^0-9]/g, '')" target="_blank" class="px-2.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded-xl text-xs flex items-center justify-center flex-shrink-0 cursor-pointer" title="Uji Link WhatsApp">
                             <i class="fa-brands fa-whatsapp text-sm"></i>
@@ -557,8 +573,8 @@
                       </div>
                     </div>
                     <div>
-                      <label class="block text-xs font-bold text-slate-700 mb-1">Email Resmi</label>
-                      <input type="email" x-model="currentBrand.contact_email" placeholder="official@domain.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+                      <label for="current_brand_email" class="block text-xs font-bold text-slate-700 mb-1">Email Resmi</label>
+                      <input type="email" id="current_brand_email" aria-label="Email Resmi Brand" x-model="currentBrand.contact_email" placeholder="official@domain.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
                     </div>
                   </div>
                 </div>
@@ -566,7 +582,7 @@
             </div>
 
             <!-- RIGHT COLUMN (5 cols): Problem-Solution Marketing Architecture & Bridges -->
-            <div class="lg:col-span-5 space-y-6">
+            <div class="lg:col-span-5 min-w-0 space-y-6">
               
               <!-- Card: Problem-Solution Architecture -->
               <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
@@ -597,7 +613,7 @@
                     <span x-show="!currentBrand.core_pain_points || currentBrand.core_pain_points.length === 0" class="text-xs text-slate-400 italic">Belum ada pain point ditambahkan</span>
                   </div>
                   <div class="flex gap-2">
-                    <input type="text" x-ref="newPainPointInput" @keydown.enter.prevent="if($refs.newPainPointInput.value.trim()){ if(!currentBrand.core_pain_points) currentBrand.core_pain_points=[]; currentBrand.core_pain_points.push($refs.newPainPointInput.value.trim()); $refs.newPainPointInput.value=''; }" placeholder="Tambah masalah klien..." class="flex-1 text-xs border-slate-200 rounded-xl p-2 border">
+                    <input type="text" id="new_pain_point_input" aria-label="Tambah Masalah Klien" x-ref="newPainPointInput" @keydown.enter.prevent="if($refs.newPainPointInput.value.trim()){ if(!currentBrand.core_pain_points) currentBrand.core_pain_points=[]; currentBrand.core_pain_points.push($refs.newPainPointInput.value.trim()); $refs.newPainPointInput.value=''; }" placeholder="Tambah masalah klien..." class="flex-1 text-xs border-slate-200 rounded-xl p-2 border">
                     <button type="button" @click="if($refs.newPainPointInput.value.trim()){ if(!currentBrand.core_pain_points) currentBrand.core_pain_points=[]; currentBrand.core_pain_points.push($refs.newPainPointInput.value.trim()); $refs.newPainPointInput.value=''; }" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
                       + Tambah
                     </button>
@@ -621,7 +637,7 @@
                     <span x-show="!currentBrand.core_solutions || currentBrand.core_solutions.length === 0" class="text-xs text-slate-400 italic">Belum ada solusi ditambahkan</span>
                   </div>
                   <div class="flex gap-2">
-                    <input type="text" x-ref="newSolutionInput" @keydown.enter.prevent="if($refs.newSolutionInput.value.trim()){ if(!currentBrand.core_solutions) currentBrand.core_solutions=[]; currentBrand.core_solutions.push($refs.newSolutionInput.value.trim()); $refs.newSolutionInput.value=''; }" placeholder="Tambah solusi unik brand..." class="flex-1 text-xs border-slate-200 rounded-xl p-2 border">
+                    <input type="text" id="new_solution_input" aria-label="Tambah Solusi Unik Brand" x-ref="newSolutionInput" @keydown.enter.prevent="if($refs.newSolutionInput.value.trim()){ if(!currentBrand.core_solutions) currentBrand.core_solutions=[]; currentBrand.core_solutions.push($refs.newSolutionInput.value.trim()); $refs.newSolutionInput.value=''; }" placeholder="Tambah solusi unik brand..." class="flex-1 text-xs border-slate-200 rounded-xl p-2 border">
                     <button type="button" @click="if($refs.newSolutionInput.value.trim()){ if(!currentBrand.core_solutions) currentBrand.core_solutions=[]; currentBrand.core_solutions.push($refs.newSolutionInput.value.trim()); $refs.newSolutionInput.value=''; }" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition cursor-pointer">
                       + Tambah
                     </button>
@@ -642,19 +658,19 @@
 
                 <div class="space-y-3">
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Alamat Domain WordPress</label>
-                    <input type="text" x-model="currentBrand.domain_url" placeholder="https://domain-anda.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+                    <label for="bridge_domain_url" class="block text-[11px] font-bold text-slate-600 mb-1">Alamat Domain WordPress</label>
+                    <input type="text" id="bridge_domain_url" aria-label="Alamat Domain WordPress" x-model="currentBrand.domain_url" placeholder="https://domain-anda.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
                   </div>
                   <div>
                     <div class="flex justify-between items-center mb-1">
-                      <label class="text-[11px] font-bold text-slate-600">Kunci Rahasia API (Secret Key)</label>
+                      <label for="bridge_secret_key" class="text-[11px] font-bold text-slate-600">Kunci Rahasia API (Secret Key)</label>
                       <button type="button" @click="showKeyMap[currentBrand.id] = !showKeyMap[currentBrand.id]" class="text-[10px] text-slate-400 hover:text-slate-600 cursor-pointer">
                         <i class="fa-solid" :class="showKeyMap[currentBrand.id] ? 'fa-eye-slash' : 'fa-eye'"></i>
                         <span x-text="showKeyMap[currentBrand.id] ? 'Sembunyikan' : 'Tampilkan'"></span>
                       </button>
                     </div>
                     <div class="flex items-center gap-2">
-                      <input :type="showKeyMap[currentBrand.id] ? 'text' : 'password'" x-model="currentBrand.api_secret_key" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono bg-slate-50">
+                      <input :type="showKeyMap[currentBrand.id] ? 'text' : 'password'" id="bridge_secret_key" aria-label="Kunci Rahasia API WordPress" x-model="currentBrand.api_secret_key" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono bg-slate-50">
                       <button type="button" @click="copyToClipboard(currentBrand.api_secret_key, 'Secret key disalin!')" class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs flex items-center justify-center flex-shrink-0 cursor-pointer" title="Salin Secret Key">
                         <i class="fa-solid fa-copy"></i>
                       </button>
@@ -678,12 +694,12 @@
 
                 <div class="space-y-3">
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">GSC Property URL</label>
-                    <input type="text" x-model="currentBrand.gsc_site_url" placeholder="https://domain-anda.com/ atau sc-domain:domain-anda.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+                    <label for="gsc_property_url" class="block text-[11px] font-bold text-slate-600 mb-1">GSC Property URL</label>
+                    <input type="text" id="gsc_property_url" aria-label="GSC Property URL" x-model="currentBrand.gsc_site_url" placeholder="https://domain-anda.com/ atau sc-domain:domain-anda.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
                   </div>
                   <div>
-                    <label class="block text-[11px] font-bold text-slate-600 mb-1">Service Account JSON (Google Cloud Console)</label>
-                    <textarea x-model="currentBrand.gsc_service_account_json" rows="3" placeholder='{"type": "service_account", "project_id": "...", ...}' class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono"></textarea>
+                    <label for="gsc_sa_json" class="block text-[11px] font-bold text-slate-600 mb-1">Service Account JSON (Google Cloud Console)</label>
+                    <textarea id="gsc_sa_json" aria-label="Service Account JSON Google Cloud Console" x-model="currentBrand.gsc_service_account_json" rows="3" placeholder='{"type": "service_account", "project_id": "...", ...}' class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono"></textarea>
                   </div>
                 </div>
               </div>
@@ -776,7 +792,7 @@
                   <!-- Logo or Initials -->
                   <div class="w-12 h-12 rounded-xl bg-slate-100 border border-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-sm">
                     <template x-if="brand.logo_url">
-                      <img :src="brand.logo_url" :alt="brand.name" class="w-full h-full object-contain p-1" @error="$el.style.display='none'">
+                      <img :src="brand.logo_url" :alt="brand.name + ' Logo'" class="w-full h-full object-contain p-1" @error="$el.style.display='none'">
                     </template>
                     <template x-if="!brand.logo_url">
                       <span class="font-extrabold text-sm text-indigo-600 uppercase" x-text="brand.name.substring(0, 2)"></span>
@@ -869,7 +885,7 @@
           <!-- Active Site Badge -->
           <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
             <template x-if="currentBrand && currentBrand.logo_url">
-              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+              <img :src="currentBrand.logo_url" :alt="(currentBrand?.name || 'Situs') + ' Logo'" class="w-4 h-4 rounded object-cover">
             </template>
             <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
@@ -880,7 +896,7 @@
               <span class="absolute left-3 text-slate-400 text-xs">
                 <i class="fa-solid fa-lock text-emerald-600"></i>
               </span>
-              <input type="url" x-model="visualizerUrl" @keydown.enter="refreshVisualizer()" class="w-full text-xs pl-8 pr-8 py-2 rounded-xl border border-slate-200 font-mono text-slate-700 bg-slate-50 focus:bg-white" placeholder="https://domain.com">
+              <input type="url" id="visualizer_url_input" aria-label="URL Website untuk Visualisasi Real" x-model="visualizerUrl" @keydown.enter="refreshVisualizer()" class="w-full text-xs pl-8 pr-8 py-2 rounded-xl border border-slate-200 font-mono text-slate-700 bg-slate-50 focus:bg-white" placeholder="https://domain.com">
               <button @click="refreshVisualizer()" class="absolute right-2 text-slate-400 hover:text-slate-600 text-xs p-1" title="Muat Ulang">
                 <i class="fa-solid fa-arrows-rotate" :class="visualizerLoading ? 'fa-spin text-sky-600' : ''"></i>
               </button>
@@ -986,7 +1002,7 @@
         <div class="flex items-center gap-2">
           <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
             <template x-if="currentBrand && currentBrand.logo_url">
-              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+              <img :src="currentBrand.logo_url" :alt="(currentBrand?.name || 'Situs') + ' Logo'" class="w-4 h-4 rounded object-cover">
             </template>
             <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
@@ -1009,7 +1025,7 @@
               </div>
               <span class="text-[11px] font-bold text-indigo-600" x-text="(keywordBank.grouped?.action || []).length + ' item'"></span>
             </div>
-            <p class="text-[11px] text-slate-400 mb-3">Kata kerja/peran: Jasa, Vendor, Software House, dll.</p>
+            <p class="text-[11px] text-slate-500 mb-3">Kata kerja/peran: Jasa, Vendor, Software House, dll.</p>
 
             <!-- Chips -->
             <div class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto custom-scrollbar p-1">
@@ -1026,7 +1042,7 @@
 
           <!-- Add Form -->
           <div class="mt-4 pt-3 border-t border-slate-100 flex gap-1.5">
-            <input type="text" x-model="newActionInput" @keydown.enter="addKeywordItem('action', newActionInput); newActionInput=''" placeholder="+ Tambah Action..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
+            <input type="text" id="new_action_input" aria-label="Tambah Action Kata Kunci" x-model="newActionInput" @keydown.enter="addKeywordItem('action', newActionInput); newActionInput=''" placeholder="+ Tambah Action..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
             <button @click="addKeywordItem('action', newActionInput); newActionInput=''" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition">
               <i class="fa-solid fa-plus"></i>
             </button>
@@ -1043,7 +1059,7 @@
               </div>
               <span class="text-[11px] font-bold text-emerald-600" x-text="(keywordBank.grouped?.subject || []).length + ' item'"></span>
             </div>
-            <p class="text-[11px] text-slate-400 mb-3">Produk spesifik: Website Enterprise, ERP, dll.</p>
+            <p class="text-[11px] text-slate-500 mb-3">Produk spesifik: Website Enterprise, ERP, dll.</p>
 
             <!-- Chips -->
             <div class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto custom-scrollbar p-1">
@@ -1060,7 +1076,7 @@
 
           <!-- Add Form -->
           <div class="mt-4 pt-3 border-t border-slate-100 flex gap-1.5">
-            <input type="text" x-model="newSubjectInput" @keydown.enter="addKeywordItem('subject', newSubjectInput); newSubjectInput=''" placeholder="+ Tambah Subject..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
+            <input type="text" id="new_subject_input" aria-label="Tambah Subject Layanan" x-model="newSubjectInput" @keydown.enter="addKeywordItem('subject', newSubjectInput); newSubjectInput=''" placeholder="+ Tambah Subject..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
             <button @click="addKeywordItem('subject', newSubjectInput); newSubjectInput=''" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition">
               <i class="fa-solid fa-plus"></i>
             </button>
@@ -1077,7 +1093,7 @@
               </div>
               <span class="text-[11px] font-bold text-amber-600" x-text="(keywordBank.grouped?.predicate || []).length + ' item'"></span>
             </div>
-            <p class="text-[11px] text-slate-400 mb-3">Solusi masalah: Performa Sub-Detik, SLA, dll.</p>
+            <p class="text-[11px] text-slate-500 mb-3">Solusi masalah: Performa Sub-Detik, SLA, dll.</p>
 
             <!-- Chips -->
             <div class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto custom-scrollbar p-1">
@@ -1094,7 +1110,7 @@
 
           <!-- Add Form -->
           <div class="mt-4 pt-3 border-t border-slate-100 flex gap-1.5">
-            <input type="text" x-model="newPredicateInput" @keydown.enter="addKeywordItem('predicate', newPredicateInput); newPredicateInput=''" placeholder="+ Tambah Solusi..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
+            <input type="text" id="new_predicate_input" aria-label="Tambah Solusi atau Predikat" x-model="newPredicateInput" @keydown.enter="addKeywordItem('predicate', newPredicateInput); newPredicateInput=''" placeholder="+ Tambah Solusi..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
             <button @click="addKeywordItem('predicate', newPredicateInput); newPredicateInput=''" class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-bold transition">
               <i class="fa-solid fa-plus"></i>
             </button>
@@ -1111,7 +1127,7 @@
               </div>
               <span class="text-[11px] font-bold text-sky-600" x-text="(keywordBank.grouped?.city || []).length + ' item'"></span>
             </div>
-            <p class="text-[11px] text-slate-400 mb-3">Lokasi target: Jakarta, Surabaya, dll.</p>
+            <p class="text-[11px] text-slate-500 mb-3">Lokasi target: Jakarta, Surabaya, dll.</p>
 
             <!-- Chips -->
             <div class="flex flex-wrap gap-1.5 max-h-48 overflow-y-auto custom-scrollbar p-1">
@@ -1128,7 +1144,7 @@
 
           <!-- Add Form -->
           <div class="mt-4 pt-3 border-t border-slate-100 flex gap-1.5">
-            <input type="text" x-model="newCityInput" @keydown.enter="addKeywordItem('city', newCityInput); newCityInput=''" placeholder="+ Tambah Kota..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
+            <input type="text" id="new_city_input" aria-label="Tambah Kota Target" x-model="newCityInput" @keydown.enter="addKeywordItem('city', newCityInput); newCityInput=''" placeholder="+ Tambah Kota..." class="text-xs border-slate-200 rounded-lg p-2 border flex-1">
             <button @click="addKeywordItem('city', newCityInput); newCityInput=''" class="px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-bold transition">
               <i class="fa-solid fa-plus"></i>
             </button>
@@ -1147,7 +1163,7 @@
           <div class="flex items-center gap-3">
             <div class="flex items-center gap-1.5 text-xs text-slate-600">
               <span>Batas Jumlah:</span>
-              <select x-model.number="matrixLimit" class="text-xs border-slate-200 rounded-lg px-2 py-1 bg-slate-50 border font-semibold">
+              <select id="matrix_limit_select" aria-label="Batas Jumlah Variasi Matriks" x-model.number="matrixLimit" class="text-xs border-slate-200 rounded-lg px-2 py-1 bg-slate-50 border font-semibold">
                 <option value="15">15 Kombinasi</option>
                 <option value="30">30 Kombinasi</option>
                 <option value="50">50 Kombinasi</option>
@@ -1221,7 +1237,7 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8" x-show="brands.length > 0">
         
         <!-- Left Column: Generator Form (4 cols) -->
-        <div class="lg:col-span-4 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+        <div class="lg:col-span-4 min-w-0 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
           <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
             <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
               <i class="fa-solid fa-sliders text-indigo-600"></i> Parameter Artikel GEO
@@ -1235,7 +1251,7 @@
             <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
               <div class="flex items-center gap-2">
                 <template x-if="currentBrand && currentBrand.logo_url">
-                  <img :src="currentBrand.logo_url" class="w-6 h-6 rounded-md object-contain border border-slate-200 bg-white p-0.5">
+                  <img :src="currentBrand.logo_url" :alt="(currentBrand?.name || 'Situs') + ' Logo'" class="w-6 h-6 rounded-md object-contain border border-slate-200 bg-white p-0.5">
                 </template>
                 <div>
                   <span class="text-xs font-bold text-slate-900 block" x-text="currentBrand?.name || 'Situs Aktif'"></span>
@@ -1249,10 +1265,10 @@
           <!-- Specialized Service Selector -->
           <div>
             <div class="flex justify-between items-center mb-1">
-              <label class="text-xs font-bold text-slate-700">Layanan Spesialisasi</label>
+              <label for="writer_service_select" class="text-xs font-bold text-slate-700">Layanan Spesialisasi</label>
               <button @click="showAddServiceModal = true" class="text-[11px] text-indigo-600 hover:underline font-semibold cursor-pointer">+ Tambah</button>
             </div>
-            <select x-model="selectedServiceId" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
+            <select id="writer_service_select" aria-label="Pilih Layanan Spesialisasi" x-model="selectedServiceId" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
               <template x-for="s in currentServices" :key="s.id">
                 <option :value="s.id" x-text="s.name"></option>
               </template>
@@ -1261,8 +1277,8 @@
 
           <!-- Target Region -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Wilayah / Negara Target</label>
-            <select x-model="selectedRegion" @change="updateDefaultCities()" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
+            <label for="writer_region_select" class="block text-xs font-bold text-slate-700 mb-1">Wilayah / Negara Target</label>
+            <select id="writer_region_select" aria-label="Pilih Wilayah atau Negara Target" x-model="selectedRegion" @change="updateDefaultCities()" class="w-full text-xs font-medium border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border bg-white">
               <template x-for="loc in currentLocations" :key="loc.region_name">
                 <option :value="loc.region_name" x-text="loc.region_name"></option>
               </template>
@@ -1271,9 +1287,9 @@
 
           <!-- Target Cities -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Kota Spesifik Target</label>
-            <input type="text" x-model="citiesInput" placeholder="Jakarta, Surabaya, Bandung" class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border">
-            <p class="text-[11px] text-slate-400 mt-1">Kota pertama akan dibuatkan preview tunggal; kota lainnya untuk bulk.</p>
+            <label for="writer_cities_input" class="block text-xs font-bold text-slate-700 mb-1">Kota Spesifik Target</label>
+            <input type="text" id="writer_cities_input" aria-label="Kota Spesifik Target" x-model="citiesInput" placeholder="Jakarta, Surabaya, Bandung" class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2.5 px-3 border">
+            <p class="text-[11px] text-slate-500 mt-1">Kota pertama akan dibuatkan preview tunggal; kota lainnya untuk bulk.</p>
           </div>
 
           <!-- Engine Intelligence Settings -->
@@ -1316,7 +1332,7 @@
         </div>
 
         <!-- Right Column: Output Screen & Tabs (8 cols) -->
-        <div class="lg:col-span-8 space-y-4">
+        <div class="lg:col-span-8 min-w-0 space-y-4">
           <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[640px]">
             
             <!-- Output Header & Sub-Tabs -->
@@ -1452,30 +1468,30 @@
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Pilih Website</label>
-            <select x-model="bulkBrandId" @change="loadBulkServices()" class="w-full text-xs font-medium border-slate-200 rounded-xl p-2.5 border bg-white">
+            <label for="bulk_brand_select" class="block font-bold text-slate-700 mb-1">Pilih Website</label>
+            <select id="bulk_brand_select" aria-label="Pilih Website untuk Batch" x-model="bulkBrandId" @change="loadBulkServices()" class="w-full text-xs font-medium border-slate-200 rounded-xl p-2.5 border bg-white">
               <template x-for="b in brands" :key="b.id">
                 <option :value="b.id" x-text="b.name"></option>
               </template>
             </select>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Pilih Layanan</label>
-            <select x-model="bulkServiceId" class="w-full text-xs font-medium border-slate-200 rounded-xl p-2.5 border bg-white">
+            <label for="bulk_service_select" class="block font-bold text-slate-700 mb-1">Pilih Layanan</label>
+            <select id="bulk_service_select" aria-label="Pilih Layanan untuk Batch" x-model="bulkServiceId" class="w-full text-xs font-medium border-slate-200 rounded-xl p-2.5 border bg-white">
               <template x-for="s in bulkServices" :key="s.id">
                 <option :value="s.id" x-text="s.name"></option>
               </template>
             </select>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Wilayah</label>
-            <input type="text" x-model="bulkRegion" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+            <label for="bulk_region_input" class="block font-bold text-slate-700 mb-1">Wilayah</label>
+            <input type="text" id="bulk_region_input" aria-label="Wilayah Target Batch" x-model="bulkRegion" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
           </div>
         </div>
 
         <div>
-          <label class="block font-bold text-slate-700 mb-1 text-xs">Daftar Kota Target (Pisahkan dengan Koma)</label>
-          <textarea x-model="bulkCitiesInput" rows="3" placeholder="Jakarta, Surabaya, Bandung, Semarang, Medan, Makassar, Denpasar" class="w-full text-xs border-slate-200 rounded-xl p-3 border font-sans"></textarea>
+          <label for="bulk_cities_input" class="block font-bold text-slate-700 mb-1 text-xs">Daftar Kota Target (Pisahkan dengan Koma)</label>
+          <textarea id="bulk_cities_input" aria-label="Daftar Kota Target Batch" x-model="bulkCitiesInput" rows="3" placeholder="Jakarta, Surabaya, Bandung, Semarang, Medan, Makassar, Denpasar" class="w-full text-xs border-slate-200 rounded-xl p-3 border font-sans"></textarea>
         </div>
 
         <div class="flex items-center gap-2">
@@ -1523,7 +1539,7 @@
           <!-- Active Brand Badge -->
           <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
             <template x-if="currentBrand && currentBrand.logo_url">
-              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+              <img :src="currentBrand.logo_url" :alt="(currentBrand?.name || 'Situs') + ' Logo'" class="w-4 h-4 rounded object-cover">
             </template>
             <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
@@ -1627,7 +1643,7 @@
           <!-- Active Brand Badge -->
           <div class="bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/20 text-xs flex items-center gap-2">
             <template x-if="currentBrand && currentBrand.logo_url">
-              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+              <img :src="currentBrand.logo_url" :alt="(currentBrand?.name || 'Situs') + ' Logo'" class="w-4 h-4 rounded object-cover">
             </template>
             <span class="text-white font-bold" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
@@ -1640,7 +1656,7 @@
       <!-- Generator Studio Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Left: Prompt Generator & AI Execution -->
-        <div class="lg:col-span-6 space-y-5">
+        <div class="lg:col-span-6 min-w-0 space-y-5">
           <!-- Card 1: Smart Prompt Generator -->
           <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
             <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
@@ -1657,8 +1673,8 @@
 
             <!-- Prompt Input / Textarea -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Prompt Visual untuk Gambar:</label>
-              <textarea x-model="imagePrompt" rows="3" placeholder="Deskripsi visual..." class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-pink-500 focus:ring-pink-500 p-3 border font-sans"></textarea>
+              <label for="image_prompt_input" class="block text-xs font-bold text-slate-700 mb-1">Prompt Visual untuk Gambar:</label>
+              <textarea id="image_prompt_input" aria-label="Prompt Visual untuk Gambar" x-model="imagePrompt" rows="3" placeholder="Deskripsi visual..." class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-pink-500 focus:ring-pink-500 p-3 border font-sans"></textarea>
               
               <!-- Copy Prompt Action -->
               <div class="mt-2 flex items-center justify-between">
@@ -1698,7 +1714,7 @@
                 <i class="fa-solid fa-paintbrush text-pink-600"></i> Langkah 2: Eksekusi Render AI
               </h3>
               <div class="flex items-center gap-1.5">
-                <input type="checkbox" id="watermarkToggle" x-model="imageWatermarkLogo" class="rounded border-slate-300 text-pink-600 focus:ring-pink-500">
+                <input type="checkbox" id="watermarkToggle" aria-label="Watermark Logo Brand" x-model="imageWatermarkLogo" class="rounded border-slate-300 text-pink-600 focus:ring-pink-500">
                 <label for="watermarkToggle" class="text-xs text-slate-700 font-medium cursor-pointer">Watermark Logo Brand</label>
               </div>
             </div>
@@ -1771,12 +1787,12 @@
             <p class="text-xs text-slate-500">
               Unggah file gambar dari komputer Anda atau hasil render Antigravity langsung ke Bank Asset situs ini.
             </p>
-            <input type="file" @change="handleAssetFileUpload($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
+            <input type="file" id="asset_file_upload" aria-label="Unggah File Asset Gambar" @change="handleAssetFileUpload($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
           </div>
         </div>
 
         <!-- Right: Realtime Preview & Actions -->
-        <div class="lg:col-span-6 space-y-4">
+        <div class="lg:col-span-6 min-w-0 space-y-4">
           <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm flex flex-col justify-between h-full">
             <div>
               <div class="flex justify-between items-center mb-4">
@@ -1919,7 +1935,7 @@
 
           <!-- Image Display -->
           <div class="bg-slate-950 rounded-xl p-2 flex items-center justify-center max-h-[460px] overflow-hidden">
-            <img :src="inspectingAsset?.url" class="max-h-[440px] w-auto object-contain rounded shadow">
+            <img :src="inspectingAsset?.url" :alt="inspectingAsset?.prompt ? ('Visual Asset: ' + inspectingAsset.prompt) : 'Visual Asset Detail'" class="max-h-[440px] w-auto object-contain rounded shadow">
           </div>
 
           <!-- Metadata Grid -->
@@ -1986,7 +2002,7 @@
           <!-- Active Site Badge -->
           <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-xl border border-slate-200">
             <template x-if="currentBrand && currentBrand.logo_url">
-              <img :src="currentBrand.logo_url" class="w-4 h-4 rounded object-cover">
+              <img :src="currentBrand.logo_url" :alt="(currentBrand?.name || 'Situs') + ' Logo'" class="w-4 h-4 rounded object-cover">
             </template>
             <span class="text-xs font-bold text-slate-800" x-text="currentBrand?.name || 'Situs Aktif'"></span>
           </div>
@@ -2196,10 +2212,10 @@
       </div>
 
       <!-- Settings & Model Selection Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 min-w-0">
         
         <!-- Left: Model Selector & Search (7 cols) -->
-        <div class="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
+        <div class="lg:col-span-7 min-w-0 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
           <div class="flex justify-between items-center border-b border-slate-100 pb-3">
             <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
               <i class="fa-solid fa-list-check text-violet-600"></i> Pilih Model LLM untuk Generator
@@ -2211,17 +2227,17 @@
 
           <!-- Quick Search Filter -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Cari / Filter Model</label>
+            <label for="filter_model_search" class="block text-xs font-bold text-slate-700 mb-1">Cari / Filter Model</label>
             <div class="relative">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400 text-xs"></i>
-              <input type="text" x-model="filterModelSearch" placeholder="Ketik nama model (contoh: alpha, claude, sonnet, deepseek, auto)..." class="w-full text-xs pl-8 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-violet-500 focus:ring-violet-500">
+              <input type="text" id="filter_model_search" aria-label="Cari atau filter model" x-model="filterModelSearch" placeholder="Ketik nama model (contoh: alpha, claude, sonnet, deepseek, auto)..." class="w-full text-xs pl-8 pr-3 py-2.5 border border-slate-200 rounded-xl focus:border-violet-500 focus:ring-violet-500">
             </div>
           </div>
 
           <!-- Model Dropdown Selector -->
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Pilih Model Utama (Active Model)</label>
-            <select x-model="routerSelectedModel" @change="saveRouterSettings()" class="w-full text-xs font-mono border-slate-200 rounded-xl shadow-sm focus:border-violet-500 focus:ring-violet-500 p-3 border bg-white">
+            <label for="router_selected_model" class="block text-xs font-bold text-slate-700 mb-1">Pilih Model Utama (Active Model)</label>
+            <select id="router_selected_model" aria-label="Pilih Model Utama" x-model="routerSelectedModel" @change="saveRouterSettings()" class="w-full text-xs font-mono border-slate-200 rounded-xl shadow-sm focus:border-violet-500 focus:ring-violet-500 p-3 border bg-white">
               <template x-for="m in filteredRouterModels()" :key="m.id">
                 <option :value="m.id" x-text="m.id + ' (' + (m.owned_by || 'router') + ')'"></option>
               </template>
@@ -2251,7 +2267,7 @@
             </div>
             
             <div class="flex gap-2">
-              <input type="text" x-model="modelTestPrompt" placeholder="Ketik pesan tes..." class="flex-1 text-xs border-slate-200 rounded-xl p-2.5 border">
+              <input type="text" id="model_test_prompt" aria-label="Ketik pesan tes respons model" x-model="modelTestPrompt" placeholder="Ketik pesan tes..." class="flex-1 text-xs border-slate-200 rounded-xl p-2.5 border">
               <button @click="testRouterModel()" :disabled="testingModel || !modelTestPrompt.trim()" class="px-4 py-2.5 bg-violet-600 hover:bg-violet-700 text-white text-xs font-bold rounded-xl shadow-sm flex items-center gap-1.5 transition disabled:opacity-50 cursor-pointer">
                 <i class="fa-solid fa-paper-plane" x-show="!testingModel"></i>
                 <i class="fa-solid fa-circle-notch fa-spin" x-show="testingModel"></i>
@@ -2260,14 +2276,14 @@
             </div>
 
             <div x-show="modelTestResponse" class="p-3 bg-white rounded-lg border border-slate-200 text-xs font-mono text-slate-800 space-y-1">
-              <div class="text-[10px] text-slate-400 font-sans font-bold">Hasil Respons Model:</div>
+              <div class="text-[10px] text-slate-500 font-sans font-bold">Hasil Respons Model:</div>
               <div x-text="modelTestResponse" class="whitespace-pre-wrap leading-relaxed"></div>
             </div>
           </div>
         </div>
 
         <!-- Right: Router Connection Config & Gemini Multi-Account (5 cols) -->
-        <div class="lg:col-span-5 space-y-6">
+        <div class="lg:col-span-5 min-w-0 space-y-6">
           
           <!-- Router Config Card -->
           <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
@@ -2277,21 +2293,21 @@
 
             <div class="space-y-3 text-xs">
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Router Base URL</label>
-                <input type="url" x-model="routerBaseUrl" placeholder="http://127.0.0.1:20128/v1" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
-                <p class="text-[11px] text-slate-400 mt-1">Default 9router berjalan pada <code>http://127.0.0.1:20128/v1</code>.</p>
+                <label for="router_base_url" class="block font-bold text-slate-700 mb-1">Router Base URL</label>
+                <input type="url" id="router_base_url" aria-label="Router Base URL" x-model="routerBaseUrl" placeholder="http://127.0.0.1:20128/v1" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+                <p class="text-[11px] text-slate-500 mt-1">Default 9router berjalan pada <code>http://127.0.0.1:20128/v1</code>.</p>
               </div>
 
               <div>
-                <label class="block font-bold text-slate-700 mb-1">Router API Key (Otomatis Terdeteksi dari 9router SQLite)</label>
-                <input type="password" x-model="routerApiKey" placeholder="sk-..." class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+                <label for="router_api_key" class="block font-bold text-slate-700 mb-1">Router API Key (Otomatis Terdeteksi dari 9router SQLite)</label>
+                <input type="password" id="router_api_key" aria-label="Router API Key" x-model="routerApiKey" placeholder="sk-..." class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
               </div>
 
               <div>
                 <div class="flex justify-between items-center mb-1">
-                  <label class="font-bold text-slate-700">Temperature Kreativitas: <span x-text="routerTemperature"></span></label>
+                  <label for="router_temperature" class="font-bold text-slate-700">Temperature Kreativitas: <span x-text="routerTemperature"></span></label>
                 </div>
-                <input type="range" min="0.1" max="1.0" step="0.05" x-model="routerTemperature" class="w-full">
+                <input type="range" id="router_temperature" aria-label="Temperature Kreativitas" min="0.1" max="1.0" step="0.05" x-model="routerTemperature" class="w-full">
               </div>
 
               <button @click="saveRouterSettings()" class="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs shadow-sm flex items-center justify-center gap-2 transition cursor-pointer">
@@ -2331,7 +2347,7 @@
 
             <!-- Add Key Input -->
             <div class="space-y-2 pt-2 border-t border-slate-100">
-              <input type="password" x-model="newGeminiKey" placeholder="Tambah AIzaSy... baru" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+              <input type="password" id="new_gemini_key_input" aria-label="Tambah Google Gemini API Key Baru" x-model="newGeminiKey" placeholder="Tambah AIzaSy... baru" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
               <button @click="addGeminiAccount()" :disabled="!newGeminiKey.trim() || verifyingGemini" class="w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition disabled:opacity-50 cursor-pointer">
                 <i class="fa-solid fa-plus" x-show="!verifyingGemini"></i>
                 <i class="fa-solid fa-circle-notch fa-spin" x-show="verifyingGemini"></i>
@@ -2356,8 +2372,8 @@
 
         <div class="space-y-3">
           <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">URL Publik Google Sheets (Share: Anyone with the link can view)</label>
-            <input type="url" x-model="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit" class="w-full text-xs border-slate-200 rounded-xl p-3 border">
+            <label for="sheet_url_input" class="block text-xs font-bold text-slate-700 mb-1">URL Publik Google Sheets (Share: Anyone with the link can view)</label>
+            <input type="url" id="sheet_url_input" aria-label="URL Publik Google Sheets" x-model="sheetUrlInput" placeholder="https://docs.google.com/spreadsheets/d/1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms/edit" class="w-full text-xs border-slate-200 rounded-xl p-3 border">
           </div>
 
           <div class="flex flex-wrap gap-3">
@@ -2404,6 +2420,14 @@
     </div>
 
   </main>
+
+  <!-- Accessible Global Footer inside main view container -->
+  <footer class="bg-white border-t border-slate-200 py-3.5 px-6 text-center text-sm text-slate-600 flex-shrink-0">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-slate-600">
+      <span class="font-medium text-slate-700">GEO SEO Engine • UNICAM STUDIO &amp; Multi-Brand Automation Network</span>
+      <span class="font-mono text-xs text-slate-600">Port: 28420 • Native Local SEO Engine</span>
+    </div>
+  </footer>
   </div>
 
   <!-- ========================================== -->
@@ -2418,7 +2442,7 @@
           </div>
           <div>
             <h3 class="text-base font-extrabold text-slate-900">Pengaturan Lengkap Brand & Website</h3>
-            <p class="text-[11px] text-slate-400" x-text="'ID Brand: ' + (editingBrand.id || '')"></p>
+            <p class="text-[11px] text-slate-500" x-text="'ID Brand: ' + (editingBrand.id || '')"></p>
           </div>
         </div>
         <button @click="showSiteSettingsModal = false" class="text-slate-400 hover:text-slate-600 cursor-pointer">
@@ -2430,12 +2454,12 @@
         <!-- Brand Name & Industry Focus -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Nama Brand / Bisnis</label>
-            <input type="text" x-model="editingBrand.name" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-semibold">
+            <label for="editing_brand_name" class="block font-bold text-slate-700 mb-1">Nama Brand / Bisnis</label>
+            <input type="text" id="editing_brand_name" aria-label="Nama Brand atau Bisnis" x-model="editingBrand.name" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-semibold">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Fokus Industri</label>
-            <select x-model="editingBrand.industry_focus" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-semibold bg-slate-50">
+            <label for="editing_brand_industry" class="block font-bold text-slate-700 mb-1">Fokus Industri</label>
+            <select id="editing_brand_industry" aria-label="Fokus Industri" x-model="editingBrand.industry_focus" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-semibold bg-slate-50">
               <option value="Software House & Enterprise IT">Software House & Enterprise IT</option>
               <option value="Creative Video & 3D Animation">Creative Video & 3D Animation</option>
               <option value="Digital Marketing & SEO Agency">Digital Marketing & SEO Agency</option>
@@ -2448,12 +2472,12 @@
         <!-- Domain URL & Bridge Secret Key -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">URL Domain WordPress</label>
-            <input type="url" x-model="editingBrand.domain_url" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+            <label for="editing_brand_domain" class="block font-bold text-slate-700 mb-1">URL Domain WordPress</label>
+            <input type="url" id="editing_brand_domain" aria-label="URL Domain WordPress" x-model="editingBrand.domain_url" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Bridge API Secret Key</label>
-            <input type="text" x-model="editingBrand.api_secret_key" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
+            <label for="editing_brand_secret" class="block font-bold text-slate-700 mb-1">Bridge API Secret Key</label>
+            <input type="text" id="editing_brand_secret" aria-label="Bridge API Secret Key" x-model="editingBrand.api_secret_key" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border font-mono">
           </div>
         </div>
 
@@ -2464,34 +2488,34 @@
           </h4>
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
             <div class="sm:col-span-2">
-              <label class="block font-medium text-slate-600 mb-1">URL Gambar Logo Resmi (PNG Transparan / JPG)</label>
-              <input type="url" x-model="editingBrand.logo_url" placeholder="https://domain.com/wp-content/uploads/logo.png" class="w-full text-xs border-slate-200 rounded-xl p-2 border bg-white">
-              <p class="text-[10px] text-slate-400 mt-1">Logo ini akan dipasang secara otomatis sebagai watermark pada sudut thumbnail artikel.</p>
+              <label for="editing_brand_logo" class="block font-medium text-slate-600 mb-1">URL Gambar Logo Resmi (PNG Transparan / JPG)</label>
+              <input type="url" id="editing_brand_logo" aria-label="URL Gambar Logo Resmi" x-model="editingBrand.logo_url" placeholder="https://domain.com/wp-content/uploads/logo.png" class="w-full text-xs border-slate-200 rounded-xl p-2 border bg-white">
+              <p class="text-[10px] text-slate-500 mt-1">Logo ini akan dipasang secara otomatis sebagai watermark pada sudut thumbnail artikel.</p>
             </div>
             <div class="flex items-center justify-center p-2 bg-white rounded-xl border border-slate-200 h-20">
               <template x-if="editingBrand.logo_url">
-                <img :src="editingBrand.logo_url" alt="Preview Logo" class="max-h-16 max-w-full object-contain">
+                <img :src="editingBrand.logo_url" alt="Preview Logo Brand" class="max-h-16 max-w-full object-contain">
               </template>
               <template x-if="!editingBrand.logo_url">
-                <span class="text-[10px] text-slate-400 text-center">Preview Logo</span>
+                <span class="text-[10px] text-slate-500 text-center">Preview Logo</span>
               </template>
             </div>
           </div>
           <div>
-            <label class="block font-medium text-slate-600 mb-1">Tagline Resmi Brand (CTA & Subjudul)</label>
-            <input type="text" x-model="editingBrand.tagline" placeholder="Solusi software house terpercaya berstandar enterprise." class="w-full text-xs border-slate-200 rounded-xl p-2 border bg-white">
+            <label for="editing_brand_tagline" class="block font-medium text-slate-600 mb-1">Tagline Resmi Brand (CTA & Subjudul)</label>
+            <input type="text" id="editing_brand_tagline" aria-label="Tagline Resmi Brand" x-model="editingBrand.tagline" placeholder="Solusi software house terpercaya berstandar enterprise." class="w-full text-xs border-slate-200 rounded-xl p-2 border bg-white">
           </div>
         </div>
 
         <!-- Contact Channels -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">WhatsApp Konsultasi (Format Internasional)</label>
-            <input type="text" x-model="editingBrand.contact_whatsapp" placeholder="628123456789" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+            <label for="editing_brand_whatsapp" class="block font-bold text-slate-700 mb-1">WhatsApp Konsultasi (Format Internasional)</label>
+            <input type="text" id="editing_brand_whatsapp" aria-label="WhatsApp Konsultasi" x-model="editingBrand.contact_whatsapp" placeholder="628123456789" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">URL Halaman Konsultasi / Kontak</label>
-            <input type="text" x-model="editingBrand.consultation_url" placeholder="/kontak atau https://domain.com/contact" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+            <label for="editing_brand_consultation_url" class="block font-bold text-slate-700 mb-1">URL Halaman Konsultasi / Kontak</label>
+            <input type="text" id="editing_brand_consultation_url" aria-label="URL Halaman Konsultasi" x-model="editingBrand.consultation_url" placeholder="/kontak atau https://domain.com/contact" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
           </div>
         </div>
 
@@ -2504,24 +2528,24 @@
             <span class="text-[10px] text-emerald-700 font-bold" x-text="editingBrand.has_gsc_credentials ? '✓ Credentials Terpasang' : 'Belum Ada Credentials'"></span>
           </div>
           <div>
-            <label class="block font-medium text-slate-700 mb-1">GSC Property URL (e.g. sc-domain:domain.com atau https://domain.com/)</label>
-            <input type="text" x-model="editingBrand.gsc_site_url" placeholder="https://domain.com/" class="w-full text-xs border-slate-200 rounded-xl p-2 border bg-white font-mono">
+            <label for="editing_brand_gsc_site_url" class="block font-medium text-slate-700 mb-1">GSC Property URL (e.g. sc-domain:domain.com atau https://domain.com/)</label>
+            <input type="text" id="editing_brand_gsc_site_url" aria-label="GSC Property URL" x-model="editingBrand.gsc_site_url" placeholder="https://domain.com/" class="w-full text-xs border-slate-200 rounded-xl p-2 border bg-white font-mono">
           </div>
           <div>
-            <label class="block font-medium text-slate-700 mb-1">Service Account JSON (Paste isi file JSON key Google Cloud)</label>
-            <textarea x-model="editingBrand.gsc_service_account_json" rows="3" placeholder='{"type": "service_account", "project_id": "...", ...}' class="w-full text-xs font-mono border-slate-200 rounded-xl p-2 border bg-white"></textarea>
+            <label for="editing_brand_gsc_json" class="block font-medium text-slate-700 mb-1">Service Account JSON (Paste isi file JSON key Google Cloud)</label>
+            <textarea id="editing_brand_gsc_json" aria-label="Service Account JSON Google Cloud" x-model="editingBrand.gsc_service_account_json" rows="3" placeholder='{"type": "service_account", "project_id": "...", ...}' class="w-full text-xs font-mono border-slate-200 rounded-xl p-2 border bg-white"></textarea>
           </div>
         </div>
 
         <!-- Client Pain Points & Core Solutions -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Pain Points Klien (1 per baris)</label>
-            <textarea x-model="editingBrand.core_pain_points_text" rows="3" placeholder="Sistem manual lambat&#10;Website performa rendah&#10;Vendor lepas tanggung jawab" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border"></textarea>
+            <label for="editing_pain_points_text" class="block font-bold text-slate-700 mb-1">Pain Points Klien (1 per baris)</label>
+            <textarea id="editing_pain_points_text" aria-label="Pain Points Klien" x-model="editingBrand.core_pain_points_text" rows="3" placeholder="Sistem manual lambat&#10;Website performa rendah&#10;Vendor lepas tanggung jawab" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border"></textarea>
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Solusi yang Ditawarkan (1 per baris)</label>
-            <textarea x-model="editingBrand.core_solutions_text" rows="3" placeholder="Arsitektur Next.js modern&#10;Performa kecepatan sub-detik&#10;Garansi bug-free purna-jual" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border"></textarea>
+            <label for="editing_solutions_text" class="block font-bold text-slate-700 mb-1">Solusi yang Ditawarkan (1 per baris)</label>
+            <textarea id="editing_solutions_text" aria-label="Solusi yang Ditawarkan" x-model="editingBrand.core_solutions_text" rows="3" placeholder="Arsitektur Next.js modern&#10;Performa kecepatan sub-detik&#10;Garansi bug-free purna-jual" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border"></textarea>
           </div>
         </div>
 
@@ -2554,19 +2578,19 @@
 
       <div class="space-y-4 text-xs">
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Nama Brand / Website</label>
-          <input type="text" x-model="newBrand.name" placeholder="UNICAM STUDIO" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+          <label for="new_brand_name" class="block font-bold text-slate-700 mb-1">Nama Brand / Website</label>
+          <input type="text" id="new_brand_name" aria-label="Nama Brand atau Website" x-model="newBrand.name" placeholder="UNICAM STUDIO" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
         </div>
 
         <div>
-          <label class="block font-bold text-slate-700 mb-1">URL Domain WordPress (Lengkap dengan https://)</label>
-          <input type="url" x-model="newBrand.domain_url" placeholder="https://unicamstudio.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+          <label for="new_brand_domain" class="block font-bold text-slate-700 mb-1">URL Domain WordPress (Lengkap dengan https://)</label>
+          <input type="url" id="new_brand_domain" aria-label="URL Domain WordPress" x-model="newBrand.domain_url" placeholder="https://unicamstudio.com" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
         </div>
 
         <div>
-          <label class="block font-bold text-slate-700 mb-1">Secret Key Bridge (Sesuai di Plugin WordPress)</label>
-          <input type="text" x-model="newBrand.api_secret_key" placeholder="unicam-geo-secret-key-2026" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
-          <p class="text-[11px] text-slate-400 mt-1">Kunci ini tercantum di WordPress Admin: menu <strong>SEO Engine</strong>.</p>
+          <label for="new_brand_secret_key" class="block font-bold text-slate-700 mb-1">Secret Key Bridge (Sesuai di Plugin WordPress)</label>
+          <input type="text" id="new_brand_secret_key" aria-label="Secret Key Bridge" x-model="newBrand.api_secret_key" placeholder="unicam-geo-secret-key-2026" class="w-full text-xs font-mono border-slate-200 rounded-xl p-2.5 border">
+          <p class="text-[11px] text-slate-500 mt-1">Kunci ini tercantum di WordPress Admin: menu <strong>SEO Engine</strong>.</p>
         </div>
 
         <!-- Real-Time Handshake Ping Check -->
@@ -2585,12 +2609,12 @@
         <!-- Optional Initial Service -->
         <div class="grid grid-cols-2 gap-3 pt-1">
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Layanan Utama (Opsional)</label>
-            <input type="text" x-model="newBrand.service_name" placeholder="Jasa Video Mapping" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+            <label for="new_brand_service" class="block font-bold text-slate-700 mb-1">Layanan Utama (Opsional)</label>
+            <input type="text" id="new_brand_service" aria-label="Layanan Utama" x-model="newBrand.service_name" placeholder="Jasa Video Mapping" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
           </div>
           <div>
-            <label class="block font-bold text-slate-700 mb-1">Wilayah Target</label>
-            <input type="text" x-model="newBrand.target_region" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+            <label for="new_brand_region" class="block font-bold text-slate-700 mb-1">Wilayah Target</label>
+            <input type="text" id="new_brand_region" aria-label="Wilayah Target" x-model="newBrand.target_region" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
           </div>
         </div>
 
@@ -2643,14 +2667,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-2">
-      <span>GEO SEO Engine • UNICAM STUDIO & Multi-Brand Automation Network</span>
-      <span class="font-mono text-[11px]">Port: 28420 • Native Local SEO Engine</span>
-    </div>
-  </footer>
 
   <!-- Alpine.js Application Logic -->
   <script>
