@@ -60,10 +60,10 @@
       outline-offset: 2px !important;
     }
 
-    /* WCAG AA Color Contrast Fixes (>= 4.5:1 ratio) */
+    /* WCAG AA Color Contrast Fixes (>= 4.5:1 ratio) & Minimalist Footer */
     footer span {
-      color: #475569 !important; /* slate-600 */
-      font-size: 14px;
+      color: #64748b !important; /* slate-500: passes WCAG AA 4.5:1 on white/light backgrounds */
+      font-size: 10px;
     }
   </style>
 </head>
@@ -105,15 +105,15 @@
          class="bg-slate-900 text-slate-300 border-r border-slate-800 flex flex-col justify-between flex-shrink-0 transition-all duration-300 ease-in-out z-40 select-none shadow-xl">
     
     <!-- Sidebar Top: Brand / Logo & Collapse Toggle -->
-    <div class="h-16 flex items-center px-4 border-b border-slate-800/80 justify-between">
-      <div class="flex items-center space-x-3 overflow-hidden">
+    <div class="h-16 flex items-center px-4 border-b border-slate-800/80 justify-between gap-3 overflow-hidden">
+      <div class="flex items-center space-x-3 overflow-hidden min-w-0 flex-1">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-900/50 flex-shrink-0">
           <i class="fa-solid fa-bolt-lightning text-lg"></i>
         </div>
-        <div x-show="!sidebarCollapsed" class="transition-opacity duration-200">
-          <div class="flex items-center gap-1.5">
-            <h1 class="text-sm font-extrabold text-white tracking-tight leading-none">GEO Engine</h1>
-            <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">v2.2</span>
+        <div x-show="!sidebarCollapsed" class="min-w-0 flex-1 transition-opacity duration-200">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <h1 class="text-sm font-extrabold text-white tracking-tight leading-none truncate">GEO Engine</h1>
+            <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex-shrink-0">v2.2</span>
           </div>
           <p class="text-[10px] text-slate-400 font-medium truncate mt-0.5">Local SEO & Generative Engine</p>
         </div>
@@ -121,8 +121,9 @@
 
       <!-- Shrink / Expand Toggle Button -->
       <button @click="sidebarCollapsed = !sidebarCollapsed" 
-              class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer"
-              :title="sidebarCollapsed ? 'Perbesar Sidebar' : 'Ciutkan Sidebar'">
+              class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer flex-shrink-0"
+              :title="sidebarCollapsed ? 'Perbesar Sidebar' : 'Ciutkan Sidebar'"
+              aria-label="Ciutkan atau Perbesar Sidebar">
         <i class="fa-solid text-xs" :class="sidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'"></i>
       </button>
     </div>
@@ -345,7 +346,7 @@
     <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 z-30 shadow-xs">
       <!-- Left: Mobile Toggle & Breadcrumbs -->
       <div class="flex items-center gap-3 min-w-0">
-        <button @click="sidebarCollapsed = !sidebarCollapsed" class="text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer" title="Ciutkan/Perbesar Sidebar">
+        <button @click="sidebarCollapsed = !sidebarCollapsed" class="text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer" title="Ciutkan/Perbesar Sidebar" aria-label="Toggle Sidebar Navigation">
           <i class="fa-solid fa-bars-staggered"></i>
         </button>
         
@@ -498,7 +499,7 @@
                       <label for="brand_color_primary_picker" class="text-[11px] font-bold text-slate-600 block">Warna Utama (Primary)</label>
                       <div class="flex items-center gap-2">
                         <input type="color" id="brand_color_primary_picker" aria-label="Pemilih Warna Utama Brand" x-model="currentBrand.brand_color_primary" class="w-9 h-9 min-h-[36px] rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
-                        <input type="text" id="brand_color_primary_hex" aria-label="Kode Hex Warna Utama Brand" x-model="currentBrand.brand_color_primary" placeholder="#4f46e5" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
+                        <input type="text" id="brand_color_primary_hex" aria-label="Brand Primary Color Hex Code" x-model="currentBrand.brand_color_primary" placeholder="#4f46e5" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
                       </div>
                       <span class="text-[10px] text-slate-500">Digunakan untuk Tombol CTA, Header Banner & Border</span>
                     </div>
@@ -508,7 +509,7 @@
                       <label for="brand_color_accent_picker" class="text-[11px] font-bold text-slate-600 block">Warna Aksen (Accent)</label>
                       <div class="flex items-center gap-2">
                         <input type="color" id="brand_color_accent_picker" aria-label="Pemilih Warna Aksen Brand" x-model="currentBrand.brand_color_accent" class="w-9 h-9 min-h-[36px] rounded-lg border border-slate-300 cursor-pointer p-0.5 bg-white">
-                        <input type="text" id="brand_color_accent_hex" aria-label="Kode Hex Warna Aksen Brand" x-model="currentBrand.brand_color_accent" placeholder="#7c3aed" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
+                        <input type="text" id="brand_color_accent_hex" aria-label="Brand Accent Color Hex Code" x-model="currentBrand.brand_color_accent" placeholder="#7c3aed" class="w-full text-xs font-mono font-bold uppercase border-slate-200 rounded-lg p-2 border bg-white">
                       </div>
                       <span class="text-[10px] text-slate-500">Digunakan untuk Glow Visual, Badge & Highlight</span>
                     </div>
@@ -2421,11 +2422,12 @@
 
   </main>
 
-  <!-- Accessible Global Footer inside main view container -->
-  <footer class="bg-white border-t border-slate-200 py-3.5 px-6 text-center text-sm text-slate-600 flex-shrink-0">
-    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-2 text-sm text-slate-600">
-      <span class="font-medium text-slate-700">GEO SEO Engine • UNICAM STUDIO &amp; Multi-Brand Automation Network</span>
-      <span class="font-mono text-xs text-slate-600">Port: 28420 • Native Local SEO Engine</span>
+  <!-- Enhanced Minimalist Footer for Contrast & Hierarchy -->
+  <footer class="border-t border-slate-200/80 py-2 px-6 bg-white flex-shrink-0">
+    <div class="max-w-7xl mx-auto flex flex-row justify-center items-center gap-6 text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+      <span>GEO SEO ENGINE • UNICAM STUDIO</span>
+      <span>•</span>
+      <span>v2.2 • PORT: 28420</span>
     </div>
   </footer>
   </div>
