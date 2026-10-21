@@ -36,6 +36,11 @@ data/*.json
 output/images/*.jpg
 output/images/*.png
 !output/images/.gitkeep
+output/assets/**/*.jpg
+output/assets/**/*.png
+output/assets/**/*.webp
+output/assets/**/*.json
+!output/assets/**/.gitkeep
 
 # macOS / System
 .DS_Store

@@ -5,7 +5,7 @@ import json
 import logging
 import requests
 from typing import Dict, Any, List, Optional
-from fastapi import FastAPI, Request, Depends, HTTPException, BackgroundTasks
+from fastapi import FastAPI, Request, Depends, HTTPException, BackgroundTasks, UploadFile, File
 from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -16,7 +16,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from db.session import get_db, SessionLocal
-from db.models import Brand, Service, LocationTarget, Article, KeywordBankItem
+from db.models import Brand, Service, LocationTarget, Article, KeywordBankItem, MediaAsset
 from generators.geo_writer import ProgrammaticGEOWriter
 from generators.link_injector import LinkInjector
 from core.bridge_client import WordPressBridgeClient
@@ -55,10 +55,21 @@ class RouterSettingsRequest(BaseModel):
 
 class GenerateCustomImageRequest(BaseModel):
     prompt: str
+    brand_id: Optional[str] = None
     brand_name: Optional[str] = "GEO Studio"
     location: Optional[str] = "Indonesia"
     aspect_ratio: Optional[str] = "16:9"
     style: Optional[str] = "photorealistic"
+    service_name: Optional[str] = None
+    logo_url: Optional[str] = None
+
+class CreateImagePromptRequest(BaseModel):
+    brand_id: Optional[str] = None
+    brand_name: Optional[str] = None
+    service_name: Optional[str] = None
+    location: Optional[str] = None
+    pain_point: Optional[str] = None
+    solution: Optional[str] = None
 
 class TestCompletionRequest(BaseModel):
     prompt: str
@@ -544,28 +555,44 @@ def test_brand_gsc_connection(brand_id: str, db: Session = Depends(get_db)):
 # Marketing Keyword Bank Routes
 @app.get("/api/keywords/bank")
 def get_keyword_bank(brand_id: Optional[str] = None, category: Optional[str] = None, db: Session = Depends(get_db)):
-    """Lists keyword bank items grouped into Action, Subject, Predicate, City."""
+    """Lists keyword bank items strictly scoped to a specific brand or global."""
     query = db.query(KeywordBankItem)
     if brand_id:
-        query = query.filter((KeywordBankItem.brand_id == brand_id) | (KeywordBankItem.brand_id == None))
-    if category:
-        query = query.filter(KeywordBankItem.category == category.lower())
-    
-    items = query.order_by(KeywordBankItem.created_at.asc()).all()
-    
-    # Auto-seed if database keyword bank is empty
-    if not items and db.query(KeywordBankItem).count() == 0:
-        for d in DEFAULT_KEYWORD_BANK:
-            item = KeywordBankItem(
-                id=f"kb-{uuid.uuid4().hex[:10]}",
-                brand_id=None,
-                category=d["category"],
-                value=d["value"],
-                is_active=True
-            )
-            db.add(item)
-        db.commit()
-        items = db.query(KeywordBankItem).order_by(KeywordBankItem.created_at.asc()).all()
+        query = query.filter(KeywordBankItem.brand_id == brand_id)
+        if category:
+            query = query.filter(KeywordBankItem.category == category.lower())
+        items = query.order_by(KeywordBankItem.created_at.asc()).all()
+
+        # If brand has no keywords yet, auto-seed defaults strictly for this brand
+        if not items:
+            brand = db.query(Brand).filter(Brand.id == brand_id).first()
+            for d in DEFAULT_KEYWORD_BANK:
+                item = KeywordBankItem(
+                    id=f"kb-{uuid.uuid4().hex[:10]}",
+                    brand_id=brand_id,
+                    category=d["category"],
+                    value=d["value"],
+                    is_active=True
+                )
+                db.add(item)
+            db.commit()
+            items = db.query(KeywordBankItem).filter(KeywordBankItem.brand_id == brand_id).order_by(KeywordBankItem.created_at.asc()).all()
+    else:
+        if category:
+            query = query.filter(KeywordBankItem.category == category.lower())
+        items = query.order_by(KeywordBankItem.created_at.asc()).all()
+        if not items and db.query(KeywordBankItem).count() == 0:
+            for d in DEFAULT_KEYWORD_BANK:
+                item = KeywordBankItem(
+                    id=f"kb-{uuid.uuid4().hex[:10]}",
+                    brand_id=None,
+                    category=d["category"],
+                    value=d["value"],
+                    is_active=True
+                )
+                db.add(item)
+            db.commit()
+            items = db.query(KeywordBankItem).order_by(KeywordBankItem.created_at.asc()).all()
 
     grouped = {"action": [], "subject": [], "predicate": [], "city": []}
     for it in items:
@@ -577,6 +604,7 @@ def get_keyword_bank(brand_id: Optional[str] = None, category: Optional[str] = N
 
     return {
         "success": True,
+        "brand_id": brand_id,
         "total": len(items),
         "items": [it.to_dict() for it in items],
         "grouped": grouped
@@ -627,6 +655,16 @@ def generate_keyword_matrix(req: KeywordMatrixGenerateRequest, db: Session = Dep
     subjects = req.subjects or []
     predicates = req.predicates or []
     cities = req.cities or []
+
+    if req.brand_id:
+        if not actions:
+            actions = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "action", KeywordBankItem.brand_id == req.brand_id, KeywordBankItem.is_active == True).all()]
+        if not subjects:
+            subjects = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "subject", KeywordBankItem.brand_id == req.brand_id, KeywordBankItem.is_active == True).all()]
+        if not predicates:
+            predicates = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "predicate", KeywordBankItem.brand_id == req.brand_id, KeywordBankItem.is_active == True).all()]
+        if not cities:
+            cities = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "city", KeywordBankItem.brand_id == req.brand_id, KeywordBankItem.is_active == True).all()]
 
     if not actions:
         actions = [i.value for i in db.query(KeywordBankItem).filter(KeywordBankItem.category == "action", KeywordBankItem.is_active == True).all()]
@@ -768,27 +806,161 @@ def test_router_completion(req: TestCompletionRequest):
         "model_used": target_model
     }
 
-# Studio Generator Gambar Endpoints
+# Studio Generator Gambar & Asset Bank Endpoints
 @app.post("/api/images/generate")
-def generate_custom_image(req: GenerateCustomImageRequest):
-    """Generates custom graphic/thumbnail with specified aspect ratio (16:9, 1:1, 9:16) and style."""
+@app.post("/api/brands/{brand_id}/generate-image")
+def generate_custom_image(req: GenerateCustomImageRequest, brand_id: Optional[str] = None, db: Session = Depends(get_db)):
+    """Generates custom graphic/thumbnail with specified aspect ratio (16:9, 1:1, 9:16) and saves into per-brand asset directory."""
     if not req.prompt.strip():
         raise HTTPException(status_code=400, detail="Prompt tidak boleh kosong.")
     
+    effective_brand_id = brand_id or req.brand_id
+    brand_name = req.brand_name or "GEO Studio"
+    location = req.location or "Indonesia"
+    logo_url = req.logo_url
+
+    if effective_brand_id:
+        brand = db.query(Brand).filter(Brand.id == effective_brand_id).first()
+        if brand:
+            brand_name = brand.name
+            location = brand.hq_location or location
+            logo_url = brand.logo_url or logo_url
+    
     result = geo_writer.gemini.generate_custom_image(
         prompt=req.prompt.strip(),
-        brand_name=req.brand_name or "GEO Studio",
-        location=req.location or "Indonesia",
+        brand_name=brand_name,
+        location=location,
         aspect_ratio=req.aspect_ratio or "16:9",
-        style=req.style or "photorealistic"
+        style=req.style or "photorealistic",
+        logo_url=logo_url,
+        brand_id=effective_brand_id
     )
+
+    # Persist in MediaAsset table if brand_id is specified
+    if effective_brand_id:
+        asset_id = result.get("id") or f"media-{uuid.uuid4().hex[:10]}"
+        media_item = MediaAsset(
+            id=asset_id,
+            brand_id=effective_brand_id,
+            file_url=result.get("url", f"/output/images/{result.get('filename')}"),
+            role="FEATURED",
+            alt_text_template=f"{brand_name} {location} - {req.prompt[:50]}",
+            title_template=req.prompt[:100],
+            caption_template=f"High resolution visual for {brand_name}."
+        )
+        try:
+            db.merge(media_item)
+            db.commit()
+        except Exception as e:
+            db.rollback()
+            logging.warning(f"Failed to record MediaAsset in DB: {e}")
+
     return result
 
+@app.post("/api/brands/{brand_id}/create-image-prompt")
+@app.post("/api/images/create-prompt")
+def create_image_prompt(req: CreateImagePromptRequest, brand_id: Optional[str] = None, db: Session = Depends(get_db)):
+    """Crafts tailored visual prompt for Antigravity or Gemini App generation based on brand positioning."""
+    effective_brand_id = brand_id or req.brand_id
+    brand_name = req.brand_name or "GEO Studio"
+    industry = None
+    location = req.location or "Indonesia"
+    pain_point = req.pain_point
+    solution = req.solution
+
+    if effective_brand_id:
+        brand = db.query(Brand).filter(Brand.id == effective_brand_id).first()
+        if brand:
+            brand_name = brand.name
+            industry = brand.industry_focus
+            location = brand.hq_location or location
+            if not pain_point and brand.core_pain_points:
+                pain_point = brand.core_pain_points[0] if isinstance(brand.core_pain_points, list) else str(brand.core_pain_points)
+            if not solution and brand.core_solutions:
+                solution = brand.core_solutions[0] if isinstance(brand.core_solutions, list) else str(brand.core_solutions)
+
+    return geo_writer.gemini.craft_creative_prompt(
+        brand_name=brand_name,
+        industry=industry,
+        service_name=req.service_name,
+        location=location,
+        pain_point=pain_point,
+        solution=solution,
+        brand_id=effective_brand_id
+    )
+
+@app.get("/api/brands/{brand_id}/assets")
+def get_brand_assets(brand_id: str, db: Session = Depends(get_db)):
+    """Returns assets strictly scoped to brand_id from dedicated directory and DB."""
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+    
+    images = geo_writer.gemini.list_gallery_images(brand_id=brand_id)
+    db_assets = db.query(MediaAsset).filter(MediaAsset.brand_id == brand_id).all()
+    
+    return {
+        "success": True,
+        "brand_id": brand_id,
+        "brand_name": brand.name,
+        "asset_dir": geo_writer.gemini.get_brand_asset_dir(brand_id),
+        "total": len(images),
+        "images": images,
+        "db_assets": [a.to_dict() for a in db_assets]
+    }
+
+@app.post("/api/brands/{brand_id}/assets/upload")
+async def upload_brand_asset(brand_id: str, file: UploadFile = File(...), db: Session = Depends(get_db)):
+    """Uploads external or Antigravity-generated image directly into brand asset directory."""
+    brand = db.query(Brand).filter(Brand.id == brand_id).first()
+    if not brand:
+        raise HTTPException(status_code=404, detail="Brand tidak ditemukan.")
+
+    brand_dir = geo_writer.gemini.get_brand_asset_dir(brand_id)
+    clean_filename = f"upload-{uuid.uuid4().hex[:8]}-{file.filename}"
+    clean_filename = re.sub(r'[^a-zA-Z0-9_.-]', '_', clean_filename)
+    dest_path = os.path.join(brand_dir, clean_filename)
+
+    contents = await file.read()
+    with open(dest_path, "wb") as f:
+        f.write(contents)
+
+    web_url = geo_writer.gemini.get_brand_asset_url(brand_id, clean_filename)
+    asset_id = f"up-{uuid.uuid4().hex[:10]}"
+
+    media_item = MediaAsset(
+        id=asset_id,
+        brand_id=brand_id,
+        file_url=web_url,
+        role="FEATURED",
+        alt_text_template=f"{brand.name} Asset - {file.filename}",
+        title_template=file.filename,
+        caption_template=f"Branded visual for {brand.name}"
+    )
+    db.merge(media_item)
+    db.commit()
+
+    asset_record = {
+        "id": asset_id,
+        "filename": clean_filename,
+        "file_path": dest_path,
+        "url": web_url,
+        "brand_id": brand_id,
+        "prompt": file.filename
+    }
+    geo_writer.gemini._record_gallery_item(asset_record, brand_id=brand_id)
+
+    return {
+        "success": True,
+        "message": f"Asset '{file.filename}' berhasil disimpan ke bank asset situs {brand.name}.",
+        "asset": asset_record
+    }
+
 @app.get("/api/images/gallery")
-def get_image_gallery():
-    """Returns list of generated images in the studio gallery."""
-    images = geo_writer.gemini.list_gallery_images()
-    return {"images": images}
+def get_image_gallery(brand_id: Optional[str] = None):
+    """Returns list of generated images in the studio gallery, optionally filtered by brand_id."""
+    images = geo_writer.gemini.list_gallery_images(brand_id=brand_id)
+    return {"images": images, "brand_id": brand_id}
 
 @app.post("/api/reset-database")
 def reset_database(db: Session = Depends(get_db)):

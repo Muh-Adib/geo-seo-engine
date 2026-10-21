@@ -22,10 +22,26 @@ class GeminiMultiAccountEngine:
     - Fallback to high-aesthetic typography engine (Pillow) with real logo compositing so generation never fails.
     """
 
-    def __init__(self, output_dir: str = "output/images"):
+    def __init__(self, output_dir: str = "output"):
         self.output_dir = output_dir
-        os.makedirs(self.output_dir, exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, "images"), exist_ok=True)
+        os.makedirs(os.path.join(self.output_dir, "assets"), exist_ok=True)
         self.auth = GeminiAuthManager()
+
+    def get_brand_asset_dir(self, brand_id: Optional[str] = None) -> str:
+        """Returns dedicated asset directory for a brand: output/assets/{brand_id}/images/"""
+        if brand_id:
+            target_dir = os.path.join(self.output_dir, "assets", brand_id, "images")
+        else:
+            target_dir = os.path.join(self.output_dir, "images")
+        os.makedirs(target_dir, exist_ok=True)
+        return target_dir
+
+    def get_brand_asset_url(self, brand_id: Optional[str], filename: str) -> str:
+        """Returns web-accessible relative URL for an asset."""
+        if brand_id:
+            return f"/output/assets/{brand_id}/images/{filename}"
+        return f"/output/images/{filename}"
 
     def get_accounts_summary(self) -> Dict[str, Any]:
         """Returns connected accounts summary."""
@@ -85,14 +101,18 @@ class GeminiMultiAccountEngine:
         location: str,
         slug: str,
         logo_url: Optional[str] = None,
-        industry: Optional[str] = None
+        industry: Optional[str] = None,
+        brand_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Generates a 16:9 (1200x675) featured thumbnail for WordPress.
         Overlays brand logo and uses industry-appropriate problem-solving visual aesthetic.
+        Saves into dedicated per-site asset directory when brand_id is specified.
         """
         filename = f"thumb-{slug[:35]}.jpg"
-        filepath = os.path.join(self.output_dir, filename)
+        target_dir = self.get_brand_asset_dir(brand_id)
+        filepath = os.path.join(target_dir, filename)
+        file_url = self.get_brand_asset_url(brand_id, filename)
 
         prompt = self.build_industry_prompt(
             service_name=service_name,
@@ -144,6 +164,9 @@ class GeminiMultiAccountEngine:
                             "success": True,
                             "source": "gemini_imagen_3",
                             "file_path": filepath,
+                            "file_url": file_url,
+                            "url": file_url,
+                            "brand_id": brand_id,
                             "filename": filename,
                             "base64_data": b64_res,
                             "alt_text": f"{service_name} in {location} - {brand_name}",
@@ -176,6 +199,9 @@ class GeminiMultiAccountEngine:
             "success": True,
             "source": "studio_canvas_fallback",
             "file_path": filepath,
+            "file_url": file_url,
+            "url": file_url,
+            "brand_id": brand_id,
             "filename": filename,
             "base64_data": b64_canvas,
             "alt_text": f"{service_name} {location} - {brand_name}",
@@ -331,17 +357,21 @@ class GeminiMultiAccountEngine:
         location: str = "Indonesia",
         aspect_ratio: str = "16:9",
         style: str = "photorealistic",
-        logo_url: Optional[str] = None
+        logo_url: Optional[str] = None,
+        brand_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Interactive visual generator supporting 16:9, 1:1, 9:16 aspect ratios and brand logo watermarking.
+        Stores into per-brand asset directory output/assets/{brand_id}/images/ when specified.
         """
         import time
         import uuid
 
         clean_slug = re.sub(r'[^a-z0-9]+', '-', prompt.lower())[:25].strip('-') or "render"
         filename = f"gen-{int(time.time())}-{clean_slug}.jpg"
-        filepath = os.path.join(self.output_dir, filename)
+        target_dir = self.get_brand_asset_dir(brand_id)
+        filepath = os.path.join(target_dir, filename)
+        web_url = self.get_brand_asset_url(brand_id, filename)
 
         width, height = 1200, 675
         if aspect_ratio == "1:1":
@@ -416,7 +446,8 @@ class GeminiMultiAccountEngine:
             "id": f"img-{uuid.uuid4().hex[:8]}",
             "filename": filename,
             "file_path": filepath,
-            "url": f"/output/images/{filename}",
+            "url": web_url,
+            "brand_id": brand_id,
             "prompt": prompt,
             "brand_name": brand_name,
             "aspect_ratio": aspect_ratio,
@@ -426,10 +457,56 @@ class GeminiMultiAccountEngine:
             "base64_data": b64
         }
 
-        self._record_gallery_item(result)
+        self._record_gallery_item(result, brand_id=brand_id)
         return result
 
-    def _record_gallery_item(self, item: Dict[str, Any]):
+    def craft_creative_prompt(
+        self,
+        brand_name: str,
+        industry: Optional[str] = None,
+        service_name: Optional[str] = None,
+        location: Optional[str] = None,
+        pain_point: Optional[str] = None,
+        solution: Optional[str] = None,
+        brand_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """Crafts a tailored commercial visual prompt for Antigravity or Gemini App generation."""
+        ind = (industry or "Technology & Software Development").strip()
+        srv = (service_name or "Enterprise Software Development").strip()
+        loc = (location or "Indonesia").strip()
+        pp = (pain_point or "sistem lama yang lambat dan sering crash").strip()
+        sol = (solution or "arsitektur modern berkinerja tinggi, responsif dan stabil").strip()
+
+        base_prompt = self.build_industry_prompt(
+            service_name=srv,
+            location=loc,
+            brand_name=brand_name,
+            industry=ind
+        )
+
+        full_prompt = (
+            f"{base_prompt} "
+            f"Commercial marketing visual solving client pain point '{pp}' with real solution '{sol}'. "
+            f"Featuring clean professional branding for {brand_name} in {loc}. "
+            f"Hyper-detailed, octane render, 8k resolution, photorealistic, cinematic lighting, no distorted text."
+        )
+
+        target_dir = self.get_brand_asset_dir(brand_id)
+
+        return {
+            "success": True,
+            "brand_id": brand_id,
+            "brand_name": brand_name,
+            "prompt": full_prompt,
+            "aspect_ratios": ["16:9", "1:1", "9:16"],
+            "target_dir": target_dir,
+            "instruction": "Salin prompt ini untuk dijalankan via Antigravity atau Gemini App, lalu masukkan hasil gambar ke bank asset situs ini."
+        }
+
+    def _record_gallery_item(self, item: Dict[str, Any], brand_id: Optional[str] = None):
+        clean_record = {k: v for k, v in item.items() if k != "base64_data"}
+
+        # 1. Record in global gallery
         gallery_file = "data/image_gallery.json"
         items = []
         if os.path.exists(gallery_file):
@@ -438,16 +515,59 @@ class GeminiMultiAccountEngine:
                     items = json.load(f)
             except Exception:
                 items = []
-        
-        clean_record = {k: v for k, v in item.items() if k != "base64_data"}
         items.insert(0, clean_record)
         try:
             with open(gallery_file, "w") as f:
-                json.dump(items[:100], f, indent=2)
+                json.dump(items[:150], f, indent=2)
         except Exception as e:
-            logger.warning(f"Could not save gallery index: {e}")
+            logger.warning(f"Could not save global gallery index: {e}")
 
-    def list_gallery_images(self) -> List[Dict[str, Any]]:
+        # 2. Record in per-brand asset index if brand_id is specified
+        if brand_id:
+            brand_dir = self.get_brand_asset_dir(brand_id)
+            brand_index = os.path.join(brand_dir, "assets_index.json")
+            brand_items = []
+            if os.path.exists(brand_index):
+                try:
+                    with open(brand_index, "r") as f:
+                        brand_items = json.load(f)
+                except Exception:
+                    brand_items = []
+            brand_items.insert(0, clean_record)
+            try:
+                with open(brand_index, "w") as f:
+                    json.dump(brand_items[:100], f, indent=2)
+            except Exception as e:
+                logger.warning(f"Could not save brand gallery index for {brand_id}: {e}")
+
+    def list_gallery_images(self, brand_id: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Lists images in gallery, scoped strictly to brand_id when provided."""
+        if brand_id:
+            brand_dir = self.get_brand_asset_dir(brand_id)
+            brand_index = os.path.join(brand_dir, "assets_index.json")
+            if os.path.exists(brand_index):
+                try:
+                    with open(brand_index, "r") as f:
+                        return json.load(f)
+                except Exception:
+                    pass
+
+            # Fallback to scanning brand's images directory
+            scanned = []
+            if os.path.exists(brand_dir):
+                for f in sorted(os.listdir(brand_dir), reverse=True):
+                    if f.endswith(".jpg") or f.endswith(".png") or f.endswith(".webp"):
+                        scanned.append({
+                            "id": f,
+                            "filename": f,
+                            "brand_id": brand_id,
+                            "url": self.get_brand_asset_url(brand_id, f),
+                            "file_path": os.path.join(brand_dir, f),
+                            "prompt": f.replace("thumb-", "").replace("gen-", "").replace(".jpg", "").replace(".png", "").replace("-", " ")
+                        })
+            return scanned
+
+        # Global list
         gallery_file = "data/image_gallery.json"
         if os.path.exists(gallery_file):
             try:
@@ -457,8 +577,9 @@ class GeminiMultiAccountEngine:
                 pass
         
         scanned = []
-        if os.path.exists(self.output_dir):
-            for f in sorted(os.listdir(self.output_dir), reverse=True):
+        img_dir = os.path.join(self.output_dir, "images")
+        if os.path.exists(img_dir):
+            for f in sorted(os.listdir(img_dir), reverse=True):
                 if f.endswith(".jpg") or f.endswith(".png"):
                     scanned.append({
                         "id": f,

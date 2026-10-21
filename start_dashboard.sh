@@ -6,8 +6,8 @@ cd "$DIR"
 
 echo "=========================================================="
 echo " Starting Unicam Programmatic SEO & GEO Engine Dashboard"
-echo " Multi-Tenant Network: 10 Brands Architecture"
-echo " Dashboard URL: http://localhost:8000"
+echo " Multi-Tenant Network: WordPress Bridge & GEO Optimization"
+echo " Dashboard URL: http://localhost:28420"
 echo "=========================================================="
 
-"$DIR/.venv/bin/uvicorn" web.app:app --host 0.0.0.0 --port 8000 --reload
+"$DIR/.venv/bin/uvicorn" web.app:app --host 0.0.0.0 --port 28420 --reload

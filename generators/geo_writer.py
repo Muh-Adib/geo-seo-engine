@@ -117,7 +117,8 @@ class ProgrammaticGEOWriter:
             location=city_scope,
             slug=slug,
             logo_url=brand_data.get("logo_url"),
-            industry=brand_data.get("industry_focus")
+            industry=brand_data.get("industry_focus"),
+            brand_id=brand_data.get("id")
         )
         article_payload["featured_media"] = thumbnail_info
         article_payload["featured_image_base64"] = thumbnail_info.get("base64_data", "")
@@ -645,7 +646,7 @@ Return VALID JSON ONLY with this structure:
 }}
 """
         max_attempts = max(1, len(self.gemini.auth.accounts))
-        models_to_try = [self.model, "gemini-2.0-flash", "gemini-1.5-flash"]
+        models_to_try = [self.model, "gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
         # De-duplicate while preserving order
         models_to_try = list(dict.fromkeys(models_to_try))
 

@@ -123,3 +123,82 @@ def test_logo_watermark_in_thumbnail(tmp_path):
     with Image.open(test_file) as img:
         assert img.width == 1200
         assert img.height == 675
+
+def test_per_brand_keyword_bank_isolation(test_db_brand):
+    brand_id = test_db_brand["brand_id"]
+    
+    # 1. Fetch bank for this brand
+    res = client.get(f"/api/keywords/bank?brand_id={brand_id}")
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert data["brand_id"] == brand_id
+    
+    # 2. Add keyword strictly for this brand
+    add_res = client.post("/api/keywords/bank", json={
+        "category": "action",
+        "value": f"Vendor Spesifik {brand_id}",
+        "brand_id": brand_id
+    })
+    assert add_res.status_code == 200
+    new_item = add_res.json()["item"]
+    assert new_item["brand_id"] == brand_id
+
+    # 3. Verify it is returned for this brand
+    res_after = client.get(f"/api/keywords/bank?brand_id={brand_id}")
+    items = res_after.json()["items"]
+    assert any(i["value"] == f"Vendor Spesifik {brand_id}" for i in items)
+
+def test_brand_asset_directory_and_prompt_generation(test_db_brand):
+    brand_id = test_db_brand["brand_id"]
+
+    # 1. Create tailored prompt
+    prompt_res = client.post(f"/api/brands/{brand_id}/create-image-prompt", json={
+        "brand_id": brand_id,
+        "service_name": "Enterprise ERP System",
+        "location": "Jakarta"
+    })
+    assert prompt_res.status_code == 200
+    pdata = prompt_res.json()
+    assert pdata["success"] is True
+    assert "Enterprise ERP System" in pdata["prompt"] or "Jakarta" in pdata["prompt"]
+
+    # 2. Generate image scoped to brand
+    gen_res = client.post(f"/api/brands/{brand_id}/generate-image", json={
+        "prompt": "Clean enterprise software studio with futuristic dashboard 8k",
+        "aspect_ratio": "16:9",
+        "style": "photorealistic",
+        "brand_id": brand_id
+    })
+    assert gen_res.status_code == 200
+    gdata = gen_res.json()
+    assert gdata["success"] is True
+    assert f"/output/assets/{brand_id}/images/" in gdata["url"]
+    assert os.path.exists(gdata["file_path"])
+
+    # 3. Retrieve brand assets
+    assets_res = client.get(f"/api/brands/{brand_id}/assets")
+    assert assets_res.status_code == 200
+    adata = assets_res.json()
+    assert adata["success"] is True
+    assert adata["brand_id"] == brand_id
+    assert adata["total"] >= 1
+    assert any(img["filename"] == gdata["filename"] for img in adata["images"])
+
+def test_brand_asset_upload(test_db_brand, tmp_path):
+    brand_id = test_db_brand["brand_id"]
+    test_img_path = tmp_path / "antigravity_render.jpg"
+    test_img = Image.new("RGB", (800, 600), color=(30, 41, 59))
+    test_img.save(test_img_path, "JPEG")
+
+    with open(test_img_path, "rb") as f:
+        res = client.post(
+            f"/api/brands/{brand_id}/assets/upload",
+            files={"file": ("antigravity_render.jpg", f, "image/jpeg")}
+        )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["success"] is True
+    assert "upload-" in data["asset"]["filename"]
+    assert f"/output/assets/{brand_id}/images/" in data["asset"]["url"]
+    assert os.path.exists(data["asset"]["file_path"])

@@ -51,7 +51,7 @@
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col" x-data="geoEngineApp()" x-init="init()">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased h-screen overflow-hidden flex" x-data="geoEngineApp()" x-init="init()">
 
   <!-- Toast Notification Container -->
   <div class="fixed top-5 right-5 z-50 flex flex-col space-y-3 pointer-events-none max-w-sm w-full">
@@ -82,94 +82,278 @@
     </template>
   </div>
 
-  <!-- Header Navigation -->
-  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="flex justify-between items-center h-16">
-        <!-- Logo & Title -->
-        <div class="flex items-center space-x-3">
-          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-700 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-100">
-            <i class="fa-solid fa-bolt-lightning text-lg"></i>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h1 class="text-base font-extrabold text-slate-900 tracking-tight">GEO SEO Engine</h1>
-              <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100">v2.1 Pro</span>
-            </div>
-            <p class="text-[11px] text-slate-500 font-medium">Programmatic Local SEO & Generative Optimization</p>
-          </div>
+  <!-- ========================================== -->
+  <!-- LEFT COLLAPSIBLE SIDEBAR                   -->
+  <!-- ========================================== -->
+  <aside :class="sidebarCollapsed ? 'w-20' : 'w-64'"
+         class="bg-slate-900 text-slate-300 border-r border-slate-800 flex flex-col justify-between flex-shrink-0 transition-all duration-300 ease-in-out z-40 select-none shadow-xl">
+    
+    <!-- Sidebar Top: Brand / Logo & Collapse Toggle -->
+    <div class="h-16 flex items-center px-4 border-b border-slate-800/80 justify-between">
+      <div class="flex items-center space-x-3 overflow-hidden">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-violet-600 flex items-center justify-center text-white shadow-md shadow-indigo-900/50 flex-shrink-0">
+          <i class="fa-solid fa-bolt-lightning text-lg"></i>
         </div>
-
-        <!-- Global Status & Quick Actions -->
-        <div class="flex items-center space-x-3">
-          <!-- Download WordPress Plugin Button -->
-          <a href="/api/download-plugin" download="unicam-seo-bridge.zip" class="px-3.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-200 text-xs font-semibold shadow-sm flex items-center gap-2 transition cursor-pointer" title="Unduh file ZIP plugin bridge untuk dipasang di WordPress">
-            <i class="fa-solid fa-puzzle-piece text-sky-600"></i>
-            <span>Unduh Plugin WP</span>
-            <i class="fa-solid fa-download text-[11px]"></i>
-          </a>
-
-          <!-- Gemini AI Status Indicator -->
-          <button @click="activeTab = 'gemini'" class="px-3 py-1.5 rounded-lg border text-xs font-semibold flex items-center gap-2 transition cursor-pointer"
-                  :class="geminiActiveCount > 0 ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100' : 'bg-amber-50 text-amber-800 border-amber-200 hover:bg-amber-100'">
-            <i class="fa-brands fa-google" :class="geminiActiveCount > 0 ? 'text-emerald-600' : 'text-amber-600'"></i>
-            <span x-text="geminiActiveCount > 0 ? (geminiAccounts[0]?.model_tested || 'Gemini 2.0 Flash') : 'Gemini: Belum Ada Key'"></span>
-            <span class="w-2 h-2 rounded-full" :class="geminiActiveCount > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'"></span>
-          </button>
-
-          <!-- Metrics Badges -->
-          <div class="hidden sm:flex items-center space-x-2 pl-2 border-l border-slate-200 text-xs font-semibold text-slate-600">
-            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5" title="Situs Terdaftar">
-              <i class="fa-solid fa-globe text-indigo-500"></i>
-              <span x-text="brands.length"></span> Situs
-            </span>
-            <span class="px-2.5 py-1 bg-violet-50 text-violet-700 border border-violet-100 rounded-md flex items-center gap-1.5" title="Model Router Aktif">
-              <i class="fa-solid fa-microchip text-violet-500"></i>
-              <span class="font-mono text-[11px]" x-text="routerSelectedModel || 'ox-alpha'"></span>
-            </span>
-            <span class="px-2.5 py-1 bg-slate-100 rounded-md flex items-center gap-1.5" title="Total Artikel Terbit">
-              <i class="fa-solid fa-file-lines text-purple-500"></i>
-              <span x-text="articles.length"></span> Artikel
-            </span>
+        <div x-show="!sidebarCollapsed" class="transition-opacity duration-200">
+          <div class="flex items-center gap-1.5">
+            <h1 class="text-sm font-extrabold text-white tracking-tight leading-none">GEO Engine</h1>
+            <span class="px-1.5 py-0.5 text-[9px] font-bold uppercase rounded bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">v2.2</span>
           </div>
+          <p class="text-[10px] text-slate-400 font-medium truncate mt-0.5">Local SEO & Generative Engine</p>
         </div>
       </div>
 
-      <!-- Navigation Tabs -->
-      <nav class="flex space-x-1 sm:space-x-3 border-t border-slate-100 overflow-x-auto custom-scrollbar" aria-label="Tabs">
-        <button @click="activeTab = 'brands'" :class="activeTab === 'brands' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-globe"></i> <span>Situs & Jaringan</span>
-        </button>
-        <button @click="activeTab = 'visualizer'; initVisualizer()" :class="activeTab === 'visualizer' ? 'border-sky-600 text-sky-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-display text-sky-500"></i> <span>Visualisasi Website Real</span>
-        </button>
-        <button @click="activeTab = 'keywordbank'; loadKeywordBank()" :class="activeTab === 'keywordbank' ? 'border-amber-600 text-amber-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-cubes-stacked text-amber-500"></i> <span>Bank Kata Kunci Marketing</span>
-        </button>
-        <button @click="activeTab = 'writer'" :class="activeTab === 'writer' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-wand-magic-sparkles text-indigo-500"></i> <span>Studio Penulis Solutif</span>
-        </button>
-        <button @click="activeTab = 'images'" :class="activeTab === 'images' ? 'border-pink-600 text-pink-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-palette text-pink-500"></i> <span>Studio Visual & Thumbnail</span>
-        </button>
-        <button @click="activeTab = 'gsc'; loadGSCPerformance()" :class="activeTab === 'gsc' ? 'border-emerald-600 text-emerald-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-chart-line text-emerald-500"></i> <span>Google Search Console</span>
-        </button>
-        <button @click="activeTab = 'articles'" :class="activeTab === 'articles' ? 'border-indigo-600 text-indigo-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-newspaper text-purple-500"></i> <span>Daftar & Sinkronisasi Artikel</span>
-        </button>
-        <button @click="activeTab = 'router'" :class="activeTab === 'router' ? 'border-violet-600 text-violet-600 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-microchip text-violet-600"></i> <span>Router & Model LLM</span>
-        </button>
-        <button @click="activeTab = 'diagnostics'" :class="activeTab === 'diagnostics' ? 'border-slate-600 text-slate-800 font-bold' : 'border-transparent text-slate-500 hover:text-slate-800 font-medium'" class="py-3 px-2 border-b-2 text-xs sm:text-sm flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap">
-          <i class="fa-solid fa-stethoscope text-slate-500"></i> <span>Kesehatan Sistem</span>
-        </button>
-      </nav>
+      <!-- Shrink / Expand Toggle Button -->
+      <button @click="sidebarCollapsed = !sidebarCollapsed" 
+              class="w-8 h-8 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center transition cursor-pointer"
+              :title="sidebarCollapsed ? 'Perbesar Sidebar' : 'Ciutkan Sidebar'">
+        <i class="fa-solid text-xs" :class="sidebarCollapsed ? 'fa-angles-right' : 'fa-angles-left'"></i>
+      </button>
     </div>
-  </header>
 
-  <!-- Main Content Body -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-1 w-full">
+    <!-- Sidebar Scrollable Navigation -->
+    <div class="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-5">
+
+      <!-- SECTION: SITUS AKTIF SELECTION -->
+      <div class="space-y-1.5">
+        <div x-show="!sidebarCollapsed" class="flex justify-between items-center px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+          <span>Situs Aktif</span>
+          <button @click="openAddBrandModal()" class="text-indigo-400 hover:text-indigo-300 flex items-center gap-1 normal-case font-semibold cursor-pointer" title="Tambah Website Baru">
+            <i class="fa-solid fa-plus text-[10px]"></i> Tambah
+          </button>
+        </div>
+
+        <!-- Brand Selector Dropdown / Pills -->
+        <div class="relative">
+          <template x-if="brands.length > 0">
+            <div>
+              <!-- Expanded State: Clean Dropdown / Pill with Logo -->
+              <div x-show="!sidebarCollapsed" class="p-2 rounded-xl bg-slate-800/80 border border-slate-700/60 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                  <div class="w-7 h-7 rounded-lg bg-slate-700 flex items-center justify-center overflow-hidden flex-shrink-0 text-white font-bold text-xs">
+                    <template x-if="currentBrand && currentBrand.logo_url">
+                      <img :src="currentBrand.logo_url" class="w-full h-full object-cover">
+                    </template>
+                    <template x-if="!currentBrand || !currentBrand.logo_url">
+                      <span x-text="(currentBrand?.name || 'S').substring(0, 1).toUpperCase()"></span>
+                    </template>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <select x-model="selectedBrandId" @change="onBrandSelect($event.target.value)" 
+                            class="w-full bg-transparent text-xs font-bold text-white border-none p-0 focus:ring-0 cursor-pointer truncate">
+                      <template x-for="b in brands" :key="b.id">
+                        <option :value="b.id" class="bg-slate-900 text-white" x-text="b.name"></option>
+                      </template>
+                    </select>
+                    <p class="text-[10px] text-slate-400 truncate" x-text="currentBrand?.domain_url || 'Pilih Brand'"></p>
+                  </div>
+                </div>
+                <button @click="openSiteSettings(selectedBrandId)" class="text-slate-400 hover:text-white p-1 text-xs" title="Pengaturan Situs">
+                  <i class="fa-solid fa-gear"></i>
+                </button>
+              </div>
+
+              <!-- Collapsed State: Icon Avatar with Ping Dot -->
+              <div x-show="sidebarCollapsed" class="flex flex-col items-center gap-2">
+                <button @click="openSiteSettings(selectedBrandId)" 
+                        class="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-white relative hover:border-indigo-500 transition cursor-pointer"
+                        :title="(currentBrand?.name || 'Situs') + ' - Klik untuk pengaturan'">
+                  <template x-if="currentBrand && currentBrand.logo_url">
+                    <img :src="currentBrand.logo_url" class="w-8 h-8 rounded-lg object-cover">
+                  </template>
+                  <template x-if="!currentBrand || !currentBrand.logo_url">
+                    <span class="text-xs font-bold" x-text="(currentBrand?.name || 'S').substring(0, 1).toUpperCase()"></span>
+                  </template>
+                  <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-slate-900"
+                        :class="brandStatusMap[selectedBrandId]?.status === 'online' ? 'bg-emerald-500' : 'bg-slate-500'"></span>
+                </button>
+                <button @click="openAddBrandModal()" class="w-8 h-8 rounded-lg bg-slate-800/60 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center text-xs" title="Tambah Website">
+                  <i class="fa-solid fa-plus"></i>
+                </button>
+              </div>
+            </div>
+          </template>
+
+          <template x-if="brands.length === 0">
+            <button @click="openAddBrandModal()" class="w-full p-2.5 rounded-xl border border-dashed border-slate-700 text-slate-400 hover:text-white hover:border-slate-500 flex items-center justify-center gap-2 text-xs transition">
+              <i class="fa-solid fa-plus"></i>
+              <span x-show="!sidebarCollapsed">Setup Website Baru</span>
+            </button>
+          </template>
+        </div>
+      </div>
+
+      <!-- SECTION: MODUL SITUS AKTIF -->
+      <div class="space-y-1">
+        <div x-show="!sidebarCollapsed" class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+          Modul Situs Aktif
+        </div>
+
+        <!-- 1. Bank Kata Kunci Marketing (Scoped to Site) -->
+        <button @click="activeTab = 'keywordbank'; loadKeywordBank()"
+                :class="activeTab === 'keywordbank' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Bank Kata Kunci Marketing">
+          <i class="fa-solid fa-cubes-stacked text-sm w-5 text-center flex-shrink-0" :class="activeTab === 'keywordbank' ? 'text-white' : 'text-amber-400'"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Bank Kata Kunci</span>
+        </button>
+
+        <!-- 2. Studio Penulis Solutif (Scoped to Site) -->
+        <button @click="activeTab = 'writer'"
+                :class="activeTab === 'writer' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Studio Penulis Solutif">
+          <i class="fa-solid fa-wand-magic-sparkles text-sm w-5 text-center flex-shrink-0" :class="activeTab === 'writer' ? 'text-white' : 'text-indigo-400'"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Studio Penulis</span>
+        </button>
+
+        <!-- 3. Asset Visual & Gambar (output/assets/{brand_id}/images/) -->
+        <button @click="activeTab = 'images'; loadBrandAssets()"
+                :class="activeTab === 'images' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Asset Visual & Gambar (Per-Site)">
+          <i class="fa-solid fa-palette text-sm w-5 text-center flex-shrink-0" :class="activeTab === 'images' ? 'text-white' : 'text-pink-400'"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Asset Visual & Gambar</span>
+        </button>
+
+        <!-- 4. Google Search Console -->
+        <button @click="activeTab = 'gsc'; loadGSCPerformance()"
+                :class="activeTab === 'gsc' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Google Search Console">
+          <i class="fa-solid fa-chart-line text-sm w-5 text-center flex-shrink-0" :class="activeTab === 'gsc' ? 'text-white' : 'text-emerald-400'"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Search Console (GSC)</span>
+        </button>
+
+        <!-- 5. Artikel Terbit & Sync WP -->
+        <button @click="activeTab = 'articles'"
+                :class="activeTab === 'articles' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Daftar Artikel & Sinkronisasi WP">
+          <i class="fa-solid fa-newspaper text-sm w-5 text-center flex-shrink-0" :class="activeTab === 'articles' ? 'text-white' : 'text-purple-400'"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Artikel Terbit & Sync</span>
+        </button>
+
+        <!-- 6. Visualisasi Website Real -->
+        <button @click="activeTab = 'visualizer'; initVisualizer()"
+                :class="activeTab === 'visualizer' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Visualisasi Website Real">
+          <i class="fa-solid fa-display text-sm w-5 text-center flex-shrink-0" :class="activeTab === 'visualizer' ? 'text-white' : 'text-sky-400'"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Visualisasi Real Web</span>
+        </button>
+      </div>
+
+      <!-- SECTION: SISTEM GLOBAL & PENGATURAN -->
+      <div class="space-y-1 pt-3 border-t border-slate-800/80">
+        <div x-show="!sidebarCollapsed" class="px-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+          Sistem Global
+        </div>
+
+        <!-- Jaringan Semua Situs -->
+        <button @click="activeTab = 'brands'"
+                :class="activeTab === 'brands' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Daftar Semua Situs">
+          <i class="fa-solid fa-network-wired text-sm w-5 text-center flex-shrink-0"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Daftar Semua Situs</span>
+        </button>
+
+        <!-- Router LLM -->
+        <button @click="activeTab = 'router'"
+                :class="activeTab === 'router' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Router LLM (9router / Custom)">
+          <i class="fa-solid fa-microchip text-sm w-5 text-center flex-shrink-0 text-violet-400"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Router LLM</span>
+        </button>
+
+        <!-- Akun Gemini & Antigravity -->
+        <button @click="activeTab = 'gemini'"
+                :class="activeTab === 'gemini' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Akun Gemini & Antigravity">
+          <i class="fa-brands fa-google text-sm w-5 text-center flex-shrink-0 text-emerald-400"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Akun Gemini / Session</span>
+        </button>
+
+        <!-- Diagnostik & Port -->
+        <button @click="activeTab = 'diagnostics'"
+                :class="activeTab === 'diagnostics' ? 'bg-slate-800 text-white font-bold' : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800/60'"
+                class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs transition cursor-pointer"
+                title="Diagnostik Sistem & Port">
+          <i class="fa-solid fa-stethoscope text-sm w-5 text-center flex-shrink-0 text-slate-400"></i>
+          <span x-show="!sidebarCollapsed" class="truncate">Diagnostik Port</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- Sidebar Bottom / Footer -->
+    <div class="p-3 border-t border-slate-800 space-y-2">
+      <!-- Active Dynamic Model Display -->
+      <div x-show="!sidebarCollapsed" class="p-2 rounded-xl bg-slate-800/60 border border-slate-700/50 flex items-center justify-between text-[11px]">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse flex-shrink-0"></span>
+          <span class="text-slate-400 truncate">Model:</span>
+          <span class="font-mono font-bold text-white truncate" x-text="routerSelectedModel || 'ox-alpha'"></span>
+        </div>
+      </div>
+
+      <!-- Download Plugin Button -->
+      <a href="/api/download-plugin" download="unicam-seo-bridge.zip" 
+         class="w-full py-2 px-3 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-400 border border-sky-500/30 text-xs font-semibold flex items-center justify-center gap-2 transition"
+         :title="'Unduh Plugin Bridge WordPress'">
+        <i class="fa-solid fa-puzzle-piece"></i>
+        <span x-show="!sidebarCollapsed">Unduh Plugin WP</span>
+      </a>
+    </div>
+
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- MAIN APP CONTAINER                         -->
+  <!-- ========================================== -->
+  <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
+
+    <!-- Top Compact Header Bar -->
+    <header class="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between flex-shrink-0 z-30 shadow-xs">
+      <!-- Left: Mobile Toggle & Breadcrumbs -->
+      <div class="flex items-center gap-3 min-w-0">
+        <button @click="sidebarCollapsed = !sidebarCollapsed" class="text-slate-500 hover:text-slate-800 p-1.5 rounded-lg hover:bg-slate-100 transition cursor-pointer" title="Ciutkan/Perbesar Sidebar">
+          <i class="fa-solid fa-bars-staggered"></i>
+        </button>
+        
+        <nav class="flex items-center gap-2 text-xs truncate">
+          <span class="text-slate-400 font-medium">GEO Engine</span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+          <span class="font-bold text-slate-700 truncate" x-text="currentBrand?.name || 'Semua Situs'"></span>
+          <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+          <span class="text-indigo-600 font-extrabold truncate" x-text="getActiveTabTitle()"></span>
+        </nav>
+      </div>
+
+      <!-- Right: Active Status & Dynamic Model Badge -->
+      <div class="flex items-center space-x-3">
+        <!-- Dynamic Router Model Badge -->
+        <span class="px-2.5 py-1 bg-violet-50 text-violet-700 border border-violet-100 rounded-lg text-xs font-semibold flex items-center gap-1.5" title="Model Router Aktif">
+          <i class="fa-solid fa-microchip text-violet-500"></i>
+          <span class="font-mono text-[11px]" x-text="routerSelectedModel || 'ox-alpha'"></span>
+        </span>
+
+        <!-- Brand Ping Live Status -->
+        <template x-if="selectedBrandId">
+          <button @click="testBrandConnection(selectedBrandId)" class="px-2.5 py-1 text-[11px] rounded-lg font-semibold border flex items-center gap-1.5 transition cursor-pointer"
+                  :class="brandStatusMap[selectedBrandId]?.status === 'online' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (brandStatusMap[selectedBrandId]?.status === 'testing' ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-slate-50 text-slate-600 border-slate-200')">
+            <span class="w-2 h-2 rounded-full" :class="brandStatusMap[selectedBrandId]?.status === 'online' ? 'bg-emerald-500' : (brandStatusMap[selectedBrandId]?.status === 'testing' ? 'bg-indigo-500 animate-ping' : 'bg-slate-400')"></span>
+            <span x-text="brandStatusMap[selectedBrandId]?.label || 'Cek Ping Situs'"></span>
+          </button>
+        </template>
+      </div>
+    </header>
+
+    <!-- Scrollable Tab Content Container -->
+    <main class="flex-1 overflow-y-auto custom-scrollbar p-6 lg:p-8 space-y-6">
 
     <!-- ========================================== -->
     <!-- TAB 1: SITUS & BRAND (WEBSITES MANAGER)     -->
@@ -421,13 +605,22 @@
         <div>
           <div class="flex items-center gap-2">
             <h2 class="text-lg font-extrabold text-slate-900">Bank Kata Kunci Marketing Solutif</h2>
-            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">Matrix Combinator</span>
+            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200" x-text="currentBrand?.name || 'Situs Aktif'"></span>
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-mono bg-slate-100 text-slate-600" x-text="'Brand ID: ' + selectedBrandId"></span>
           </div>
           <p class="text-xs text-slate-500 mt-1 max-w-3xl leading-relaxed">
-            Menyusun formula kata kunci berbasis 4 dimensi marketing: <strong>[Action / Intent]</strong> + <strong>[Subject / Layanan]</strong> + <strong>[Predikat / Solusi Masalah]</strong> + <strong>[Kota Target]</strong>. Fokus menjawab pain point klien tanpa mengandalkan spreadsheet manual.
+            Formula kata kunci terisolasi untuk brand <strong><span x-text="currentBrand?.name || 'Situs Aktif'"></span></strong> (<span x-text="currentBrand?.domain_url || '-'"></span>): <strong>[Action / Intent]</strong> + <strong>[Subject / Layanan]</strong> + <strong>[Predikat / Solusi Masalah]</strong> + <strong>[Kota Target]</strong>. Seluruh kata kunci di halaman ini hanya milik situs ini dan tidak dicampur dengan situs lain.
           </p>
         </div>
         <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
+            <span class="text-xs font-semibold text-slate-500">Situs:</span>
+            <select x-model="selectedBrandId" @change="onBrandSelect($event.target.value)" class="text-xs font-bold bg-transparent border-none p-0 focus:ring-0 text-slate-800 cursor-pointer">
+              <template x-for="b in brands" :key="b.id">
+                <option :value="b.id" x-text="b.name"></option>
+              </template>
+            </select>
+          </div>
           <button @click="loadKeywordBank()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
             <i class="fa-solid fa-arrows-rotate"></i> Muat Ulang
           </button>
@@ -1039,134 +1232,167 @@
     <!-- TAB 4: STUDIO GENERATOR GAMBAR (AI VISUAL) -->
     <!-- ========================================== -->
     <div x-show="activeTab === 'images'" x-cloak class="space-y-6">
-      <div class="bg-gradient-to-r from-pink-600 to-indigo-600 p-6 rounded-2xl text-white shadow-md flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <!-- Header Banner with Brand Context & Directory -->
+      <div class="bg-gradient-to-r from-pink-600 via-purple-600 to-indigo-600 p-6 rounded-2xl text-white shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div class="inline-flex items-center gap-1.5 px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-bold mb-2">
-            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Visual Studio
+            <i class="fa-solid fa-wand-magic-sparkles"></i> AI Visual Studio & Per-Site Asset Directory
           </div>
-          <h2 class="text-xl font-extrabold">Studio Generator Gambar & Visual Asset</h2>
+          <h2 class="text-xl font-extrabold flex items-center gap-2">
+            <span>Studio Asset Visual & Gambar</span>
+            <span class="text-xs px-2.5 py-0.5 rounded-full bg-white/20 backdrop-blur-sm" x-text="currentBrand?.name || 'Situs Aktif'"></span>
+          </h2>
           <p class="text-xs text-white/80 mt-1 max-w-2xl leading-relaxed">
-            Generate visual beresolusi tinggi secara instan: Thumbnail 16:9 untuk artikel WordPress, infografis 1:1 untuk feed media sosial, atau orientasi vertikal 9:16 untuk Stories/Reels.
+            Generate visual beresolusi tinggi dengan prompt kontekstual industri, watermark logo otomatis, dan penyimpanan terisolasi langsung ke folder asset website ini.
           </p>
+          <div class="mt-2 inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-black/30 text-[11px] font-mono text-pink-200">
+            <i class="fa-solid fa-folder-open"></i>
+            <span x-text="'output/assets/' + (selectedBrandId || 'brand') + '/images/'"></span>
+          </div>
         </div>
         <div class="flex items-center gap-2">
-          <span class="px-3 py-1.5 bg-white/10 rounded-xl text-xs font-semibold backdrop-blur-sm">
-            <i class="fa-solid fa-images"></i> <span x-text="imageGallery.length"></span> Asset Tersimpan
+          <!-- Site Switcher -->
+          <div class="bg-black/30 backdrop-blur-sm px-3 py-1.5 rounded-xl border border-white/20 text-xs">
+            <span class="text-white/60 mr-1.5">Situs:</span>
+            <select x-model="selectedBrandId" @change="onBrandSelect($event.target.value)" class="bg-transparent text-white font-bold border-none p-0 focus:ring-0 cursor-pointer">
+              <template x-for="b in brands" :key="b.id">
+                <option :value="b.id" class="bg-slate-900 text-white" x-text="b.name"></option>
+              </template>
+            </select>
+          </div>
+          <span class="px-3 py-2 bg-white/10 rounded-xl text-xs font-semibold backdrop-blur-sm flex items-center gap-1.5">
+            <i class="fa-solid fa-images"></i> <span x-text="imageGallery.length"></span> Asset
           </span>
         </div>
       </div>
 
       <!-- Generator Studio Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        <!-- Left: Prompt & Settings Form -->
-        <div class="lg:col-span-6 bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-5">
-          <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
-            <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-paintbrush text-pink-600"></i> Konfigurasi Prompt Visual
-            </h3>
-            <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-pink-50 text-pink-700 border border-pink-100">Live Generator</span>
-          </div>
-
-          <!-- Brand & Logo Watermark Option -->
-          <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
-            <div class="flex items-center justify-between">
-              <label class="block text-xs font-bold text-slate-700">Brand / Situs Pemilik:</label>
-              <span class="text-[10px] text-slate-400">Overlay Logo Otomatis</span>
+        <!-- Left: Prompt Generator & AI Execution -->
+        <div class="lg:col-span-6 space-y-5">
+          <!-- Card 1: Smart Prompt Generator -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+              <div>
+                <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <i class="fa-solid fa-brain text-purple-600"></i> Langkah 1: Generator Prompt Cerdas
+                </h3>
+                <p class="text-[11px] text-slate-400 mt-0.5">Prompt dirancang berdasarkan pain points & solusi layanan brand</p>
+              </div>
+              <button type="button" @click="createSmartImagePrompt()" class="px-3 py-1.5 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-lg text-xs font-bold transition flex items-center gap-1.5 cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Buat Prompt
+              </button>
             </div>
-            <div class="flex items-center gap-3">
-              <select x-model="imageBrandId" @change="onImageBrandChange()" class="text-xs border-slate-200 rounded-lg p-2 border bg-white flex-1 font-semibold">
-                <template x-for="b in brands" :key="b.id">
-                  <option :value="b.id" x-text="b.name"></option>
-                </template>
-              </select>
-              <div class="flex items-center gap-1.5">
-                <input type="checkbox" id="watermarkToggle" x-model="imageWatermarkLogo" class="rounded border-slate-300 text-pink-600 focus:ring-pink-500">
-                <label for="watermarkToggle" class="text-xs text-slate-700 font-medium cursor-pointer">Watermark Logo</label>
+
+            <!-- Prompt Input / Textarea -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Prompt Visual untuk Gambar:</label>
+              <textarea x-model="imagePrompt" rows="3" placeholder="Deskripsi visual..." class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-pink-500 focus:ring-pink-500 p-3 border font-sans"></textarea>
+              
+              <!-- Copy Prompt Action -->
+              <div class="mt-2 flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <button type="button" @click="copyToClipboard(imagePrompt, 'Prompt gambar disalin! Anda bisa paste langsung di Antigravity.')" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                    <i class="fa-solid fa-copy text-indigo-500"></i> Salin Prompt untuk Antigravity
+                  </button>
+                </div>
+                <span class="text-[10px] text-slate-400">Siap dijalankan via Antigravity</span>
+              </div>
+            </div>
+
+            <!-- Prompt Presets Chips -->
+            <div class="pt-2 border-t border-slate-100">
+              <span class="text-[11px] text-slate-400 block mb-1.5 font-medium">Preset Cepat:</span>
+              <div class="flex flex-wrap gap-1.5">
+                <button type="button" @click="imagePrompt = 'Modern software house developer workstation with dual curved screens displaying clean code and enterprise glassmorphism web dashboard 8k'" class="text-[11px] px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg transition cursor-pointer">
+                  💻 Software House 8K
+                </button>
+                <button type="button" @click="imagePrompt = 'Futuristic cloud server infrastructure and API microservices architecture dashboard interface'" class="text-[11px] px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-medium rounded-lg transition cursor-pointer">
+                  ☁️ Cloud System UI
+                </button>
+                <button type="button" @click="imagePrompt = 'Commercial Video Production Studio with 4K Cine Camera and Master Lighting'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
+                  🎥 Video Studio 4K
+                </button>
+                <button type="button" @click="imagePrompt = 'Aerial Drone Cinematography over Modern City Architecture at Sunset 8K'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
+                  🚁 Aerial Drone 8K
+                </button>
               </div>
             </div>
           </div>
 
-          <!-- Prompt Input -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-1">Deskripsi Visual / Prompt Gambar</label>
-            <textarea x-model="imagePrompt" rows="3" placeholder="Contoh: Hyperrealistic 8k commercial cinematic visual for video production studio..." class="w-full text-xs border-slate-200 rounded-xl shadow-sm focus:border-pink-500 focus:ring-pink-500 p-3 border"></textarea>
-            
-            <!-- Prompt Presets Chips -->
-            <div class="mt-2 flex flex-wrap gap-1.5">
-              <span class="text-[11px] text-slate-400 py-0.5 font-medium">Contoh Cepat:</span>
-              <button type="button" @click="imagePrompt = 'Modern software house developer workstation with dual curved screens displaying clean code and enterprise glassmorphism web dashboard 8k'" class="text-[11px] px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-medium rounded-lg transition cursor-pointer">
-                💻 Software House 8K
-              </button>
-              <button type="button" @click="imagePrompt = 'Futuristic cloud server infrastructure and API microservices architecture dashboard interface'" class="text-[11px] px-2.5 py-1 bg-sky-50 hover:bg-sky-100 text-sky-700 font-medium rounded-lg transition cursor-pointer">
-                ☁️ Cloud System UI
-              </button>
-              <button type="button" @click="imagePrompt = 'Commercial Video Production Studio with 4K Cine Camera and Master Lighting'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
-                🎥 Video Studio 4K
-              </button>
-              <button type="button" @click="imagePrompt = 'Aerial Drone Cinematography over Modern City Architecture at Sunset 8K'" class="text-[11px] px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition cursor-pointer">
-                🚁 Aerial Drone 8K
-              </button>
+          <!-- Card 2: AI Execution Settings -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3 flex justify-between items-center">
+              <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <i class="fa-solid fa-paintbrush text-pink-600"></i> Langkah 2: Eksekusi Render AI
+              </h3>
+              <div class="flex items-center gap-1.5">
+                <input type="checkbox" id="watermarkToggle" x-model="imageWatermarkLogo" class="rounded border-slate-300 text-pink-600 focus:ring-pink-500">
+                <label for="watermarkToggle" class="text-xs text-slate-700 font-medium cursor-pointer">Watermark Logo Brand</label>
+              </div>
             </div>
-          </div>
 
-          <!-- Aspect Ratio Selector -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-2">Aspek Rasio Gambar</label>
-            <div class="grid grid-cols-3 gap-3">
-              <button type="button" @click="imageRatio = '16:9'" :class="imageRatio === '16:9' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
-                <div class="w-12 h-7 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">16:9</div>
-                <span class="text-xs font-bold">Landscape</span>
-                <span class="text-[10px] text-slate-400">1200x675 (Thumbnail WP)</span>
-              </button>
-
-              <button type="button" @click="imageRatio = '1:1'" :class="imageRatio === '1:1' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
-                <div class="w-8 h-8 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">1:1</div>
-                <span class="text-xs font-bold">Square</span>
-                <span class="text-[10px] text-slate-400">1000x1000 (Social Media)</span>
-              </button>
-
-              <button type="button" @click="imageRatio = '9:16'" :class="imageRatio === '9:16' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
-                <div class="w-6 h-10 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">9:16</div>
-                <span class="text-xs font-bold">Portrait</span>
-                <span class="text-[10px] text-slate-400">720x1280 (Story/Reels)</span>
-              </button>
-            </div>
-          </div>
-
-          <!-- Style Selector -->
-          <div>
-            <label class="block text-xs font-bold text-slate-700 mb-2">Gaya Visual (Aesthetic Style)</label>
-            <div class="grid grid-cols-3 gap-3">
-              <button type="button" @click="imageStyle = 'photorealistic'" :class="imageStyle === 'photorealistic' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                <i class="fa-solid fa-camera"></i> Photorealistic
-              </button>
-              <button type="button" @click="imageStyle = 'cyberpunk'" :class="imageStyle === 'cyberpunk' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                <i class="fa-solid fa-bolt"></i> Cyberpunk
-              </button>
-              <button type="button" @click="imageStyle = 'minimalist'" :class="imageStyle === 'minimalist' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
-                <i class="fa-solid fa-cube"></i> Minimalist
-              </button>
-            </div>
-          </div>
-
-          <!-- Brand & Location Optional Attributes -->
-          <div class="grid grid-cols-2 gap-4">
+            <!-- Aspect Ratio Selector -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Nama Brand / Watermark</label>
-              <input type="text" x-model="imageBrand" placeholder="GEO Studio" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+              <label class="block text-xs font-bold text-slate-700 mb-2">Aspek Rasio Gambar</label>
+              <div class="grid grid-cols-3 gap-3">
+                <button type="button" @click="imageRatio = '16:9'" :class="imageRatio === '16:9' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
+                  <div class="w-12 h-7 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">16:9</div>
+                  <span class="text-xs font-bold">Landscape</span>
+                  <span class="text-[10px] text-slate-400">Thumbnail WP (1200x675)</span>
+                </button>
+
+                <button type="button" @click="imageRatio = '1:1'" :class="imageRatio === '1:1' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
+                  <div class="w-8 h-8 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">1:1</div>
+                  <span class="text-xs font-bold">Square</span>
+                  <span class="text-[10px] text-slate-400">Feed (1000x1000)</span>
+                </button>
+
+                <button type="button" @click="imageRatio = '9:16'" :class="imageRatio === '9:16' ? 'border-pink-500 bg-pink-50/50 text-pink-700 ring-2 ring-pink-500' : 'border-slate-200 hover:border-slate-300 text-slate-700'" class="p-3 border rounded-xl flex flex-col items-center gap-1.5 text-center transition cursor-pointer">
+                  <div class="w-6 h-10 border-2 border-current rounded flex items-center justify-center text-[10px] font-bold">9:16</div>
+                  <span class="text-xs font-bold">Portrait</span>
+                  <span class="text-[10px] text-slate-400">Story/Reels (720x1280)</span>
+                </button>
+              </div>
             </div>
+
+            <!-- Style Selector -->
             <div>
-              <label class="block text-xs font-bold text-slate-700 mb-1">Lokasi Target</label>
-              <input type="text" x-model="imageLocation" placeholder="Indonesia" class="w-full text-xs border-slate-200 rounded-xl p-2.5 border">
+              <label class="block text-xs font-bold text-slate-700 mb-2">Gaya Visual (Aesthetic Style)</label>
+              <div class="grid grid-cols-3 gap-3">
+                <button type="button" @click="imageStyle = 'photorealistic'" :class="imageStyle === 'photorealistic' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                  <i class="fa-solid fa-camera"></i> Photorealistic
+                </button>
+                <button type="button" @click="imageStyle = 'cyberpunk'" :class="imageStyle === 'cyberpunk' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                  <i class="fa-solid fa-bolt"></i> Cyberpunk
+                </button>
+                <button type="button" @click="imageStyle = 'minimalist'" :class="imageStyle === 'minimalist' ? 'border-indigo-600 bg-indigo-50 text-indigo-700 font-bold' : 'border-slate-200 text-slate-700'" class="py-2.5 px-3 border rounded-xl text-xs flex items-center justify-center gap-1.5 transition cursor-pointer">
+                  <i class="fa-solid fa-cube"></i> Minimalist
+                </button>
+              </div>
             </div>
+
+            <!-- Generate Button -->
+            <button @click="generateCustomImage()" :disabled="!imagePrompt.trim() || generatingImage" class="w-full py-3.5 bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-700 hover:to-indigo-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer">
+              <i class="fa-solid fa-sparkles" x-show="!generatingImage"></i>
+              <i class="fa-solid fa-circle-notch fa-spin" x-show="generatingImage"></i>
+              <span x-text="generatingImage ? 'Sedang Merender Visual AI...' : '🚀 Eksekusi Render AI (Sesi Gemini/Antigravity)'"></span>
+            </button>
           </div>
 
-          <!-- Generate Button -->
-          <button @click="generateCustomImage()" :disabled="!imagePrompt.trim() || generatingImage" class="w-full py-3.5 bg-gradient-to-r from-pink-600 to-indigo-600 hover:from-pink-700 hover:to-indigo-700 text-white font-extrabold rounded-xl text-xs shadow-md flex items-center justify-center gap-2 transition disabled:opacity-50 cursor-pointer">
-            <i class="fa-solid fa-sparkles" x-show="!generatingImage"></i>
-            <i class="fa-solid fa-circle-notch fa-spin" x-show="generatingImage"></i>
-            <span x-text="generatingImage ? 'Sedang Merender Visual AI...' : '✨ Generate Visual AI Sekarang'"></span>
-          </button>
+          <!-- Card 3: Upload / Import File dari Antigravity -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 shadow-sm space-y-3">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-2">
+              <h3 class="text-xs font-bold text-slate-800 flex items-center gap-2">
+                <i class="fa-solid fa-cloud-arrow-up text-sky-600"></i> Langkah 3: Import File dari Antigravity
+              </h3>
+              <span class="text-[10px] text-slate-400">Ke output/assets/<span x-text="selectedBrandId || 'brand'"></span>/images/</span>
+            </div>
+            <p class="text-xs text-slate-500">
+              Jika Anda telah merender gambar di percakapan Antigravity, Anda dapat mengunggah file tersebut langsung ke Bank Asset situs ini.
+            </p>
+            <input type="file" @change="handleAssetFileUpload($event)" accept="image/*" class="w-full text-xs text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100 cursor-pointer">
+          </div>
         </div>
 
         <!-- Right: Realtime Preview & Actions -->
@@ -1191,7 +1417,7 @@
                       <i class="fa-solid fa-image"></i>
                     </div>
                     <p class="text-xs">Belum ada gambar yang digenerate dalam sesi ini.</p>
-                    <p class="text-[11px] text-slate-600">Tulis prompt di sebelah kiri dan klik tombol Generate.</p>
+                    <p class="text-[11px] text-slate-600">Buat prompt di sebelah kiri dan klik tombol Eksekusi Render AI.</p>
                   </div>
                 </template>
               </div>
@@ -1199,9 +1425,9 @@
               <!-- Details of latest image -->
               <div x-show="latestGeneratedImage" class="mt-4 p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs space-y-1">
                 <div class="font-bold text-slate-800" x-text="latestGeneratedImage?.prompt"></div>
-                <div class="text-[11px] text-slate-500 flex items-center gap-3 font-mono">
+                <div class="text-[11px] text-slate-500 flex flex-wrap items-center gap-3 font-mono">
                   <span>File: <strong class="text-slate-700" x-text="latestGeneratedImage?.filename"></strong></span>
-                  <span>Style: <strong class="text-slate-700 uppercase" x-text="latestGeneratedImage?.style"></strong></span>
+                  <span>URL: <strong class="text-indigo-600" x-text="latestGeneratedImage?.url"></strong></span>
                 </div>
               </div>
             </div>
@@ -1209,10 +1435,13 @@
             <!-- Action Buttons for latest image -->
             <div x-show="latestGeneratedImage" class="pt-4 flex flex-wrap gap-2 border-t border-slate-100 mt-4">
               <a :href="latestGeneratedImage?.url" :download="latestGeneratedImage?.filename" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
-                <i class="fa-solid fa-download"></i> Unduh File JPG
+                <i class="fa-solid fa-download"></i> Unduh File
               </a>
               <button @click="copyToClipboard(window.location.origin + latestGeneratedImage?.url, 'URL Gambar disalin!')" class="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
                 <i class="fa-solid fa-link"></i> Salin URL
+              </button>
+              <button @click="selectAsArticleThumbnail(latestGeneratedImage)" class="px-3.5 py-2 bg-purple-50 hover:bg-purple-100 text-purple-700 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Jadikan Thumbnail Penulis
               </button>
             </div>
           </div>
@@ -1224,18 +1453,18 @@
         <div class="flex justify-between items-center border-b border-slate-100 pb-3">
           <div>
             <h3 class="text-sm font-extrabold text-slate-900 flex items-center gap-2">
-              <i class="fa-solid fa-grip text-indigo-600"></i> Galeri Asset Visual
+              <i class="fa-solid fa-grip text-indigo-600"></i> Bank Asset Visual Website: <span class="text-indigo-600" x-text="currentBrand?.name || 'Situs Aktif'"></span>
             </h3>
-            <p class="text-xs text-slate-500 mt-0.5">Seluruh asset visual yang telah digenerate siap digunakan untuk postingan blog atau materi pemasaran.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Asset tersimpan di <code class="font-mono text-slate-700" x-text="'output/assets/' + (selectedBrandId || 'brand') + '/images/'"></code></p>
           </div>
-          <button @click="loadImageGallery()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer">
-            <i class="fa-solid fa-rotate-right"></i> Refresh Galeri
+          <button @click="loadBrandAssets()" class="text-xs text-indigo-600 hover:underline font-semibold flex items-center gap-1 cursor-pointer">
+            <i class="fa-solid fa-rotate-right"></i> Refresh Bank Asset
           </button>
         </div>
 
         <!-- Empty Gallery -->
         <div x-show="imageGallery.length === 0" class="p-8 text-center text-xs text-slate-400">
-          Belum ada asset di galeri. Generate gambar pertama Anda di atas.
+          Belum ada asset di bank visual situs ini. Buat prompt di atas atau render gambar pertama Anda.
         </div>
 
         <!-- Gallery Grid -->
@@ -1249,14 +1478,19 @@
               <div class="p-3 space-y-2 flex-1 flex flex-col justify-between">
                 <div>
                   <h4 class="text-xs font-bold text-slate-800 line-clamp-2" x-text="item.prompt"></h4>
-                  <p class="text-[10px] text-slate-400 mt-1 font-mono" x-text="item.filename"></p>
+                  <p class="text-[10px] text-slate-400 mt-1 font-mono truncate" x-text="item.filename"></p>
                 </div>
-                <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-[11px]">
-                  <a :href="item.url" :download="item.filename" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1">
-                    <i class="fa-solid fa-download"></i> Unduh
-                  </a>
-                  <button @click="copyToClipboard(window.location.origin + item.url, 'URL Gambar disalin!')" class="text-slate-500 hover:text-slate-800">
-                    <i class="fa-solid fa-copy"></i>
+                <div class="pt-2 border-t border-slate-200 flex flex-wrap justify-between items-center text-[11px] gap-2">
+                  <div class="flex items-center gap-2">
+                    <a :href="item.url" :download="item.filename" class="text-indigo-600 hover:underline font-semibold flex items-center gap-1" title="Unduh File">
+                      <i class="fa-solid fa-download"></i> Unduh
+                    </a>
+                    <button @click="copyToClipboard(window.location.origin + item.url, 'URL Gambar disalin!')" class="text-slate-500 hover:text-slate-800" title="Salin URL">
+                      <i class="fa-solid fa-copy"></i>
+                    </button>
+                  </div>
+                  <button @click="selectAsArticleThumbnail(item)" class="text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1 text-[10px]" title="Pilih sebagai Thumbnail Artikel">
+                    <i class="fa-solid fa-image"></i> Thumbnail
                   </button>
                 </div>
               </div>
@@ -1697,18 +1931,19 @@
             <div class="text-base font-bold text-slate-800 mt-1">Operational</div>
           </div>
           <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
-            <span class="text-slate-400 font-medium">Model Utama Gemini</span>
-            <div class="text-base font-bold text-indigo-600 mt-1">gemini-2.0-flash</div>
+            <span class="text-slate-400 font-medium">Model LLM Aktif</span>
+            <div class="text-base font-bold text-indigo-600 mt-1 font-mono" x-text="routerSelectedModel || (geminiAccounts[0]?.model_tested || 'Dynamic Discovery')"></div>
           </div>
           <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
             <span class="text-slate-400 font-medium">Thumbnail Engine</span>
-            <div class="text-base font-bold text-purple-600 mt-1">Imagen 3 + Canvas</div>
+            <div class="text-base font-bold text-purple-600 mt-1">AI Prompt + Studio Canvas</div>
           </div>
         </div>
       </div>
     </div>
 
   </main>
+  </div>
 
   <!-- ========================================== -->
   <!-- MODAL: PENGATURAN LENGKAP SITUS & BRAND    -->
@@ -1960,6 +2195,7 @@
   <script>
     function geoEngineApp() {
       return {
+        sidebarCollapsed: false,
         activeTab: 'brands',
         previewMode: 'rendered',
         loading: false,
@@ -2065,6 +2301,49 @@
         sheetUrlInput: '',
 
         toasts: [],
+
+        get currentBrand() {
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            return this.brands[0];
+          }
+          return this.brands.find(b => b.id === this.selectedBrandId) || null;
+        },
+
+        getActiveTabTitle() {
+          const titles = {
+            'brands': 'Jaringan Semua Situs',
+            'visualizer': 'Visualisasi Website Real',
+            'keywordbank': 'Bank Kata Kunci Marketing',
+            'writer': 'Studio Penulis Solutif',
+            'images': 'Studio Asset Visual & Gambar',
+            'gsc': 'Google Search Console',
+            'articles': 'Artikel Terbit & Sinkronisasi WP',
+            'router': 'Router & Model LLM',
+            'diagnostics': 'Diagnostik Sistem & Port',
+            'gemini': 'Akun Gemini / Session'
+          };
+          return titles[this.activeTab] || 'Dashboard';
+        },
+
+        onBrandSelect(brandId) {
+          this.selectedBrandId = brandId;
+          this.visualizerSiteId = brandId;
+          this.gscBrandId = brandId;
+          this.selectedArticlesBrandId = brandId;
+          this.imageBrandId = brandId;
+
+          if (this.activeTab === 'keywordbank') {
+            this.loadKeywordBank();
+          } else if (this.activeTab === 'images') {
+            this.loadBrandAssets();
+          } else if (this.activeTab === 'gsc') {
+            this.loadGSCPerformance();
+          } else if (this.activeTab === 'visualizer') {
+            this.switchVisualizerSite(brandId);
+          } else if (this.activeTab === 'writer') {
+            this.loadBrandServices();
+          }
+        },
 
         async init() {
           await this.loadRouterStatus();
@@ -2575,24 +2854,30 @@
 
         async generateCustomImage() {
           if (!this.imagePrompt.trim()) return;
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            this.selectedBrandId = this.brands[0].id;
+          }
           this.generatingImage = true;
           try {
-            const res = await fetch('/api/images/generate', {
+            const targetBrandId = this.selectedBrandId || this.imageBrandId;
+            const res = await fetch(`/api/brands/${targetBrandId}/generate-image`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 prompt: this.imagePrompt.trim(),
                 aspect_ratio: this.imageRatio,
                 style: this.imageStyle,
-                brand_name: this.imageBrand || 'GEO Studio',
-                location: this.imageLocation || 'Indonesia'
+                brand_id: targetBrandId,
+                brand_name: this.currentBrand?.name || this.imageBrand || 'GEO Studio',
+                location: this.currentBrand?.hq_location || this.imageLocation || 'Indonesia',
+                logo_url: this.imageWatermarkLogo ? this.currentBrand?.logo_url : null
               })
             });
             const data = await res.json();
             if (res.ok && data.success) {
               this.latestGeneratedImage = data;
-              this.showToast('Visual Selesai', `Asset ${data.filename} berhasil digenerate!`, 'success');
-              await this.loadImageGallery();
+              this.showToast('Visual Selesai', `Asset ${data.filename} berhasil disimpan ke output/assets/${targetBrandId}/images/`, 'success');
+              await this.loadBrandAssets();
             } else {
               this.showToast('Gagal Generate', data.detail || 'Gagal memproduksi gambar visual.', 'error');
             }
@@ -2603,14 +2888,92 @@
           }
         },
 
-        async loadImageGallery() {
-          try {
-            const res = await fetch('/api/images/gallery');
-            const data = await res.json();
-            this.imageGallery = data.images || [];
-          } catch (e) {
-            console.error('Error loading gallery:', e);
+        async loadBrandAssets() {
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            this.selectedBrandId = this.brands[0].id;
           }
+          if (!this.selectedBrandId) {
+            this.imageGallery = [];
+            return;
+          }
+          try {
+            const res = await fetch(`/api/brands/${this.selectedBrandId}/assets`);
+            const data = await res.json();
+            if (data.success) {
+              this.imageGallery = data.images || [];
+            }
+          } catch (e) {
+            console.error('Error loading brand assets:', e);
+          }
+        },
+
+        async createSmartImagePrompt() {
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            this.selectedBrandId = this.brands[0].id;
+          }
+          try {
+            const res = await fetch(`/api/brands/${this.selectedBrandId}/create-image-prompt`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                brand_id: this.selectedBrandId,
+                service_name: this.selectedServiceId ? (this.currentServices.find(s => s.id === this.selectedServiceId)?.name) : null,
+                location: this.selectedRegion || 'Indonesia'
+              })
+            });
+            const data = await res.json();
+            if (data.success && data.prompt) {
+              this.imagePrompt = data.prompt;
+              this.showToast('Prompt Cerdas Dibuat', 'Prompt visual kontekstual berhasil dibuat untuk brand ini.', 'info');
+            }
+          } catch (e) {
+            console.error('Error creating smart image prompt:', e);
+          }
+        },
+
+        async handleAssetFileUpload(event) {
+          const file = event.target.files[0];
+          if (!file) return;
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            this.selectedBrandId = this.brands[0].id;
+          }
+          const formData = new FormData();
+          formData.append('file', file);
+          try {
+            const res = await fetch(`/api/brands/${this.selectedBrandId}/assets/upload`, {
+              method: 'POST',
+              body: formData
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+              this.showToast('Asset Diimpor', data.message, 'success');
+              await this.loadBrandAssets();
+            } else {
+              this.showToast('Gagal Upload', data.detail || 'Gagal mengunggah file.', 'error');
+            }
+          } catch (e) {
+            this.showToast('Error', e.message, 'error');
+          } finally {
+            event.target.value = '';
+          }
+        },
+
+        selectAsArticleThumbnail(item) {
+          if (this.previewData) {
+            this.previewData.featured_media = {
+              file_path: item.file_path,
+              filename: item.filename,
+              url: item.url,
+              source: 'brand_asset_bank'
+            };
+            this.previewData.featured_image_filename = item.filename;
+          }
+          this.showToast('Thumbnail Dipilih', `Asset ${item.filename} disetel sebagai thumbnail artikel.`, 'success');
+          this.activeTab = 'writer';
+        },
+
+        async loadImageGallery() {
+          await this.loadBrandAssets();
         },
 
         // Visualizer Methods
@@ -2728,10 +3091,14 @@
           }
         },
 
-        // Keyword Bank Methods
+        // Keyword Bank Methods (Strictly Scoped to Brand)
         async loadKeywordBank() {
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            this.selectedBrandId = this.brands[0].id;
+          }
           try {
-            const res = await fetch('/api/keywords/bank');
+            const url = this.selectedBrandId ? `/api/keywords/bank?brand_id=${this.selectedBrandId}` : '/api/keywords/bank';
+            const res = await fetch(url);
             const data = await res.json();
             if (data.success) {
               this.keywordBank = data;
@@ -2743,15 +3110,22 @@
 
         async addKeywordItem(category, value) {
           if (!value || !value.trim()) return;
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            this.selectedBrandId = this.brands[0].id;
+          }
           try {
             const res = await fetch('/api/keywords/bank', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ category, value: value.trim() })
+              body: JSON.stringify({ 
+                category, 
+                value: value.trim(),
+                brand_id: this.selectedBrandId || null
+              })
             });
             const data = await res.json();
             if (res.ok && data.success) {
-              this.showToast('Kata Kunci Ditambahkan', `"${value.trim()}" masuk ke kategori ${category}.`, 'success');
+              this.showToast('Kata Kunci Ditambahkan', `"${value.trim()}" masuk ke bank situs ini.`, 'success');
               await this.loadKeywordBank();
             }
           } catch (e) {
@@ -2769,17 +3143,23 @@
         },
 
         async generateMarketingMatrix() {
+          if (!this.selectedBrandId && this.brands.length > 0) {
+            this.selectedBrandId = this.brands[0].id;
+          }
           this.generatingMatrix = true;
           try {
             const res = await fetch('/api/keywords/generate-matrix', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ limit: this.matrixLimit || 25 })
+              body: JSON.stringify({ 
+                brand_id: this.selectedBrandId || null,
+                limit: parseInt(this.matrixLimit) || 25 
+              })
             });
             const data = await res.json();
             if (res.ok && data.success) {
-              this.generatedMatrix = data.matrix || [];
-              this.showToast('Matrix Selesai', `Berhasil menyusun ${data.total_generated} kata kunci marketing solutif!`, 'success');
+              this.generatedMatrix = data.combinations || data.matrix || [];
+              this.showToast('Matrix Selesai', `Berhasil menyusun ${data.total || this.generatedMatrix.length} kata kunci marketing solutif untuk situs ini!`, 'success');
             }
           } catch (e) {
             this.showToast('Error', e.message, 'error');

@@ -92,7 +92,7 @@ class GeminiAuthManager:
             "credential": clean_cred,
             "is_active": True,
             "source": "Google AI Studio API Key",
-            "model_tested": test_res.get("model", "gemini-2.0-flash"),
+            "model_tested": test_res.get("model", "gemini-1.5-flash"),
             "status": "verified"
         }
 
@@ -134,7 +134,7 @@ class GeminiAuthManager:
                 "is_current": idx == self.current_index,
                 "is_active": acc.get("is_active", True),
                 "status": acc.get("status", "ready"),
-                "model_tested": acc.get("model_tested", "gemini-2.0-flash"),
+                "model_tested": acc.get("model_tested", "gemini-1.5-flash"),
                 "masked_credential": masked
             })
 
@@ -192,7 +192,7 @@ class GeminiAuthManager:
 
     def verify_credential(self, credential: str, auth_type: str = "api_key") -> Dict[str, Any]:
         """Tests validity of a credential against Google Gemini API."""
-        models_to_test = ["gemini-2.0-flash", "gemini-1.5-flash"]
+        models_to_test = ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro"]
         clean_cred = credential.strip()
 
         for model in models_to_test:
