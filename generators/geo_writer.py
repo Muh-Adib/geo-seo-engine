@@ -1,0 +1,457 @@
+import re
+import json
+import logging
+import requests
+from typing import Dict, Any, List, Optional
+import os
+
+from generators.gemini_generator import GeminiMultiAccountEngine
+
+logger = logging.getLogger(__name__)
+
+class ProgrammaticGEOWriter:
+    """
+    Programmatic Local SEO & GEO (Generative Engine Optimization) Generator.
+    Powered directly by Google Gemini (Multi-Account Key Pool):
+    - 12 strict structural blocks
+    - 10 factual FAQ items for AI Overviews / GEO
+    - Strict NO-EMAIL constraint (in CTA and FAQ #10)
+    - 50 transactional tags for WordPress taxonomy (NOT inserted into article body text)
+    - Automatic italic sub-heading keyword line
+    - Language adaptation (English vs Indonesian)
+    - Automatic 16:9 featured thumbnail generation
+    """
+
+    def __init__(self, gemini_engine: Optional[GeminiMultiAccountEngine] = None, model: str = "gemini-1.5-flash"):
+        self.gemini = gemini_engine or GeminiMultiAccountEngine()
+        self.model = model
+
+    def generate_programmatic_article(
+        self,
+        brand_data: Dict[str, Any],
+        service_data: Dict[str, Any],
+        location_data: Dict[str, Any],
+        specific_city: Optional[str] = None,
+        use_llm: bool = True
+    ) -> Dict[str, Any]:
+        """
+        Generates a complete 12-block programmatic article and featured thumbnail.
+        """
+        brand_name = brand_data["name"]
+        service_name = service_data["name"]
+        target_region = location_data.get("region_name", "")
+        city_scope = specific_city or target_region
+        
+        # Determine language
+        is_english = brand_data.get("default_language", "en").lower() == "en" or target_region.lower() in ["australia", "uae", "united states", "uk"]
+
+        # Compose Primary Keyword & Title (avoid duplicate region if service name already contains region)
+        clean_service_name = re.sub(rf'\s+{re.escape(target_region)}$', '', service_name, flags=re.IGNORECASE).strip()
+        primary_keyword = f"{clean_service_name} {city_scope}".strip()
+        title = f"{primary_keyword} - {brand_name}"
+        slug = re.sub(r'[^a-z0-9]+', '-', f"{primary_keyword}".lower()).strip('-')
+
+        # Sub-cities list
+        sub_cities = location_data.get("sub_cities", [])
+        if isinstance(sub_cities, str):
+            sub_cities = json.loads(sub_cities or "[]")
+        tier1_cities_str = ", ".join(sub_cities[:4]) if sub_cities else city_scope
+
+        # Anchor variations
+        anchors = service_data.get("anchor_variations", [])
+        if isinstance(anchors, str):
+            anchors = json.loads(anchors or "[]")
+        sub_keywords = anchors[:4] if anchors else [f"{service_name.lower()} cost", f"hire {service_name.lower()}", f"best {service_name.lower()}", f"{service_name.lower()} studio"]
+
+        # Sub solutions & pipeline
+        sub_solutions = service_data.get("sub_solutions", [])
+        if isinstance(sub_solutions, str):
+            sub_solutions = json.loads(sub_solutions or "[]")
+
+        production_steps = service_data.get("production_steps", [])
+        if isinstance(production_steps, str):
+            production_steps = json.loads(production_steps or "[]")
+
+        # Attempt Gemini generation if user accounts exist and use_llm is True
+        llm_result = None
+        if use_llm and self.gemini.auth.get_active_auth_headers_or_param():
+            llm_result = self._generate_with_gemini(
+                brand_data, service_data, location_data, city_scope, primary_keyword, title, is_english, sub_keywords
+            )
+
+        if llm_result:
+            article_payload = llm_result
+        else:
+            article_payload = self._build_deterministic_article(
+                brand_data, service_data, location_data, city_scope, primary_keyword, title, is_english, sub_keywords, tier1_cities_str, sub_solutions, production_steps
+            )
+
+        # 1. Strict No-Email constraint & Meta Description <= 155 chars
+        article_payload["content_html"] = self._strip_emails(article_payload["content_html"])
+        clean_meta = self._strip_emails(article_payload["meta_description"])
+        if len(clean_meta) > 155:
+            clean_meta = clean_meta[:152].rstrip() + "..."
+        article_payload["meta_description"] = clean_meta
+
+        # 2. Strict 50-tags: generated for WordPress post taxonomy (NOT inserted into article body text)
+        article_payload["tags"] = self._enforce_50_tags(
+            service_data, location_data, primary_keyword, city_scope, is_english
+        )
+
+        article_payload["primary_keyword"] = primary_keyword
+        article_payload["title"] = title
+        article_payload["slug"] = slug
+        article_payload["target_location"] = city_scope
+
+        # 3. Generate 16:9 Featured Thumbnail using user Gemini account / Imagen
+        thumbnail_info = self.gemini.generate_featured_thumbnail(
+            title=title,
+            service_name=clean_service_name,
+            brand_name=brand_name,
+            location=city_scope,
+            slug=slug
+        )
+        article_payload["featured_media"] = thumbnail_info
+
+        return article_payload
+
+    def _strip_emails(self, text: str) -> str:
+        """Removes any email addresses as strictly required by rule."""
+        email_pattern = r'[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+'
+        clean_text = re.sub(email_pattern, 'our studio production specialists', text)
+        return clean_text
+
+    def _enforce_50_tags(
+        self,
+        service_data: Dict[str, Any],
+        location_data: Dict[str, Any],
+        primary_keyword: str,
+        city_scope: str,
+        is_english: bool
+    ) -> List[str]:
+        """Ensures exactly 50 transactional and location-specific tags."""
+        base_tags = service_data.get("base_tags", [])
+        if isinstance(base_tags, str):
+            base_tags = json.loads(base_tags or "[]")
+
+        loc_tags = location_data.get("location_tags", [])
+        if isinstance(loc_tags, str):
+            loc_tags = json.loads(loc_tags or "[]")
+
+        combined = list(dict.fromkeys(base_tags + loc_tags))
+        
+        # Ensure primary and variations exist
+        prefixes = ["hire", "best", "affordable", "commercial", "studio", "services", "quote", "cost of", "remote", "expert"] if is_english else ["jasa", "vendor", "biaya", "harga", "profesional", "studio", "terpercaya", "terbaik", "layanan", "portofolio"]
+        suffixes = [city_scope, "Yogyakarta", "4K", "remote", "production", "agency", "near me", "fast turnaround"]
+
+        idx = 0
+        while len(combined) < 50:
+            p = prefixes[idx % len(prefixes)]
+            s = suffixes[(idx // len(prefixes)) % len(suffixes)]
+            candidate = f"{p} {primary_keyword.lower()} {s}".strip()
+            if candidate not in combined:
+                combined.append(candidate)
+            idx += 1
+
+        return combined[:50]
+
+    def _build_deterministic_article(
+        self,
+        brand_data: Dict[str, Any],
+        service_data: Dict[str, Any],
+        location_data: Dict[str, Any],
+        city_scope: str,
+        primary_keyword: str,
+        title: str,
+        is_english: bool,
+        sub_keywords: List[str],
+        tier1_cities_str: str,
+        sub_solutions: List[Dict[str, str]],
+        production_steps: List[Dict[str, Any]]
+    ) -> Dict[str, Any]:
+        """Builds the 12 blocks deterministically when offline or verifying rules."""
+        brand_name = brand_data["name"]
+        hq = brand_data.get("hq_location", "Yogyakarta, Indonesia")
+        guarantee = brand_data.get("revision_guarantee", "Free 2x revision guarantee")
+        spec = brand_data.get("master_output_spec", "Uncompressed 4K master files")
+        tagline = brand_data.get("cta_tagline", f"🎥 Bringing your vision to reality across {city_scope}.")
+        sub_kw_str = ", ".join(sub_keywords)
+
+        if is_english:
+            meta_desc = f"{brand_name} delivers world-class {primary_keyword} from {hq}. Enjoy 4K master quality, {guarantee}, and high-ROI remote delivery. Inquire today!"
+            
+            # Block 2: Hook & Location Context (Intro)
+            intro_html = f"""
+<p>Navigating conventional visual production in major hubs such as {tier1_cities_str} frequently saddles organizations with bloated agency retainers, fragmented vendor communication, and prolonged turnaround schedules. In competitive enterprise environments, securing top-tier <strong>{primary_keyword}</strong> demands a streamlined approach that pairs photorealistic precision with agile delivery.</p>
+<p>Headquartered in {hq}, {brand_name} bridges this gap by operating a high-efficiency remote production studio designed for visionary brands across {city_scope}. By combining international visual aesthetics with cost-effective Southeast Asian production dynamics, we deliver unmatched return on investment (ROI) without compromising technical rigor.</p>
+"""
+            # Block 3: Definition of Service
+            def_html = f"""
+<h3>What Defines a {service_data['name']}?</h3>
+<p><em>*Keyword Subjudul: {sub_kw_str}*</em></p>
+<p>At its core, professional {service_data['name']} integrates cutting-edge computer-generated imagery, physically based lighting shaders, and bespoke motion choreography to articulate value propositions with absolute fidelity. Rather than relying on generic stock footage, every sequence is modeled from the ground up to reflect genuine industrial and commercial standards.</p>
+<ul>
+    <li><strong>Impact and Clarity:</strong> Distilling complex structural or technical narratives into memorable visual moments.</li>
+    <li><strong>Limitless Scalability:</strong> Virtual cameras explore perspectives impossible in physical live-action shoots.</li>
+    <li><strong>High Localization ROI:</strong> Assets effortlessly adapt across regional campaigns and technical revisions.</li>
+</ul>
+"""
+            # Block 4: Regional Urgency
+            urgency_html = f"""
+<h3>Why Is {primary_keyword} Vital for Growth?</h3>
+<p>In high-stakes markets across {city_scope}, visual ambiguity directly compromises stakeholder confidence and slows sales cycles. Deploying high-fidelity {primary_keyword} immediately establishes commercial authority, mitigates misunderstanding, and drives measurable engagement across digital touchpoints.</p>
+"""
+            # Block 5: Brand Profile & USP
+            usp_html = f"""
+<h3>{brand_name}: Your Strategic Partner for {service_data['name']}</h3>
+<h4>Core Value Proposition</h4>
+<p>We blend <strong>Storytelling Mastery</strong> with procedural modeling to ensure that every frame advances your core business narrative rather than merely providing superficial decoration.</p>
+<h4>Guaranteed Quality & Delivery</h4>
+<p>Every commercial engagement includes our verified <strong>{guarantee}</strong> and <strong>{spec}</strong>, providing complete peace of mind to enterprise partners in {city_scope}.</p>
+"""
+            # Block 6: Client Education
+            education_html = f"""
+<h3>Briefs and Communication</h3>
+<p>Seamless cross-border production hinges on transparent milestones. Our studio implements cloud-based daily visual dailies, structured review checkpoints, and clear turnaround sprints ensuring clients in {city_scope} maintain full creative direction.</p>
+"""
+            # Block 7: Specialized Solutions Catalog
+            solutions_items = "".join([f"<li><strong>{s.get('title', 'Solution')}:</strong> {s.get('desc', '')}</li>" for s in sub_solutions]) if sub_solutions else f"<li><strong>Tailored CGI Packages:</strong> Built bespoke for commercial leaders in {city_scope}.</li>"
+            solutions_html = f"""
+<h3>Specialized Visual Solutions</h3>
+<ul>
+{solutions_items}
+</ul>
+"""
+            # Block 8: Studio Production Pipeline
+            steps_items = "".join([f"<li><strong>Phase {st.get('step', i+1)}: {st.get('title', 'Phase')}</strong> - {st.get('desc', '')}</li>" for i, st in enumerate(production_steps)]) if production_steps else "<li><strong>Pipeline:</strong> Audit, Storyboard, 3D Asset Creation, Post & Sound, Master Delivery.</li>"
+            pipeline_html = f"""
+<h3>Our Studio Production Pipeline</h3>
+<ol>
+{steps_items}
+</ol>
+"""
+            # Block 9: Asset Modularization & ROI
+            modular_html = f"""
+<h3>Asset Modularization and Maximum ROI</h3>
+<p>Investing in {primary_keyword} extends far beyond a one-off campaign asset. By constructing fully rigged, textured, and shaded 3D geometry in our studio pipeline, your organization acquires an evergreen digital asset repository.</p>
+<p>These modular master files can be readily repurposed into vertical 9:16 social shorts, high-resolution print graphics, interactive web viewers, and investor demonstration decks at a fraction of initial production costs.</p>
+"""
+            # Block 10: Call to Action (Strictly NO EMAIL)
+            cta_html = f"""
+<h3>Elevate Your Visual Content Today</h3>
+<p>Ready to outpace market competitors and command authority with unmatched 3D clarity? Connect directly with our studio production directors to discuss your scope, request comprehensive portfolio samples, and receive a customized production roadmap tailored to your timeline.</p>
+<p style="font-weight: bold; margin-top: 15px;">{tagline}</p>
+"""
+            # Block 11: 10 GEO / FAQ Items
+            faq_items = [
+                {"question": f"What defines professional {primary_keyword}?", "answer": f"It is custom high-fidelity 3D computer graphics tailored to {city_scope} commercial standards, crafted remotely by {brand_name} with photorealistic detail."},
+                {"question": f"What are the primary commercial benefits of {service_data['name']}?", "answer": "It significantly elevates visual comprehension, eliminates costly live filming logistical overhead, and accelerates conversion rates."},
+                {"question": f"How is pricing structured for {city_scope} clients?", "answer": f"Pricing is project-based and highly competitive, offering up to 40% cost savings compared to local {city_scope} agencies while maintaining uncompressed 4K quality."},
+                {"question": f"How does {brand_name} maintain strict brand consistency?", "answer": "We ingest your exact corporate style guides, CAD engineering data, and color palettes during initial previsualization."},
+                {"question": f"Which industries benefit most from {primary_keyword}?", "answer": f"Enterprise technology, heavy mining, civil infrastructure, luxury real estate, and consumer product innovators operating in {city_scope}."},
+                {"question": f"What is the typical production timeline?", "answer": f"Standard production spans {service_data.get('estimated_timeline', '2 to 5 weeks')} from brief signoff to final master delivery."},
+                {"question": f"Can assets be formatted for vertical social media?", "answer": "Yes, our asset modularization workflow exports native 9:16 vertical reels and 1:1 square cutdowns alongside 16:9 widescreen masters."},
+                {"question": f"Are the 3D assets reusable for future campaigns?", "answer": "All 3D models and digital environments are archived in our studio repository, enabling rapid iteration for subsequent product updates."},
+                {"question": f"What deliverable formats are provided?", "answer": f"Deliverables include {service_data.get('deliverable_formats', 'Uncompressed 4K ProRes 422 HQ, web-optimized MP4, and raw transparent PNGs')}."},
+                {"question": f"How do we begin a project with {brand_name}?", "answer": f"Reach out directly through our website consultation portal or initiate an instant project brief with our production coordinators."}
+            ]
+            
+            faq_html_list = "".join([f"<li><strong>{q['question']}</strong><p>{q['answer']}</p></li>" for q in faq_items])
+            faq_html = f"""
+<h3>10 Questions and Answers (Q&A)</h3>
+<ol>
+{faq_html_list}
+</ol>
+"""
+
+        else:
+            # Bahasa Indonesia Version
+            meta_desc = f"{brand_name} menghadirkan {primary_keyword} berstandar studio Yogyakarta. Kualitas master 4K, {guarantee}, dan pengerjaan tepat waktu. Hubungi kami!"
+            
+            intro_html = f"""
+<p>Menjalankan produksi visual konvensional di kota-kota besar seperti {tier1_cities_str} sering kali terbentur tingginya biaya vendor serta keterbatasan peralatan fisik. Di tengah persaingan pasar modern, menghadirkan layanan <strong>{primary_keyword}</strong> yang kredibel membutuhkan sinergi antara keahlian teknis tingkat tinggi dan efisiensi anggaran produksi.</p>
+<p>Berpusat di {hq}, {brand_name} hadir sebagai mitra strategis bagi pelaku industri di {city_scope}. Kami menghadirkan studio produksi visual berstandar internasional dengan skema kerja jarak jauh yang terbukti memangkas biaya operasional tanpa mengurangi sedikit pun kualitas estetika maupun ketelitian teknis.</p>
+"""
+            def_html = f"""
+<h3>Apa yang Mendefinisikan {service_data['name']}?</h3>
+<p>Secara esensial, layanan {service_data['name']} menggabungkan pemodelan digital presisi, simulasi fisika canggih, dan sinkronisasi audio terpadu untuk menyampaikan pesan bisnis secara jelas dan memukau.</p>
+<ul>
+    <li><strong>Dampak Visual Kuat:</strong> Memvisualisasikan konsep rumit menjadi tayangan yang langsung dimengerti audiens.</li>
+    <li><strong>Skalabilitas Tanpa Batas:</strong> Sudut pandang kamera bebas mengeksplorasi dimensi yang mustahil diambil kamera manual.</li>
+    <li><strong>Efisiensi Jangka Panjang:</strong> Aset digital master dapat digunakan berulang kali untuk berbagai kebutuhan promosi.</li>
+</ul>
+"""
+            urgency_html = f"""
+<h3>Mengapa {primary_keyword} Sangat Krusial untuk Pertumbuhan Bisnis?</h3>
+<p>Di era digital interaktif saat ini, konsumen dan mitra korporat di {city_scope} menuntut transparansi dan bukti visual nyata. Layanan {primary_keyword} mampu meningkatkan kredibilitas brand, mempercepat pengambilan keputusan klien, dan memperkuat posisi tawar bisnis Anda di pasar.</p>
+"""
+            usp_html = f"""
+<h3>{brand_name}: Mitra Terbaik Anda untuk {service_data['name']}</h3>
+<h4>Nilai Utama Layanan Kami</h4>
+<p>Kami tidak sekadar memproduksi visual; kami meramu <strong>Penguasaan Cerita</strong> yang menyatu dengan target bisnis Anda agar setiap detik tayangan memberikan dampak nyata bagi penonton.</p>
+<h4>Jaminan Kualitas dan Kepastian Hasil</h4>
+<p>Setiap proyek kami lindungi dengan komitmen <strong>{guarantee}</strong> serta penyediaan <strong>{spec}</strong> demi kepuasan mutlak klien kami di {city_scope}.</p>
+"""
+            education_html = f"""
+<h3>Briefing dan Komunikasi Terbuka</h3>
+<p>Keberhasilan produksi jarak jauh bertumpu pada komunikasi yang terstruktur. Tim kami menerapkan sistem pelaporan berkala pada setiap tahapan kerja agar klien di {city_scope} selalu memegang kendali penuh atas jalannya proyek.</p>
+"""
+            solutions_items = "".join([f"<li><strong>{s.get('title', 'Solusi')}:</strong> {s.get('desc', '')}</li>" for s in sub_solutions]) if sub_solutions else f"<li><strong>Solusi Kustom:</strong> Dirancang khusus untuk kebutuhan industri di {city_scope}.</li>"
+            solutions_html = f"""
+<h3>Katalog Solusi Visual Terpadu</h3>
+<ul>
+{solutions_items}
+</ul>
+"""
+            steps_items = "".join([f"<li><strong>Tahap {st.get('step', i+1)}: {st.get('title', 'Langkah')}</strong> - {st.get('desc', '')}</li>" for i, st in enumerate(production_steps)]) if production_steps else "<li><strong>Alur Kerja:</strong> Riset, Storyboard, Produksi 3D, Audio Compositing, dan Final Render.</li>"
+            pipeline_html = f"""
+<h3>Alur Kerja Produksi Studio Kami</h3>
+<ol>
+{steps_items}
+</ol>
+"""
+            modular_html = f"""
+<h3>Modularitas Aset dan Nilai Investasi (ROI)</h3>
+<p>Investasi pada {primary_keyword} memiliki nilai guna jangka panjang. Seluruh file master 3D yang dibangun dalam pipeline studio kami tersimpan secara aman dalam format modular.</p>
+<p>Aset ini dapat dialihfungsikan menjadi konten media sosial vertikal, materi cetak beresolusi tinggi, hingga materi presentasi investor tanpa harus membayar biaya produksi dari awal.</p>
+"""
+            cta_html = f"""
+<h3>Tingkatkan Kualitas Konten Visual Anda Sekarang</h3>
+<p>Konsultasikan kebutuhan visual dan target proyek Anda bersama tim spesialis produksi kami hari ini untuk mendapatkan estimasi pengerjaan serta rancangan konsep terbaik.</p>
+<p style="font-weight: bold; margin-top: 15px;">{tagline}</p>
+"""
+            faq_items = [
+                {"question": f"Apa keunggulan {primary_keyword} dari {brand_name}?", "answer": f"Kombinasi kualitas visual tingkat tinggi berstandar studio Yogyakarta dengan harga yang sangat kompetitif bagi pelaku usaha di {city_scope}."},
+                {"question": f"Apa manfaat utama menggunakan {service_data['name']}?", "answer": "Meningkatkan daya pikat visual, memperjelas informasi teknis secara instan, dan menaikkan angka konversi penjualan."},
+                {"question": f"Bagaimana estimasi biaya pengerjaan di {city_scope}?", "answer": "Biaya disesuaikan dengan tingkat kerumitan konsep dan durasi, dengan skema penawaran transparan tanpa biaya tersembunyi."},
+                {"question": f"Bagaimana {brand_name} memastikan kepatuhan pada identitas brand klien?", "answer": "Kami menerapkan pedoman visual dan warna resmi perusahaan klien secara ketat sejak tahap pembuatan storyboard."},
+                {"question": f"Sektor industri apa saja yang cocok menggunakan layanan ini?", "answer": f"Korporasi, institusi pendidikan, industri manufaktur, perhotelan, pariwisata, hingga pelaku bisnis di {city_scope}."},
+                {"question": f"Berapa lama waktu pengerjaan proyek?", "answer": f"Rata-rata proyek memakan waktu {service_data.get('estimated_timeline', '2 hingga 5 minggu')} hingga serah terima master."},
+                {"question": f"Apakah hasil video bisa disesuaikan untuk format media sosial?", "answer": "Tentu, kami menyediakan format rasio vertikal 9:16 untuk Reels/TikTok dan rasio 16:9 untuk presentasi serta YouTube."},
+                {"question": f"Apakah aset visual dapat digunakan kembali di masa depan?", "answer": "Ya, seluruh model master 3D diarsipkan dan dapat diperbarui sewaktu-waktu untuk kampanye berikutnya."},
+                {"question": f"Format file apa yang akan diterima klien?", "answer": f"Klien menerima master video resolusi tinggi {spec} beserta file web-ready."},
+                {"question": f"Bagaimana cara memulai pemesanan layanan?", "answer": f"Hubungi tim produksi kami secara langsung melalui formulir kontak di website untuk mendiskusikan jadwal dan konsep visual Anda."}
+            ]
+            faq_html_list = "".join([f"<li><strong>{q['question']}</strong><p>{q['answer']}</p></li>" for q in faq_items])
+            faq_html = f"""
+<h3>10 Pertanyaan dan Jawaban (Q&A)</h3>
+<ol>
+{faq_html_list}
+</ol>
+"""
+
+        # Assemble full content
+        full_content_html = f"{intro_html}\n{def_html}\n{urgency_html}\n{usp_html}\n{education_html}\n{solutions_html}\n{pipeline_html}\n{modular_html}\n{cta_html}\n{faq_html}"
+
+        return {
+            "meta_description": meta_desc,
+            "content_html": full_content_html,
+            "faq_items": faq_items,
+            "structured_sections": {
+                "intro": intro_html,
+                "definition": def_html,
+                "urgency": urgency_html,
+                "usp": usp_html,
+                "education": education_html,
+                "solutions": solutions_html,
+                "pipeline": pipeline_html,
+                "modular": modular_html,
+                "cta": cta_html,
+                "faq": faq_html
+            }
+        }
+
+    def _generate_with_gemini(
+        self,
+        brand_data: Dict[str, Any],
+        service_data: Dict[str, Any],
+        location_data: Dict[str, Any],
+        city_scope: str,
+        primary_keyword: str,
+        title: str,
+        is_english: bool,
+        sub_keywords: List[str]
+    ) -> Optional[Dict[str, Any]]:
+        """Calls Google Gemini API using the user's active key with auto-rotation."""
+        sub_kw_str = ", ".join(sub_keywords)
+        lang_str = "English" if is_english else "Bahasa Indonesia"
+
+        prompt = f"""
+You are an expert Programmatic Local SEO and Generative Engine Optimization (GEO) copywriter.
+Generate a structured, high-conversion landing page article in {lang_str}.
+
+PARAMETERS:
+- Brand: {brand_data['name']} (HQ: {brand_data.get('hq_location', 'Yogyakarta, Indonesia')})
+- Service: {service_data['name']}
+- Primary Keyword: {primary_keyword}
+- Target Location: {city_scope}
+- Sub-Keywords to mention: {sub_kw_str}
+- Revision Guarantee: {brand_data.get('revision_guarantee', 'Free 2x revision guarantee')}
+- Master Spec: {brand_data.get('master_output_spec', 'Uncompressed 4K master files')}
+- CTA Tagline: {brand_data.get('cta_tagline', '🎥 Bringing your vision to life.')}
+
+STRICT CONSTRAINTS (CRITICAL):
+1. NO EMAIL ADDRESSES: Never write any email address (like info@ or contact@) in the CTA or in FAQ #10.
+2. In English articles, under every H3 header, place: '*Keyword Subjudul: {sub_kw_str}*' in italics.
+3. EXACTLY 10 FAQ items in the FAQ section addressing definition, benefits, pricing, brand consistency, industries, timeline, social media formats, reusability, file formats, and how to start.
+4. Meta description must be under 160 characters.
+
+Return VALID JSON ONLY with this structure:
+{{
+  "meta_description": "concise meta under 160 chars",
+  "content_html": "<p>Intro paragraph 1 with <strong>{primary_keyword}</strong>...</p><h3>What Defines...</h3>...",
+  "faq_items": [
+    {{"question": "Q1", "answer": "A1"}},
+    {{"question": "Q2", "answer": "A2"}},
+    {{"question": "Q3", "answer": "A3"}},
+    {{"question": "Q4", "answer": "A4"}},
+    {{"question": "Q5", "answer": "A5"}},
+    {{"question": "Q6", "answer": "A6"}},
+    {{"question": "Q7", "answer": "A7"}},
+    {{"question": "Q8", "answer": "A8"}},
+    {{"question": "Q9", "answer": "A9"}},
+    {{"question": "Q10", "answer": "A10 without email"}}
+  ]
+}}
+"""
+        max_attempts = max(1, len(self.gemini.auth.accounts))
+        for _ in range(max_attempts):
+            auth_info = self.gemini.auth.get_active_auth_headers_or_param()
+            if not auth_info:
+                break
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent"
+            headers = {"Content-Type": "application/json"}
+            headers.update(auth_info.get("headers", {}))
+            params = auth_info.get("param", {})
+
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.5,
+                    "responseMimeType": "application/json"
+                }
+            }
+
+            try:
+                resp = requests.post(url, headers=headers, params=params, json=payload, timeout=20)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidates = data.get("candidates", [])
+                    if candidates and "content" in candidates[0]:
+                        parts = candidates[0]["content"].get("parts", [])
+                        if parts and "text" in parts[0]:
+                            parsed = json.loads(parts[0]["text"])
+                            if "content_html" in parsed and len(parsed.get("faq_items", [])) == 10:
+                                logger.info(f"[GEOWriter] Successfully generated via user Gemini account ({self.model})")
+                                return parsed
+                elif resp.status_code in [429, 403]:
+                    logger.warning("[GEOWriter] Gemini quota hit. Rotating to next user account...")
+                    self.gemini.auth.rotate()
+                else:
+                    logger.warning(f"[GEOWriter] Gemini API error ({resp.status_code}): {resp.text[:150]}")
+                    self.gemini.auth.rotate()
+            except Exception as e:
+                logger.warning(f"[GEOWriter] Gemini request exception: {e}")
+                self.gemini.auth.rotate()
+
+        return None

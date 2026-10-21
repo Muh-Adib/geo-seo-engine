@@ -1,0 +1,10 @@
+[
+  {
+    "id": "gemini-api-key-primary",
+    "name": "Primary Gemini Account",
+    "auth_type": "api_key",
+    "api_key": "AIzaSyYourGeminiApiKeyHere",
+    "is_active": true,
+    "source": "Web Dashboard / Manual"
+  }
+]

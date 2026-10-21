@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "geo-seo-engine": {
+      "command": "python",
+      "args": [
+        "-m",
+        "mcp.server"
+      ],
+      "cwd": "/path/to/geo-seo-engine",
+      "env": {
+        "PYTHONPATH": "/path/to/geo-seo-engine",
+        "GEMINI_API_KEY": "AIzaSyYourGeminiApiKeyHere"
+      }
+    }
+  }
+}

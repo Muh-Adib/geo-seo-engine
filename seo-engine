@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Unicam SEO Engine CLI Wrapper (inspired by 9router)
+# ==============================================================================
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+cd "$DIR"
+
+# Ensure venv exists
+if [ ! -d ".venv" ]; then
+    echo "📦 Menyiapkan environment Python..."
+    python3 -m venv .venv
+    .venv/bin/pip install --upgrade pip -q
+    .venv/bin/pip install -r requirements.txt -q
+fi
+
+exec "$DIR/.venv/bin/python" "$DIR/cli.py" "$@"

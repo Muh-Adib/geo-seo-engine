@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Programmatic Local SEO & GEO Engine (10 Brands)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    [x-cloak] { display: none !important; }
+    .prose-preview h2 { font-size: 1.5rem; font-weight: 700; margin-top: 1.25rem; margin-bottom: 0.5rem; color: #0f172a; }
+    .prose-preview h3 { font-size: 1.25rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.5rem; color: #1e293b; }
+    .prose-preview h4 { font-size: 1.1rem; font-weight: 600; margin-top: 0.75rem; margin-bottom: 0.25rem; color: #334155; }
+    .prose-preview p { margin-bottom: 0.75rem; line-height: 1.6; color: #334155; }
+    .prose-preview ul, .prose-preview ol { margin-left: 1.5rem; margin-bottom: 0.75rem; color: #334155; }
+    .prose-preview li { margin-bottom: 0.35rem; }
+    .prose-preview a { color: #2563eb; text-decoration: underline; }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen" x-data="geoApp()" x-init="init()">
+
+  <!-- Top Navigation -->
+  <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-between items-center h-16">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-blue-500 flex items-center justify-center text-white shadow-md">
+          <i class="fa-solid fa-bolt-lightning text-lg"></i>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-slate-900 leading-tight">Unicam GEO Engine</h1>
+          <p class="text-xs text-slate-500 font-medium">Programmatic Local SEO & Generative Engine Optimization</p>
+        </div>
+      </div>
+      
+      <div class="flex items-center space-x-3">
+        <button @click="showWizard = true" class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-compass"></i> Panduan Onboarding
+        </button>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <i class="fa-brands fa-google mr-1.5 text-emerald-600"></i> <span x-text="geminiAccounts.length > 0 ? geminiAccounts[0].email : 'Akun Gemini'"></span>
+        </span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+          <i class="fa-solid fa-layer-group mr-1.5 text-indigo-500"></i> <span x-text="brands.length"></span> Brands
+        </span>
+        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+          <i class="fa-solid fa-database mr-1.5 text-purple-500"></i> <span x-text="articles.length"></span> Articles
+        </span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-100 flex space-x-8">
+      <button @click="activeTab = 'brands'" :class="activeTab === 'brands' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
+        <i class="fa-solid fa-layer-group"></i> <span>Brand Network</span>
+      </button>
+      <button @click="activeTab = 'gemini'" :class="activeTab === 'gemini' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
+        <i class="fa-brands fa-google text-emerald-600"></i> <span>Akun Gemini (Multi-Akun)</span>
+      </button>
+      <button @click="activeTab = 'generator'" :class="activeTab === 'generator' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
+        <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Matrix Writer & Preview</span>
+      </button>
+      <button @click="activeTab = 'registry'" :class="activeTab === 'registry' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
+        <i class="fa-solid fa-book-bookmark"></i> <span>Article Registry & Links</span>
+      </button>
+      <button @click="activeTab = 'diagnostics'" :class="activeTab === 'diagnostics' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
+        <i class="fa-solid fa-stethoscope"></i> <span>WP Bridge & Diagnostics</span>
+      </button>
+      <button @click="activeTab = 'sheet'" :class="activeTab === 'sheet' ? 'border-indigo-600 text-indigo-600 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300 font-medium'" class="py-3 px-1 border-b-2 text-sm flex items-center space-x-2">
+        <i class="fa-solid fa-table"></i> <span>Spreadsheet Bank Data</span>
+      </button>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- TAB 1: BRAND NETWORK -->
+    <div x-show="activeTab === 'brands'" x-cloak class="space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Jaringan Multi-Brand WordPress</h2>
+          <p class="text-sm text-slate-500">Kelola brand studio Anda satu per satu. Pasang plugin WordPress pada masing-masing website untuk otomasi posting.</p>
+        </div>
+        <button @click="showAddBrandModal = true" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-plus"></i> Tambah Brand Baru
+        </button>
+      </div>
+
+      <!-- Empty State if No Brands -->
+      <div x-show="brands.length === 0" class="bg-white rounded-2xl border-2 border-dashed border-indigo-200 p-12 text-center shadow-sm">
+        <div class="w-16 h-16 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+          <i class="fa-solid fa-rocket"></i>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-1">Belum Ada Brand yang Didaftarkan</h3>
+        <p class="text-xs text-slate-500 max-w-md mx-auto mb-6">Mulai dengan mendaftarkan website brand pertama Anda satu per satu, lalu pasang plugin WordPress untuk menerima artikel otomatis.</p>
+        <button @click="showAddBrandModal = true" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow transition">
+          <i class="fa-solid fa-plus mr-1"></i> Setup Brand Pertama Sekarang
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" x-show="brands.length > 0">
+        <template x-for="brand in brands" :key="brand.id">
+          <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm hover:shadow-md transition">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <span class="text-xs uppercase tracking-wider font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-600" x-text="brand.id"></span>
+                <h3 class="text-lg font-bold text-slate-900 mt-1" x-text="brand.name"></h3>
+              </div>
+              <span class="px-2.5 py-1 text-xs rounded-full font-medium" :class="brand.platform === 'WORDPRESS' ? 'bg-sky-50 text-sky-700 border border-sky-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'" x-text="brand.platform"></span>
+            </div>
+
+            <p class="text-xs text-slate-500 mb-4 line-clamp-2" x-text="brand.brand_voice || ('Studio spesialis ' + brand.name)"></p>
+
+            <div class="space-y-2 text-xs text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-100 mb-4">
+              <div class="flex justify-between">
+                <span class="text-slate-400">HQ Location:</span>
+                <span class="font-medium text-slate-700" x-text="brand.hq_location"></span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Domain:</span>
+                <a :href="brand.domain_url" target="_blank" class="font-medium text-indigo-600 hover:underline" x-text="brand.domain_url"></a>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400">Garansi:</span>
+                <span class="font-medium text-emerald-600" x-text="brand.revision_guarantee"></span>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-100">
+              <button @click="selectBrandForMatrix(brand.id)" class="inline-flex items-center text-xs font-semibold text-indigo-600 hover:text-indigo-800">
+                <i class="fa-solid fa-wand-magic-sparkles mr-1.5"></i> Buka Penulis Matriks &rarr;
+              </button>
+              <button @click="deleteBrand(brand.id)" class="text-rose-500 hover:text-rose-700 text-xs" title="Hapus Brand">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+
+    <!-- TAB: AKUN GEMINI (MULTI-AKUN) -->
+    <div x-show="activeTab === 'gemini'" x-cloak class="space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Koneksi Akun Google Gemini (Multi-Akun)</h2>
+          <p class="text-sm text-slate-500">Terhubung langsung ke akun Google Gemini user seperti Antigravity Desktop. Dukungan multi-akun dengan rotasi otomatis saat kuota habis.</p>
+        </div>
+      </div>
+
+      <!-- Antigravity 1-Click Banner -->
+      <div class="p-6 rounded-xl border border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50 shadow-sm flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div class="flex items-start space-x-3">
+          <div class="w-12 h-12 rounded-xl bg-emerald-600 text-white flex items-center justify-center text-xl shrink-0 shadow">
+            <i class="fa-brands fa-google"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-emerald-950 flex items-center gap-2">
+              Sesi Antigravity / Gemini Desktop Terdeteksi
+              <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-200 text-emerald-900 font-bold uppercase">Auto-Detect</span>
+            </h3>
+            <p class="text-xs text-emerald-800 mt-1">Anda login di Mac ini dengan akun Google: <strong class="font-mono bg-white/70 px-1.5 py-0.5 rounded" x-text="geminiAccounts.length > 0 ? geminiAccounts[0].email : 'proofingunipics@gmail.com'"></strong>. Tidak perlu input API key manual!</p>
+          </div>
+        </div>
+        <button @click="connectAntigravityAccount()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow transition shrink-0 flex items-center gap-2">
+          <i class="fa-solid fa-arrows-rotate"></i> Sinkronkan Sesi Antigravity
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Connected Accounts Pool -->
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-users text-indigo-600"></i> Akun Gemini Terhubung (<span x-text="geminiAccounts.length"></span>)
+          </h3>
+          <p class="text-xs text-slate-500">Sistem membagi beban artikel dan thumbnail secara otomatis di antara akun-akun ini.</p>
+
+          <div class="space-y-3">
+            <template x-for="acc in geminiAccounts" :key="acc.id">
+              <div class="p-3.5 rounded-lg border border-slate-200 bg-slate-50/70 flex justify-between items-center text-xs">
+                <div>
+                  <div class="font-bold text-slate-800 flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <span x-text="acc.email"></span>
+                  </div>
+                  <div class="text-[11px] text-slate-500 mt-0.5" x-text="acc.source + ' (' + acc.auth_type + ')'"></div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="px-2 py-0.5 rounded text-[10px] bg-emerald-100 text-emerald-800 font-semibold" x-show="acc.is_current">Aktif Saat Ini</span>
+                  <button @click="removeGeminiAccount(acc.id)" class="text-rose-500 hover:text-rose-700 p-1" title="Hapus Akun">
+                    <i class="fa-solid fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+            </template>
+            <div x-show="geminiAccounts.length === 0" class="p-4 text-center text-slate-400 italic text-xs border border-dashed rounded-lg">
+              Belum ada akun Gemini terhubung. Klik "Sinkronkan Sesi Antigravity" atau tambah akun di sebelah kanan.
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Additional Account Form -->
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-indigo-600"></i> Tambah Akun Google Lain (Multi-Akun)
+          </h3>
+          <p class="text-xs text-slate-500">Gunakan akun Google kedua/ketiga untuk menambah kuota gratis harian.</p>
+
+          <div class="space-y-3 text-xs">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Email Akun Google (Opsional)</label>
+              <input type="email" x-model="newGeminiEmail" placeholder="akun2@gmail.com" class="w-full text-xs border-slate-200 rounded-lg p-2.5 border">
+            </div>
+
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">API Key Google AI Studio / OAuth Token</label>
+              <input type="password" x-model="newGeminiKey" placeholder="AIzaSy..." class="w-full text-xs font-mono border-slate-200 rounded-lg p-2.5 border">
+              <p class="text-[11px] text-slate-400 mt-1">Dapatkan gratis di <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-indigo-600 underline">aistudio.google.com</a>.</p>
+            </div>
+
+            <button @click="addGeminiAccount()" :disabled="!newGeminiKey.trim()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow transition disabled:opacity-50">
+              <i class="fa-solid fa-link mr-1"></i> Simpan & Hubungkan Akun Gemini
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 2: MATRIX WRITER & 12-BLOCK PREVIEW -->
+    <div x-show="activeTab === 'generator'" x-cloak class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <!-- Left: Configuration Form -->
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-5">
+          <h2 class="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center">
+            <i class="fa-solid fa-sliders text-indigo-600 mr-2"></i> Matrix Generator Parameters
+          </h2>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Target Brand</label>
+            <select x-model="selectedBrandId" @change="loadBrandServices()" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+              <template x-for="brand in brands" :key="brand.id">
+                <option :value="brand.id" x-text="brand.name + ' (' + brand.id + ')'"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Specialized Service</label>
+            <select x-model="selectedServiceId" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+              <template x-for="s in currentServices" :key="s.id">
+                <option :value="s.id" x-text="s.name"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Target Region / Country</label>
+            <select x-model="selectedRegion" @change="updateDefaultCities()" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border bg-white">
+              <template x-for="loc in currentLocations" :key="loc.region_name">
+                <option :value="loc.region_name" x-text="loc.region_name"></option>
+              </template>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Target Cities (Comma Separated for Bulk)</label>
+            <input type="text" x-model="citiesInput" placeholder="Sydney, Melbourne, Brisbane, Perth" class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 py-2 px-3 border">
+            <p class="text-[11px] text-slate-400 mt-1">First city is used for single preview; all are used for bulk matrix generation.</p>
+          </div>
+
+          <!-- Constraints Verification Badge -->
+          <div class="bg-indigo-50/60 rounded-lg p-3 border border-indigo-100 text-xs space-y-1 text-indigo-900">
+            <div class="font-semibold flex items-center text-indigo-700">
+              <i class="fa-solid fa-shield-check mr-1.5"></i> Strict Programmatic Constraints:
+            </div>
+            <div>✓ Exactly 12 structural blocks</div>
+            <div>✓ Exactly 10 GEO FAQs for AI Overviews</div>
+            <div>✓ Exactly 50 transactional tags in 1 paragraph</div>
+            <div>✓ Strictly NO email addresses in CTA/FAQs</div>
+            <div>✓ Contextual internal linking & JSON-LD schema</div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="space-y-2 pt-2">
+            <button @click="generatePreview()" :disabled="loading" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
+              <i class="fa-solid fa-bolt" x-show="!loading"></i>
+              <i class="fa-solid fa-spinner fa-spin" x-show="loading"></i>
+              <span x-text="loading ? 'Generating 12-Block Article...' : 'Generate 12-Block Preview'"></span>
+            </button>
+
+            <button @click="generateBulkMatrix()" :disabled="loading" class="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-900 text-white font-semibold rounded-lg text-sm shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
+              <i class="fa-solid fa-network-wired"></i>
+              <span>Batch Generate All Cities Matrix</span>
+            </button>
+
+            <button @click="publishCurrentArticle()" :disabled="!previewData || loading" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-sm shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
+              <i class="fa-solid fa-cloud-arrow-up"></i>
+              <span>Publish Previewed Post to WordPress</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Right: Output Preview Screen -->
+        <div class="lg:col-span-2 space-y-4">
+          <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col min-h-[600px]">
+            
+            <!-- Output Header & Sub-Tabs -->
+            <div class="border-b border-slate-200 px-6 py-4 flex justify-between items-center bg-slate-50">
+              <div>
+                <h3 class="text-sm font-bold text-slate-800" x-text="previewData ? previewData.title : 'No Article Generated Yet'"></h3>
+                <p class="text-xs text-slate-500" x-show="previewData">
+                  Slug: <code class="bg-slate-200 px-1 py-0.5 rounded text-slate-700" x-text="previewData.slug"></code> | 
+                  Tags: <span class="font-bold text-indigo-600" x-text="previewData.tags_count"></span> | 
+                  GEO FAQs: <span class="font-bold text-indigo-600" x-text="previewData.faq_items_count"></span>
+                </p>
+              </div>
+
+              <div class="flex space-x-2" x-show="previewData">
+                <button @click="previewMode = 'rendered'" :class="previewMode === 'rendered' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">Formatted View</button>
+                <button @click="previewMode = 'tags'" :class="previewMode === 'tags' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">50 Tags (1 Para)</button>
+                <button @click="previewMode = 'faq'" :class="previewMode === 'faq' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">10 FAQs</button>
+                <button @click="previewMode = 'raw'" :class="previewMode === 'raw' ? 'bg-white shadow text-slate-800 font-bold' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1 text-xs rounded border border-slate-200">Raw HTML & Schema</button>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div x-show="!previewData && !loading" class="flex-1 flex flex-col items-center justify-center p-12 text-center text-slate-400">
+              <i class="fa-solid fa-file-pen text-5xl mb-4 text-slate-300"></i>
+              <h4 class="text-base font-semibold text-slate-700 mb-1">Ready to Produce Programmatic SEO & GEO Content</h4>
+              <p class="text-xs max-w-md">Select brand, service, and location on the left panel and click "Generate 12-Block Preview" to run the generation pipeline.</p>
+            </div>
+
+            <!-- Loading State -->
+            <div x-show="loading" class="flex-1 flex flex-col items-center justify-center p-12 text-center text-indigo-600">
+              <i class="fa-solid fa-circle-notch fa-spin text-4xl mb-4"></i>
+              <h4 class="text-sm font-semibold text-slate-800">Synthesizing 12 Strict Structural Blocks...</h4>
+              <p class="text-xs text-slate-500">Injecting local contexts, 50 transactional tags, GEO FAQs, and contextual silo links.</p>
+            </div>
+
+            <!-- Content Rendered View -->
+            <div x-show="previewData && !loading && previewMode === 'rendered'" class="p-8 overflow-y-auto max-h-[700px] prose-preview">
+              <div class="mb-6 p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs space-y-1">
+                <span class="font-bold text-slate-700">Meta Description (<span x-text="previewData.meta_description.length"></span> chars):</span>
+                <p class="text-slate-600 italic" x-text="previewData.meta_description"></p>
+              </div>
+              <div x-html="previewData.content_html"></div>
+            </div>
+
+            <!-- 50 Tags View -->
+            <div x-show="previewData && !loading && previewMode === 'tags'" class="p-8 overflow-y-auto max-h-[700px]">
+              <div class="flex justify-between items-center mb-4">
+                <h4 class="text-sm font-bold text-slate-800">50 Transactional & Location Tags (Strict 1-Paragraph Format)</h4>
+                <span class="text-xs font-semibold px-2 py-1 rounded bg-indigo-50 text-indigo-700">Total: <span x-text="previewData.tags.length"></span> tags</span>
+              </div>
+              <div class="p-4 bg-slate-50 border border-slate-200 rounded-lg text-xs leading-relaxed text-slate-700 font-mono">
+                <span x-text="previewData.tags.join(', ')"></span>
+              </div>
+            </div>
+
+            <!-- 10 FAQs View -->
+            <div x-show="previewData && !loading && previewMode === 'faq'" class="p-8 overflow-y-auto max-h-[700px] space-y-4">
+              <h4 class="text-sm font-bold text-slate-800 mb-2">10 Questions and Answers (GEO / Generative Engine Optimization)</h4>
+              <template x-for="(faq, idx) in previewData.faq_items" :key="idx">
+                <div class="border border-slate-200 rounded-lg p-4 bg-slate-50/50">
+                  <div class="text-xs font-bold text-indigo-700 mb-1 flex items-center">
+                    <span class="w-5 h-5 rounded-full bg-indigo-100 flex items-center justify-center mr-2 text-[10px]" x-text="idx + 1"></span>
+                    <span x-text="faq.question"></span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-2 pl-7 leading-relaxed" x-text="faq.answer"></p>
+                </div>
+              </template>
+            </div>
+
+            <!-- Raw HTML & Schema View -->
+            <div x-show="previewData && !loading && previewMode === 'raw'" class="p-6 overflow-y-auto max-h-[700px]">
+              <textarea readonly class="w-full h-[550px] font-mono text-xs p-4 bg-slate-900 text-slate-200 rounded-lg border border-slate-800" x-text="previewData.content_html"></textarea>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 3: ARTICLE REGISTRY & LINKS -->
+    <div x-show="activeTab === 'registry'" x-cloak class="space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Generated Article Registry</h2>
+          <p class="text-sm text-slate-500">Persistent database repository of programmatic articles, URLs, and linking graph.</p>
+        </div>
+        <button @click="loadArticles()" class="text-xs font-semibold px-3 py-2 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-700">
+          <i class="fa-solid fa-arrows-rotate mr-1"></i> Refresh List
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+        <table class="min-w-full divide-y divide-slate-200 text-xs">
+          <thead class="bg-slate-50 text-slate-500 font-semibold uppercase tracking-wider">
+            <tr>
+              <th class="px-6 py-3 text-left">Title / Keyword</th>
+              <th class="px-6 py-3 text-left">Brand</th>
+              <th class="px-6 py-3 text-left">Target City</th>
+              <th class="px-6 py-3 text-left">Tags</th>
+              <th class="px-6 py-3 text-left">Status</th>
+              <th class="px-6 py-3 text-left">Created At</th>
+              <th class="px-6 py-3 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-600">
+            <template x-for="art in articles" :key="art.id">
+              <tr class="hover:bg-slate-50 transition">
+                <td class="px-6 py-4 font-medium text-slate-900">
+                  <div x-text="art.title"></div>
+                  <div class="text-[11px] text-slate-400 font-mono" x-text="art.slug"></div>
+                </td>
+                <td class="px-6 py-4 uppercase font-semibold text-slate-500" x-text="art.brand_id"></td>
+                <td class="px-6 py-4" x-text="art.target_location"></td>
+                <td class="px-6 py-4"><span class="font-bold text-indigo-600" x-text="art.tags_count"></span> tags</td>
+                <td class="px-6 py-4">
+                  <span class="px-2 py-0.5 rounded text-[10px] font-bold" :class="art.status === 'PUBLISHED' ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'" x-text="art.status"></span>
+                </td>
+                <td class="px-6 py-4 text-slate-400" x-text="art.created_at"></td>
+                <td class="px-6 py-4 text-right">
+                  <a :href="art.published_url || '#'" target="_blank" class="text-indigo-600 hover:text-indigo-900 font-medium">View &rarr;</a>
+                </td>
+              </tr>
+            </template>
+            <tr x-show="articles.length === 0">
+              <td colspan="7" class="px-6 py-8 text-center text-slate-400 italic">No articles generated yet. Generate your first matrix above.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 4: WP BRIDGE & DIAGNOSTICS -->
+    <div x-show="activeTab === 'diagnostics'" x-cloak class="space-y-6">
+      <div>
+        <h2 class="text-xl font-bold text-slate-900">WordPress Bridge & System Diagnostics</h2>
+        <p class="text-sm text-slate-500">Test live connections, configure security keys, and manage the high-speed bridge plugin.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Bridge Plugin Card -->
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-sky-100 text-sky-700 flex items-center justify-center text-lg">
+              <i class="fa-brands fa-wordpress"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Unicam SEO Engine Bridge Plugin</h3>
+              <p class="text-xs text-slate-500">Fast 1ms publishing, sets 50 tags, bypasses Wordfence app password locks.</p>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-lg border border-slate-100 text-xs space-y-2">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Plugin Archive:</span>
+              <span class="font-mono text-slate-800">wordpress-plugin/unicam-seo-bridge.zip</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Secret Header:</span>
+              <span class="font-mono text-slate-800">X-SEO-Engine-Key</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Default Key:</span>
+              <span class="font-mono text-slate-800">unicam-geo-secret-key-2026</span>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <p class="text-xs text-slate-600 mb-3">Install this plugin directly on target WordPress sites to enable instant automated publishing without security blocks.</p>
+            <button @click="testWpEndpoint()" class="w-full py-2 px-4 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-semibold shadow">
+              <i class="fa-solid fa-plug mr-1.5"></i> Test Bridge Endpoint Health
+            </button>
+          </div>
+        </div>
+
+        <!-- Session Auth Diagnostic Card -->
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-lock-open"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Custom Path Session Auth Diagnostic</h3>
+              <p class="text-xs text-slate-500">Bypasses Wordfence application password restrictions via /pawon/ login.</p>
+            </div>
+          </div>
+
+          <div class="bg-slate-50 p-4 rounded-lg border border-slate-100 text-xs space-y-2">
+            <div class="flex justify-between">
+              <span class="text-slate-500">Target Host:</span>
+              <span class="font-mono text-slate-800">https://segiatech.com</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">Login Path:</span>
+              <span class="font-mono text-slate-800">/pawon/</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500">User:</span>
+              <span class="font-mono text-slate-800">Adib IT (Author)</span>
+            </div>
+          </div>
+
+          <div class="pt-2">
+            <button @click="testSessionAuth()" :disabled="sessionTesting" class="w-full py-2 px-4 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-semibold shadow flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-vial" x-show="!sessionTesting"></i>
+              <i class="fa-solid fa-spinner fa-spin" x-show="sessionTesting"></i>
+              <span x-text="sessionTesting ? 'Testing Auth & Nonce...' : 'Test Segiatech /pawon Session Auth'"></span>
+            </button>
+            <div x-show="sessionResult" class="mt-3 p-3 rounded-lg text-xs" :class="sessionResult && sessionResult.success ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-rose-50 text-rose-800 border border-rose-200'">
+              <span x-text="sessionResult ? JSON.stringify(sessionResult) : ''"></span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TAB 5: SPREADSHEET BANK DATA -->
+    <div x-show="activeTab === 'sheet'" x-cloak class="space-y-6">
+      <div class="flex justify-between items-center">
+        <div>
+          <h2 class="text-xl font-bold text-slate-900">Spreadsheet Matrix Bank Data</h2>
+          <p class="text-sm text-slate-500">Import bulk brands, services, target regions, and city matrices directly from Google Sheets or CSV.</p>
+        </div>
+        <a href="/api/download-template" download="matrix_template.csv" class="inline-flex items-center text-xs font-semibold px-3 py-2 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 hover:bg-indigo-100 transition shadow-sm">
+          <i class="fa-solid fa-file-csv mr-1.5 text-base"></i> Download CSV Template
+        </a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- Google Sheets Live Sync Card -->
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-file-spreadsheet"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Google Sheets Live Sync</h3>
+              <p class="text-xs text-slate-500">Auto-converts view links to CSV export for real-time sync.</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Google Sheets URL</label>
+            <input type="text" x-model="googleSheetUrl" placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit..." class="w-full text-sm border-slate-200 rounded-lg shadow-sm focus:border-emerald-500 focus:ring-emerald-500 py-2 px-3 border">
+            <p class="text-[11px] text-slate-400 mt-1">Make sure Sheet sharing is set to: <strong class="text-slate-600">"Anyone with the link can view"</strong>.</p>
+          </div>
+
+          <button @click="syncGoogleSheet()" :disabled="sheetSyncing" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg text-xs shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
+            <i class="fa-solid fa-arrows-rotate" x-show="!sheetSyncing"></i>
+            <i class="fa-solid fa-spinner fa-spin" x-show="sheetSyncing"></i>
+            <span x-text="sheetSyncing ? 'Synchronizing Google Sheet...' : 'Sync Bank Data from Google Sheet'"></span>
+          </button>
+        </div>
+
+        <!-- Raw CSV Import Card -->
+        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm space-y-4">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-paste"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900">Paste or Upload CSV Content</h3>
+              <p class="text-xs text-slate-500">Quickly upload or paste rows formatted like the template.</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">Raw CSV Text</label>
+            <textarea x-model="rawCsvInput" rows="4" placeholder="brand_id,brand_name,service_name,target_region,cities..." class="w-full text-xs font-mono border-slate-200 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 p-2.5 border"></textarea>
+          </div>
+
+          <button @click="importRawCsv()" :disabled="sheetSyncing || !rawCsvInput.trim()" class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-xs shadow flex items-center justify-center space-x-2 transition disabled:opacity-50">
+            <i class="fa-solid fa-upload"></i>
+            <span>Import & Sync CSV Rows</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Sync Result Notification Box -->
+      <div x-show="sheetResult" class="p-4 rounded-xl text-xs space-y-2 border transition shadow-sm" :class="sheetResult && sheetResult.success ? 'bg-emerald-50 text-emerald-900 border-emerald-200' : 'bg-rose-50 text-rose-900 border-rose-200'">
+        <div class="font-bold text-sm flex items-center">
+          <i class="fa-solid mr-2 text-base" :class="sheetResult && sheetResult.success ? 'fa-circle-check text-emerald-600' : 'fa-circle-xmark text-rose-600'"></i>
+          <span x-text="sheetResult && sheetResult.success ? 'Bank Data Successfully Synchronized!' : 'Sync Failed'"></span>
+        </div>
+        <div x-show="sheetResult && sheetResult.success" class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 font-mono text-[11px]">
+          <div class="bg-white/80 p-2 rounded border border-emerald-100">Rows: <strong x-text="sheetResult ? sheetResult.rows_processed : 0"></strong></div>
+          <div class="bg-white/80 p-2 rounded border border-emerald-100">Brands: <strong x-text="sheetResult ? sheetResult.brands_synced : 0"></strong></div>
+          <div class="bg-white/80 p-2 rounded border border-emerald-100">Services: <strong x-text="sheetResult ? sheetResult.services_synced : 0"></strong></div>
+          <div class="bg-white/80 p-2 rounded border border-emerald-100">Locations: <strong x-text="sheetResult ? sheetResult.locations_synced : 0"></strong></div>
+        </div>
+        <div x-show="sheetResult && !sheetResult.success" x-text="sheetResult ? sheetResult.error : ''"></div>
+      </div>
+
+    </div>
+
+    <!-- MODAL: ADD BRAND -->
+    <div x-show="showAddBrandModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4" @click.away="showAddBrandModal = false">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <h3 class="text-base font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-plus-circle text-indigo-600"></i> Setup Brand Baru
+          </h3>
+          <button @click="showAddBrandModal = false" class="text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Nama Brand Studio *</label>
+            <input type="text" x-model="newBrand.name" placeholder="Contoh: UNIMASI Studio" class="w-full border-slate-200 rounded-lg p-2.5 border">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">URL Domain WordPress *</label>
+            <input type="url" x-model="newBrand.domain_url" placeholder="https://unimasi.com" class="w-full border-slate-200 rounded-lg p-2.5 border">
+            <p class="text-[11px] text-slate-400 mt-0.5">Alamat website tempat plugin bridge akan dipasang.</p>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Lokasi Markas (HQ)</label>
+              <input type="text" x-model="newBrand.hq_location" placeholder="Yogyakarta, Indonesia" class="w-full border-slate-200 rounded-lg p-2.5 border">
+            </div>
+            <div>
+              <label class="block font-semibold text-slate-600 mb-1">Bahasa Utama</label>
+              <select x-model="newBrand.default_language" class="w-full border-slate-200 rounded-lg p-2.5 border bg-white">
+                <option value="id">Bahasa Indonesia</option>
+                <option value="en">English (Global/Australia)</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Layanan Utama Awal</label>
+            <input type="text" x-model="newBrand.service_name" placeholder="Contoh: 3D Marketing Video" class="w-full border-slate-200 rounded-lg p-2.5 border">
+          </div>
+          <div>
+            <label class="block font-semibold text-slate-600 mb-1">Wilayah / Negara Target</label>
+            <input type="text" x-model="newBrand.target_region" placeholder="Indonesia / Australia" class="w-full border-slate-200 rounded-lg p-2.5 border">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button @click="showAddBrandModal = false" class="px-4 py-2 border rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-50">Batal</button>
+          <button @click="createBrand()" :disabled="!newBrand.name || !newBrand.domain_url" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow disabled:opacity-50">Simpan & Daftarkan Brand</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MODAL: ONBOARDING WIZARD (PANDUAN SETUP AWAL) -->
+    <div x-show="showWizard" x-cloak class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+      <div class="bg-white rounded-2xl max-w-2xl w-full p-7 shadow-2xl space-y-6" @click.away="showWizard = false">
+        <div class="flex justify-between items-center border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <span class="w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-sm font-bold">1/4</span>
+            <h3 class="text-base font-bold text-slate-900">Panduan Onboarding Awal (Orang Awam Friendly)</h3>
+          </div>
+          <button @click="showWizard = false" class="text-slate-400 hover:text-slate-600">
+            <i class="fa-solid fa-xmark text-lg"></i>
+          </button>
+        </div>
+
+        <div class="space-y-4 text-xs">
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fa-brands fa-google text-emerald-600 text-base"></i> Langkah 1: Hubungkan Akun Gemini
+            </h4>
+            <p class="text-slate-600">Karena Anda menggunakan Mac ini, sistem secara otomatis mendeteksi sesi login Antigravity Desktop Anda (<strong class="text-indigo-600 font-mono">proofingunipics@gmail.com</strong>). Anda juga bisa menambahkan akun Google kedua/ketiga di tab "Akun Gemini" untuk rotasi kuota otomatis.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-globe text-indigo-600 text-base"></i> Langkah 2: Setup Brand Website Anda
+            </h4>
+            <p class="text-slate-600">Daftarkan website WordPress Anda satu per satu dengan mengklik tombol <strong>"+ Tambah Brand Baru"</strong>. Masukkan nama brand dan alamat domain WordPress Anda.</p>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fa-brands fa-wordpress text-sky-600 text-base"></i> Langkah 3: Pasang Plugin di WordPress
+            </h4>
+            <p class="text-slate-600">Unduh plugin WordPress jembatan <strong class="text-slate-800 font-mono">unicam-seo-bridge.zip</strong>. Di WordPress Admin target, buka menu <strong>Plugins -> Add New -> Upload Plugin</strong>, lalu klik Aktifkan. Plugin ini otomatis menyetel 50 tag dan gambar thumbnail tanpa error Wordfence.</p>
+            <div class="pt-1">
+              <a href="/api/diagnostics/system" class="inline-flex items-center gap-1.5 text-indigo-600 font-semibold hover:underline">
+                <i class="fa-solid fa-download"></i> File zip tersedia di folder: <code>wordpress-plugin/unicam-seo-bridge.zip</code>
+              </a>
+            </div>
+          </div>
+
+          <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-500 text-base"></i> Langkah 4: Tulis & Terbitkan Artikel!
+            </h4>
+            <p class="text-slate-600">Pilih brand, layanan, dan kota di tab "Matrix Writer & Preview". Klik <strong>Generate 12-Block Preview</strong> untuk melihat hasilnya secara instan, lalu klik <strong>Publish to WordPress</strong>. Artikel langsung tayang dengan 50 tag dan thumbnail Gemini!</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end pt-2 border-t border-slate-100">
+          <button @click="showWizard = false" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow">
+            Saya Mengerti, Mulai Sekarang &rarr;
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    function geoApp() {
+      return {
+        activeTab: 'generator',
+        previewMode: 'rendered',
+        brands: [],
+        currentServices: [],
+        currentLocations: [],
+        articles: [],
+        
+        selectedBrandId: 'unimasi',
+        selectedServiceId: '',
+        selectedRegion: 'Australia',
+        citiesInput: 'Sydney, Melbourne, Brisbane, Perth',
+        
+        loading: false,
+        sessionTesting: false,
+        previewData: null,
+        sessionResult: null,
+
+        googleSheetUrl: '',
+        rawCsvInput: '',
+        sheetSyncing: false,
+        sheetResult: null,
+
+        showWizard: false,
+        showAddBrandModal: false,
+        geminiAccounts: [],
+        newGeminiEmail: '',
+        newGeminiKey: '',
+        newBrand: {
+          name: '',
+          domain_url: '',
+          hq_location: 'Yogyakarta, Indonesia',
+          default_language: 'id',
+          service_name: '',
+          target_region: 'Indonesia'
+        },
+
+        async init() {
+          await this.loadGeminiAccounts();
+          await this.loadBrands();
+          await this.loadBrandServices();
+          await this.loadArticles();
+        },
+
+        async loadGeminiAccounts() {
+          try {
+            const res = await fetch('/api/gemini/accounts');
+            const data = await res.json();
+            this.geminiAccounts = data.accounts || [];
+          } catch (e) {
+            console.error('Error loading gemini accounts', e);
+          }
+        },
+
+        async connectAntigravityAccount() {
+          try {
+            const res = await fetch('/api/gemini/connect-antigravity', { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+              alert('Sesi Antigravity berhasil dihubungkan untuk akun: ' + data.account.email);
+              await this.loadGeminiAccounts();
+            } else {
+              alert('Koneksi gagal: ' + data.detail);
+            }
+          } catch (e) {
+            alert('Error: ' + e);
+          }
+        },
+
+        async addGeminiAccount() {
+          if (!this.newGeminiKey.trim()) return;
+          try {
+            const res = await fetch('/api/gemini/add-account', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: this.newGeminiEmail,
+                credential: this.newGeminiKey,
+                auth_type: 'api_key'
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              alert('Akun Google Gemini berhasil ditambahkan!');
+              this.newGeminiKey = '';
+              this.newGeminiEmail = '';
+              await this.loadGeminiAccounts();
+            } else {
+              alert('Gagal menambah akun: ' + (data.detail || data.error));
+            }
+          } catch (e) {
+            alert('Error: ' + e);
+          }
+        },
+
+        async removeGeminiAccount(accId) {
+          if (!confirm('Hapus akun Gemini ini?')) return;
+          try {
+            await fetch(`/api/gemini/accounts/${accId}`, { method: 'DELETE' });
+            await this.loadGeminiAccounts();
+          } catch (e) {
+            console.error('Error removing account', e);
+          }
+        },
+
+        async createBrand() {
+          if (!this.newBrand.name || !this.newBrand.domain_url) return;
+          try {
+            const res = await fetch('/api/brands', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(this.newBrand)
+            });
+            const data = await res.json();
+            if (data.success) {
+              alert('Brand ' + data.brand.name + ' berhasil didaftarkan!');
+              this.showAddBrandModal = false;
+              this.newBrand.name = '';
+              this.newBrand.domain_url = '';
+              await this.loadBrands();
+              this.selectedBrandId = data.brand.id;
+              await this.loadBrandServices();
+            } else {
+              alert('Gagal membuat brand: ' + (data.detail || data.error));
+            }
+          } catch (e) {
+            alert('Error creating brand: ' + e);
+          }
+        },
+
+        async deleteBrand(brandId) {
+          if (!confirm('Hapus brand ' + brandId + ' beserta layanannya?')) return;
+          try {
+            await fetch(`/api/brands/${brandId}`, { method: 'DELETE' });
+            await this.loadBrands();
+            if (this.brands.length > 0) {
+              this.selectedBrandId = this.brands[0].id;
+              await this.loadBrandServices();
+            } else {
+              this.currentServices = [];
+              this.currentLocations = [];
+            }
+          } catch (e) {
+            alert('Error deleting brand: ' + e);
+          }
+        },
+
+        async loadBrands() {
+          try {
+            const res = await fetch('/api/brands');
+            const data = await res.json();
+            this.brands = data.brands || [];
+          } catch (e) {
+            console.error('Error loading brands', e);
+          }
+        },
+
+        async loadBrandServices() {
+          if (!this.selectedBrandId) return;
+          try {
+            const res = await fetch(`/api/brands/${this.selectedBrandId}/context`);
+            const data = await res.json();
+            this.currentServices = data.services || [];
+            this.currentLocations = data.locations || [];
+            
+            if (this.currentServices.length > 0) {
+              this.selectedServiceId = this.currentServices[0].id;
+            }
+            if (this.currentLocations.length > 0) {
+              this.selectedRegion = this.currentLocations[0].region_name;
+              this.updateDefaultCities();
+            }
+          } catch (e) {
+            console.error('Error loading brand context', e);
+          }
+        },
+
+        updateDefaultCities() {
+          const loc = this.currentLocations.find(l => l.region_name === this.selectedRegion);
+          if (loc && loc.sub_cities && loc.sub_cities.length > 0) {
+            this.citiesInput = loc.sub_cities.join(', ');
+          } else {
+            this.citiesInput = this.selectedRegion;
+          }
+        },
+
+        selectBrandForMatrix(brandId) {
+          this.selectedBrandId = brandId;
+          this.activeTab = 'generator';
+          this.loadBrandServices();
+        },
+
+        async generatePreview() {
+          this.loading = true;
+          this.previewData = null;
+          
+          const firstCity = this.citiesInput.split(',')[0].trim() || this.selectedRegion;
+          try {
+            const res = await fetch('/api/preview', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                brand_id: this.selectedBrandId,
+                service_id: this.selectedServiceId,
+                location_region: this.selectedRegion,
+                city_name: firstCity
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              this.previewData = data;
+            } else {
+              alert('Generation failed: ' + (data.detail || data.error));
+            }
+          } catch (e) {
+            alert('Error generating preview: ' + e);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        async generateBulkMatrix() {
+          const cities = this.citiesInput.split(',').map(c => c.trim()).filter(Boolean);
+          if (cities.length === 0) {
+            alert('Please specify at least 1 city.');
+            return;
+          }
+          if (!confirm(`Generate ${cities.length} programmatic articles across ${cities.join(', ')}?`)) return;
+
+          this.loading = true;
+          try {
+            const res = await fetch('/api/generate-bulk', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                brand_id: this.selectedBrandId,
+                service_id: this.selectedServiceId,
+                location_region: this.selectedRegion,
+                cities: cities,
+                auto_publish: false
+              })
+            });
+            const data = await res.json();
+            if (data.success) {
+              alert(`Successfully generated ${data.total_generated} articles in SQLite database!`);
+              await this.loadArticles();
+              this.activeTab = 'registry';
+            } else {
+              alert('Bulk generation error: ' + JSON.stringify(data));
+            }
+          } catch (e) {
+            alert('Bulk generation error: ' + e);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        async publishCurrentArticle() {
+          if (!this.previewData) return;
+          if (!confirm(`Publish "${this.previewData.title}" directly to WordPress site?`)) return;
+
+          this.loading = true;
+          const firstCity = this.citiesInput.split(',')[0].trim() || this.selectedRegion;
+          try {
+            const res = await fetch('/api/publish', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                brand_id: this.selectedBrandId,
+                service_id: this.selectedServiceId,
+                location_region: this.selectedRegion,
+                city_name: firstCity,
+                status: 'publish',
+                username: '',
+                password: '',
+                login_path: '/wp-login.php'
+              })
+            });
+            const data = await res.json();
+            alert('Publishing completed!\nStatus: ' + data.status + '\nURL: ' + data.url);
+            await this.loadArticles();
+          } catch (e) {
+            alert('Publish error: ' + e);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        async loadArticles() {
+          try {
+            const res = await fetch('/api/articles');
+            const data = await res.json();
+            this.articles = data.articles || [];
+          } catch (e) {
+            console.error('Error loading articles', e);
+          }
+        },
+
+        async testSessionAuth() {
+          this.sessionTesting = true;
+          this.sessionResult = null;
+          try {
+            const res = await fetch('/api/diagnostics/session-test', {
+              method: 'POST'
+            });
+            const data = await res.json();
+            this.sessionResult = data;
+          } catch (e) {
+            this.sessionResult = { success: false, error: String(e) };
+          } finally {
+            this.sessionTesting = false;
+          }
+        },
+
+        async testWpEndpoint() {
+          alert('Checking Bridge endpoint for selected brand: ' + this.selectedBrandId);
+          try {
+            const res = await fetch(`/api/diagnostics/wp-test?brand_id=${this.selectedBrandId}`, { method: 'POST' });
+            const data = await res.json();
+            alert('Bridge Status: ' + JSON.stringify(data, null, 2));
+          } catch (e) {
+            alert('Endpoint check error: ' + e);
+          }
+        },
+
+        async syncGoogleSheet() {
+          if (!this.googleSheetUrl.trim()) {
+            alert('Please enter a Google Sheets URL');
+            return;
+          }
+          this.sheetSyncing = true;
+          this.sheetResult = null;
+          try {
+            const res = await fetch('/api/import-sheet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ sheet_url: this.googleSheetUrl })
+            });
+            const data = await res.json();
+            this.sheetResult = data;
+            if (data.success) {
+              await this.loadBrands();
+              await this.loadBrandServices();
+            }
+          } catch (e) {
+            this.sheetResult = { success: false, error: String(e) };
+          } finally {
+            this.sheetSyncing = false;
+          }
+        },
+
+        async importRawCsv() {
+          if (!this.rawCsvInput.trim()) return;
+          this.sheetSyncing = true;
+          this.sheetResult = null;
+          try {
+            const res = await fetch('/api/import-sheet', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ csv_content: this.rawCsvInput })
+            });
+            const data = await res.json();
+            this.sheetResult = data;
+            if (data.success) {
+              await this.loadBrands();
+              await this.loadBrandServices();
+            }
+          } catch (e) {
+            this.sheetResult = { success: false, error: String(e) };
+          } finally {
+            this.sheetSyncing = false;
+          }
+        }
+      }
+    }
+  </script>
+</body>
+</html>
