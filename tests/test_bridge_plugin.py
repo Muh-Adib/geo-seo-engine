@@ -7,6 +7,9 @@ from core.bridge_client import WordPressBridgeClient
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+import shutil
+
+@pytest.mark.skipif(shutil.which("php") is None, reason="PHP CLI is not installed on system")
 def test_php_syntax():
     php_path = BASE_DIR / "wordpress-plugin/unicam-seo-bridge/unicam-seo-bridge.php"
     assert php_path.exists(), f"Plugin PHP file does not exist at {php_path}"
